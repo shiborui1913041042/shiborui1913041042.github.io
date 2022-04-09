@@ -835,218 +835,6 @@
       </tags>
   </entry>
   <entry>
-    <title>常见webshell客户端的流量特征及检测思路</title>
-    <url>/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="中国菜刀"><a href="#中国菜刀" class="headerlink" title="中国菜刀"></a>中国菜刀</h1><p>主流为11、14、16版，11到14功能性增强，14到16隐秘性增强。它支持PHP、JSP、ASP三种webshell的链接。</p>
-<h2 id="11和14版本的流量特征"><a href="#11和14版本的流量特征" class="headerlink" title="11和14版本的流量特征"></a>11和14版本的流量特征</h2><h3 id="php类的webshell流量特征"><a href="#php类的webshell流量特征" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>主要特征在body当中，将其中的流量解码如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.&quot;eval&quot;，eval函数用于执行传递攻击的payload</span><br><span class="line">2.(base64_decode($_POST[z0]))，将攻击payload进行base64解码，菜刀默认将攻击荷载base64编码，避免被检测</span><br><span class="line">3.&amp;z0=QGluaV9zZXQ...，传递攻击payload，参数z0对应$_POST[z0]接收到的数据，该参数值使用base64编码的，所以使用base64解码可以看到攻击明文。</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">1.少数地方eval函数被assert方法替代</span><br><span class="line">2.$_POST也会被$_GET、$_REQUEST替代</span><br><span class="line">3.z0是菜刀默认的参数，这个地方也有可能被修改为其他参数名。</span><br></pre></td></tr></table></figure>
-
-<h3 id="jsp类的webshell流量特征"><a href="#jsp类的webshell流量特征" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><p>该流量是WebShell链接流量的第一段链接流量，其中特征主要在i&#x3D;A&amp;z0&#x3D;GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i&#x3D;A，第二个参数指定编码，其参数值为编码，如z0&#x3D;GB2312，有时候z0后面还会接着又z1&#x3D;参数用来加入攻击载荷。</p>
-<p>注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</p>
-<h3 id="asp类的webshell流量特征"><a href="#asp类的webshell流量特征" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><p>其中body流量进行URL解码后其特征点有如下三个</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“Execute”，此函数执行传递的攻击payload，等同于php的eval</span><br><span class="line">2.OnError ResumeNext，大部分asp客户端中必有的流量，不管前边有任何错误，继续执行</span><br><span class="line">3.Response.Write和Response.End必有，完善整个操作</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">OnError Resume Next这个特征在大部分流量中存在，极少数没有。</span><br></pre></td></tr></table></figure>
-
-<h2 id="16版的流量特征"><a href="#16版的流量特征" class="headerlink" title="16版的流量特征"></a>16版的流量特征</h2><h3 id="php类的webshell流量特征-1"><a href="#php类的webshell流量特征-1" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>其中特征主要在body中，将body中部分如下：这个版本中流量最大的改变就是将特征进行打断混淆，这也给我们识别特征提供一种思路。其中特征点有如下三部分</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“&quot;Ba&quot;.&quot;SE6&quot;.&quot;4_dEc&quot;.&quot;OdE”，这部分是将base64解码打断使用.来连接。</span><br><span class="line">2.@ev&quot;.&quot;al，这部分也是将@eval这部分进行打断连接，可以识别这段代码即可。</span><br><span class="line">3.QGluaV9zZXQoImRpc3BsYXlf...，该部分是传递攻击payload，payload依旧使用Base64编码的，所以可以利用base64解码可以看到攻击明文来识别。</span><br><span class="line"></span><br><span class="line">注意：有少数时候eval方法会被assert方法替代。</span><br></pre></td></tr></table></figure>
-
-<h3 id="jsp类的webshell流量特征-1"><a href="#jsp类的webshell流量特征-1" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">所以分析如上：该流量是WebShell链接流量的第一段链接流量，其中特征主要在i=A&amp;z0=GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i=A，第二个参数指定编码，其参数值为编码，如z0=GB2312，有时候z0后面还会接着又z1=、z2=参数用来加入攻击载荷。</span><br><span class="line">注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</span><br></pre></td></tr></table></figure>
-
-<h3 id="asp类的webshell流量特征-1"><a href="#asp类的webshell流量特征-1" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">其中body流量为：</span><br><span class="line">2016版本流量这链接流量最大的变化在于body中部分字符被unicode编码替换混淆，所以这种特征需要提取出一种形式来，匹配这个混淆特征，比如“字符+%u0000+字符+%u0000”这种形式来判断该流量。</span><br><span class="line">或者直接将这部分代码直接进行unicode解码，可以获取到如2011或2014版本的asp所示的流量。可以根据上一段特征来进行判断。</span><br><span class="line">这种流量主要识别这几部分特征，在正常流量中基本没有。</span><br></pre></td></tr></table></figure>
-
-<h1 id="中国蚁剑"><a href="#中国蚁剑" class="headerlink" title="中国蚁剑"></a>中国蚁剑</h1><p>大部分代码来源于菜刀，但是蚁剑扩充性好，可以对进行加密、混淆等绕过处理。蚁剑默认支持ASP以及PHP的webshell链接。</p>
-<h2 id="PHP类链接特征"><a href="#PHP类链接特征" class="headerlink" title="PHP类链接特征"></a>PHP类链接特征</h2><p>其中body流量进行url解码后为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">最明显的为@ini_set(&quot;display_errors&quot;,&quot;0&quot;);这段代码是基本所有webshell客户端连接php类webshell都有的一种代码，有的客户端会加密、编码。蚁剑是明文，好发现。</span><br></pre></td></tr></table></figure>
-
-<h2 id="ASP类链接特征"><a href="#ASP类链接特征" class="headerlink" title="ASP类链接特征"></a>ASP类链接特征</h2><p>其中body流量进行url解码后为；</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">与菜刀很像。如OnError、ResumeNext、Response.End、Response.Write其中execute在蚁剑中被打断混淆了，变成了拼接形式Ex&quot;&amp;cHr(101)&amp;&quot;cute,同时该流量也用了eval参数。</span><br></pre></td></tr></table></figure>
-
-<h2 id="蚁剑绕过流量特征"><a href="#蚁剑绕过流量特征" class="headerlink" title="蚁剑绕过流量特征"></a>蚁剑绕过流量特征</h2><p>蚁剑包含了很多加密、绕过插件，所以导致很多流量被加密后无法识别，但是还有一个明显的特征，即参数名大多数以”_0x……”这种形式。所以以这种形式开头的参数名，后面为加密数据的数据包也是特征。</p>
-<h1 id="冰蝎"><a href="#冰蝎" class="headerlink" title="冰蝎"></a>冰蝎</h1><p>流量进行了加密，且加密密钥使用者自己来设定，但是该拦截器对webshell的需求比较高，无法连接一句话木马，综上，该客户端的流量无法检测。</p>
-<p>功能介绍</p>
-<p><a href="https://xz.aliyun.com/t/2799">《利用动态二进制加密实现新型一句话木马之客户端篇》</a></p>
-<p>工作原理</p>
-<p><a href="https://xz.aliyun.com/t/2744">《利用动态二进制加密实现新型一句话木马之java篇》</a></p>
-<p><a href="https://xz.aliyun.com/t/2758">《利用动态二进制加密实现新型一句话木马之.NET篇》</a></p>
-<p><a href="https://xz.aliyun.com/t/2774">《利用动态二进制加密实现新型一句话木马之PHP篇》</a></p>
-<h1 id="Cknife"><a href="#Cknife" class="headerlink" title="Cknife"></a>Cknife</h1><p>特征就是在body部分的参数值均为base64编码，将该部分进行base64解码后，其流量特征同中国菜刀一致</p>
-<h1 id="Weevely"><a href="#Weevely" class="headerlink" title="Weevely"></a>Weevely</h1><p>Weevely是kail中自带的一款功能强大的WebShell客户端，该链接器首先自己生成webshell，在将该webshell上传至目的服务器后，通过Weevely进行链接，该链接流量属于加密流量，但是在该流量中还可以发现特征，进行区分。</p>
-<p>该流量中的攻击载荷存在于Referer中，其中Referer中的路径中php的查询参数有以下参数名或值，即sa&#x3D;、source&#x3D;web、cd&#x3D;数字、url&#x3D;、ei&#x3D;，即可确定该流量为客户端流量。</p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>webshell的流量特征</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>面试题整理</title>
-    <url>/2022/04/03/%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="面试题整理"><a href="#面试题整理" class="headerlink" title="面试题整理"></a>面试题整理</h1><p>自我介绍</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">面试官你好，我叫史博瑞，是19级应界生，来自中北大学软件工程专业的一名学生。在校内通过网安实验室初步学习了解了web渗透的一些基础，后来参加过校内组织的一些ctf比赛，网络安全知识竞赛等。后来自己报名参加过网上的一些web渗透相关培训，有了系统的了解。熟悉常见的web漏洞。还有一些扫漏工具的简单使用。内网方面也了解一些渗透方法和思路。熟悉一些java框架还有中间件的一些漏洞。</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="1-sqlmap-–os-shell原理"><a href="#1-sqlmap-–os-shell原理" class="headerlink" title="1.sqlmap –os-shell原理"></a>1.sqlmap –os-shell原理</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.已知网站的绝对路径</span><br><span class="line">2.已知目标站点的脚本语言</span><br><span class="line">3.当前数据库的权限必须是root权限</span><br><span class="line">4.网站不查杀木马文件</span><br><span class="line">5.php主动转义功能关闭</span><br></pre></td></tr></table></figure>
-
-<p>如何获取目标站点的绝对路径</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.IIS系统，参数恶意传值，使其出现报错</span><br><span class="line">2.TinkPHP访问无效路径，参数恶意传值</span><br><span class="line">3.字典拆解</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="2-Mysql上传文件的条件"><a href="#2-Mysql上传文件的条件" class="headerlink" title="2.Mysql上传文件的条件"></a>2.Mysql上传文件的条件</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.已知目标系统的绝对路径</span><br><span class="line">2.使用into outfile（）进行文件上传</span><br><span class="line">3.mysql数据库身份需要有写文件权限</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="3-TCP和UDP的区别"><a href="#3-TCP和UDP的区别" class="headerlink" title="3.TCP和UDP的区别"></a>3.TCP和UDP的区别</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.TCP比UDP安全</span><br><span class="line">2.UDP传输速度&gt;TCP,TCP报文长度&gt;UDP</span><br><span class="line">3.TCP面向连接，UDP不需要</span><br><span class="line">4.TCP是点对点，UDP可以一对多</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="4-常见端口的协议"><a href="#4-常见端口的协议" class="headerlink" title="4.常见端口的协议"></a>4.常见端口的协议</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220403134306981.png" alt="image-20220403134306981"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">443 网页浏览端口HTTPS</span><br><span class="line">445 共享文件夹</span><br><span class="line">3306 mysql数据库</span><br><span class="line">1443 mssql数据库</span><br><span class="line">20 21 ftp</span><br><span class="line">拓展：常见端口号</span><br><span class="line">端口号    端口说明    				攻击技巧</span><br><span class="line">21/22/69  ftp/tftp：文件传输协议    爆破\嗅探\溢出\后门</span><br><span class="line">22    	  ssh：远程连接    			爆破OpenSSH；28个退格</span><br><span class="line">23    	  telnet：远程连接    		爆破\嗅探</span><br><span class="line">25    	  smtp：邮件服务    		邮件伪造</span><br><span class="line">53   	  DNS：域名系统    			DNS区域传输\DNS劫持\DNS缓存投毒\DNS欺骗\利用DNS隧道技术刺透防火墙</span><br><span class="line">67/68     dhcp    					劫持\欺骗</span><br><span class="line">110    	  pop3    					爆破</span><br><span class="line">139    	  samba    					爆破\未授权访问\远程代码执行</span><br><span class="line">143    	  imap    					爆破</span><br><span class="line">161    	  snmp      				爆破</span><br><span class="line">389       ldap    					注入攻击\未授权访问</span><br><span class="line">512/513/514 linux r    				直接使用rlogin</span><br><span class="line">873    	  rsync    					未授权访问</span><br><span class="line">1080    socket    					爆破：进行内网渗透</span><br><span class="line">1352    lotus    					爆破：弱口令\信息泄漏：源代码</span><br><span class="line">1433    mssql    					爆破：使用系统用户登录\注入攻击</span><br><span class="line">1521    oracle    					爆破：TNS\注入攻击</span><br><span class="line">2049    nfs    						配置不当</span><br><span class="line">2181    zookeeper    				未授权访问</span><br><span class="line">3306    mysql    					爆破\拒绝服务\注入</span><br><span class="line">3389    rdp    						爆破\Shift后门</span><br><span class="line">4848    glassfish    				爆破：控制台弱口令\认证绕过</span><br><span class="line">5000    sybase/DB2    				爆破\注入</span><br><span class="line">5432    postgresql    				缓冲区溢出\注入攻击\爆破：弱口令</span><br><span class="line">5632    pcanywhere    				拒绝服务\代码执行</span><br><span class="line">5900    vnc    						爆破：弱口令\认证绕过</span><br><span class="line">6379    redis    					未授权访问\爆破：弱口令</span><br><span class="line">7001    weblogic    				Java反序列化\控制台弱口令\控制台部署webshell</span><br><span class="line">80/443/8080    web    				常见web攻击\控制台爆破\对应服务器版本漏洞</span><br><span class="line">8069    zabbix    					远程命令执行</span><br><span class="line">9090    websphere控制台    			爆破：控制台弱口令\Java反序列</span><br><span class="line">9200/9300 elasticsearch    			远程代码执行</span><br><span class="line">11211    memcacache    				未授权访问</span><br><span class="line">27017    mongodb    				爆破\未授权访问</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="5-http-only的作用，以及如何获取cookie"><a href="#5-http-only的作用，以及如何获取cookie" class="headerlink" title="5.http only的作用，以及如何获取cookie"></a>5.http only的作用，以及如何获取cookie</h2><p>如果在cookie中设置了http only属性，那么将不能从 JS脚本中获取到cookie信息，也就是说不能用 document.cookie()来获取cookie。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.信息泄露，http only是只对指定的cookie做保护，所以前端是会泄露指定保护的cookie</span><br><span class="line">2.配置错误，可能在设置 hettp only的时候只对某个 cookie做了保护，关键的 cookie未保护 </span><br><span class="line">3.如果apache版本较低，使用CVE-2012-0053 ,通过发送超长 cookie，可以获取 http only保护下的cookie</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="6-冰蝎、哥斯拉的流量特征"><a href="#6-冰蝎、哥斯拉的流量特征" class="headerlink" title="6.冰蝎、哥斯拉的流量特征"></a>6.冰蝎、哥斯拉的流量特征</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">冰蝎</span><br><span class="line">1.Accept头application/xhtml+xmlapplication/xmlapplication/signed-exchange属于弱特征</span><br><span class="line">2.内置的一些ua头</span><br><span class="line">3.request.getReader().readLine()读取post请求。请求的Content-Type: application/octet-stream属于强特征。</span><br><span class="line">4.content-length，上传文件，命令执行来讲，加密的参数不定长。但是对于密钥交互，获取基本信息来讲，payload都为定长，且无随机padding</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">哥斯拉</span><br><span class="line">phpshell有三种编码方式</span><br><span class="line">1.EVAL_XOR_BASE64编码连接特征很明显，经过url解码后，pass=eval(base64_decode... 拦截明显的木马特征即可</span><br><span class="line">2.XOR_BASE64编码方式第一个包形式为pass=加密数据，无法检测:(XOR_RAW与其类似，不再单独分析)</span><br><span class="line">3.哥斯拉连接时有一个握手机制，加密前的内容和响应都是固定的，且加密中未填充随机长度字符。故在默认密码和密钥的情况下，内容固定可以检测握手机制包中的请求体和响应体：DlMRWA1cL1gOVDc2MjRhRwZFEQ%3D%3D11cd6a8758984163fL1tMGI4YTljO/79NDQm7r9PZzBiOA==6c37ac826a2a04bc</span><br><span class="line">注意：密钥改变，base加密字符串改变，密码改变，md5加密字符串改变。如果密码和密钥不是默认，可以检测响应体的长度以及构成要素：前后为16位md5值，中间为32位加密字符串。</span><br><span class="line">4.哥斯拉页面配置中的header有三个固定值user-agent,accept,accept-language。该弱特征也可作为检测。</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="7-Kerberos协议，PAC还有黄金票据和白银票据"><a href="#7-Kerberos协议，PAC还有黄金票据和白银票据" class="headerlink" title="7.Kerberos协议，PAC还有黄金票据和白银票据"></a>7.Kerberos协议，PAC还有黄金票据和白银票据</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">首先Client向域控制器DC请求访问ServerDC通过去AD活动目录中查找依次区分Client来判断Client是否可信。</span><br><span class="line">认证通过后返回TGT给ClientClient 得到TGT（Ticket Granting Ticket）。</span><br><span class="line">Client继续拿着TGT请求DC访问Server，TGS通过Client消息中的TGT判断Client是否有访问权限。</span><br><span class="line">如果有，则给Client有访问Server的权限Ticket，也叫 ST（Service Ticket）。</span><br><span class="line">Client得到Ticket后，再去访问Server，且该Ticket只针对这一个Server有效。</span><br><span class="line">最终Server和Client建立通信。</span><br></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">客户机将明文密码进行NTLM哈希,然后和时间戳一起加密(使用krbtgt密码 hash作为密钥)，发送给kdc(域控)，kdc对用户进行检测，成功之后创建TGT(Ticket-Granting Ticket)</span><br><span class="line"></span><br><span class="line">将TGT进行加密签名返回给客户机器，只有域用户krbtgt才能读取kerberos中TGT数据</span><br><span class="line"></span><br><span class="line">然后客户机将TGT发送给域控制器KDC请求TGS(票证授权服务。kdc向客户机或server的临时密钥）票证，并且对TGT进行检测</span><br><span class="line"></span><br><span class="line">检测成功之后，将目标服务账户的NTLM以及TGT进行加密，将加密后的结果返回给客户机</span><br></pre></td></tr></table></figure>
-
-
-
-<p>PAC</p>
-<p>KDC向客户机返回AS的时候插入PAC，里边包含用户的 SID、用户所在的组等一些信息。PAC 造成了MS14-068这个漏洞。PAC是用来验证Client的访问权限的，它会被放在TGT里发送给Client，然后由Client发送给TGS。</p>
-<p>区别</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">获取的权限不同</span><br><span class="line">金票：伪造的TGT，可以获取任意Kerberos的访问权限</span><br><span class="line">银票：伪造的TGS，只能访问指定的服务，如CIFS</span><br><span class="line">认证流程不同</span><br><span class="line">金票：同KDC交互，但不同AS交互</span><br><span class="line">银票：不同KDC交互，直接访问Server</span><br><span class="line">加密方式不同</span><br><span class="line">金票：由krbtgt NTLM Hash 加密</span><br><span class="line">银票：由服务账号 NTLM Hash 加密</span><br><span class="line">所以白银票更加隐蔽</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="8-Codeql"><a href="#8-Codeql" class="headerlink" title="8.Codeql"></a>8.Codeql</h2><p>github收购了这个公司。用来解决项目托管的安全问题。而且还开源了一些规则。自动化审计工具。</p>
-<h2 id="9-渗透流程"><a href="#9-渗透流程" class="headerlink" title="9.渗透流程"></a>9.渗透流程</h2><ol>
-<li><p>首先得到人家的许可进行渗透测试</p>
-</li>
-<li><p>信息搜集包括</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.对方服务器的信息（ip、系统类型、版本、开放端口、waf）</span><br><span class="line">2.网站指纹识别（cms、cdn、证书、dns记录）</span><br><span class="line">3.社工whois信息、姓名、备案、邮箱、电话</span><br><span class="line">4.子域名收集、旁站、c段</span><br><span class="line">5.中间件、协议、网站的目录结构</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>漏洞挖掘</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.浏览网站的规模</span><br><span class="line">2.弱口令扫描</span><br><span class="line">3.xss、sql注入、csrf、敏感信息、暴力破解、文件上传、越权漏洞</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>漏洞利用和权限提升</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mysql提权、mssql、oracle</span><br><span class="line">windows</span><br><span class="line">linux</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>输出报告</p>
-</li>
-</ol>
-<h2 id="10-绕过CDN方法总结"><a href="#10-绕过CDN方法总结" class="headerlink" title="10.绕过CDN方法总结"></a>10.绕过CDN方法总结</h2><ol>
-<li><p>全球ping</p>
-</li>
-<li><p>黑暗引擎（fofa、shodan、钟馗之眼）</p>
-</li>
-<li><p>社工（邮箱）</p>
-</li>
-</ol>
-<h2 id="11-phpinfo你会关注哪些信息"><a href="#11-phpinfo你会关注哪些信息" class="headerlink" title="11.phpinfo你会关注哪些信息"></a>11.phpinfo你会关注哪些信息</h2><ol>
-<li>网站的绝对路径</li>
-<li>看是否有特殊的程序服务（redis、memcache可以ssrfgetshell）</li>
-<li>fastcgi是否开启，有些公开漏洞可以利用</li>
-<li>敏感配置allow_url_include 可用来远程文件包含、disable_functions 用来查看禁用函数。</li>
-</ol>
-<h2 id="12-权限维持"><a href="#12-权限维持" class="headerlink" title="12.权限维持"></a>12.权限维持</h2><p>msf里的use post&#x2F;windows&#x2F;manage&#x2F;sticky_keys</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">C:\Windows\System32\sethc.exe 粘滞键 快捷键：按五次 shift 键；</span><br><span class="line">C:\Windows\System32\utilman.exe 设置中心 快捷键：Windows+U 键；</span><br><span class="line">C:\Windows\System32\osk.exe 屏幕键盘</span><br></pre></td></tr></table></figure>
-
-<p>计划任务windows的2007之前的at2008之后的schtaskslinux计划任务为crontab命令</p>
-<h2 id="13-xss之href输出防护"><a href="#13-xss之href输出防护" class="headerlink" title="13.xss之href输出防护"></a>13.xss之href输出防护</h2><p>在输入的时候只允许http和https的协议</p>
-<h2 id="14-samesite防御CSRF的原理"><a href="#14-samesite防御CSRF的原理" class="headerlink" title="14.samesite防御CSRF的原理"></a>14.samesite防御CSRF的原理</h2><p>三个属性</p>
-<p>Lax:b通过超连接访问a，携带a的cookie，b通过img标签访问a，不带cookie，设置的cookie不起作用</p>
-<p>Strict：b通过超连接访问a，不会携带a的cookie，b通过img标签访问a，不带cookie，设置的cookie不起作用。</p>
-<ol>
-<li>get类型的csrf漏洞原本可以用img&#x2F;script等标签进行攻击，但是由于SameSite&#x3D;Lax属性，攻击无效，只能通过访问超连接进行攻击</li>
-<li>post类型的csrf漏洞，ajax可以完成content-type为application&#x2F;x-www-form-urlencoded的csrf攻击，form表单也可以进行攻击，由于SameSite&#x3D;Lax属性，只能通过form表单提交到新页面进行攻击。</li>
-</ol>
-<h2 id="15-json格式的CSRF如何防御"><a href="#15-json格式的CSRF如何防御" class="headerlink" title="15.json格式的CSRF如何防御"></a>15.json格式的CSRF如何防御</h2><ol>
-<li>验证用户，提交数据的时候输入验证码</li>
-<li>验证请求来源的refer</li>
-<li>表单token验证</li>
-</ol>
-<h2 id="16-浏览器解析顺序和解码顺序"><a href="#16-浏览器解析顺序和解码顺序" class="headerlink" title="16.浏览器解析顺序和解码顺序"></a>16.浏览器解析顺序和解码顺序</h2><p>解析顺序</p>
-<ol>
-<li>浏览器接收到响应数据后，解析器先对HTML之类的文档进行解析，构建成DOM节点树，同时，CSS会被CSS解析器解析生成样式表。</li>
-<li>解析html标签过程中遇到<script>标签，则暂停HTML标签解析，控制权转交给<a href="https://cloud.tencent.com/product/sms?from=10680">JavaScript</a>引擎，执行完后继续解析html，js可以对DOM进行修改。</li>
-</ol>
-<p>解码顺序</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">浏览器一般的解码顺序是先进行html解码，再进行javascript解码，最后再进行url解码，需要注意的是这里的url解码和我们发送到服务器的url解码不同，那个过程是由服务器来完成的，而不是浏览器。</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="17-过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过"><a href="#17-过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过" class="headerlink" title="17.过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过"></a>17.过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过</h2><p>在使用盲注的时候，需要使用到substr() .mid() ,limit。这些子句方法都需要使用到逗号。对于substr()和mid()这两个方法可以使用fromto的方式来解决。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">select substr(database(O from 1 for 1);</span><br><span class="line">select mid(database(O from 1 for 1);对于limit可以使用offset来绕过。</span><br><span class="line">select * from news limit 0,1#等价于下面这条SQL语句</span><br><span class="line">select * from news limit 1 offset o小结:使用from可以绕过逗号</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="18-Fastjson漏洞"><a href="#18-Fastjson漏洞" class="headerlink" title="18.Fastjson漏洞"></a>18.Fastjson漏洞</h2><p>提供了autoType功能，允许用户在反序列化数据中通过@type指定反序列化的类型，所以黑客可以构造数据，使目标应用的代码执行流程进入特定的类的settergetter方法中，从而造成攻击。</p>
-<p>反序列化有两种利用方式，rmi(远程方法调用)ldap（轻量级目录访问协议）</p>
-<p>exp 用java编译为class文件上传到VP-s上，然后在目录下运行python -m ip port搭建一个web服务，接受ldap的重定向请求。然后使用github上的一个工具，marshalsec ，maven生成jar包，进入这个工具目录，工具启动ldap服务，然后nc监听。反弹shell。</p>
-<h2 id="19-log4j漏洞"><a href="#19-log4j漏洞" class="headerlink" title="19.log4j漏洞"></a>19.log4j漏洞</h2><p>Apache Log4j 2是一个开源的日志记录组件，使用非常的广泛。黑客通过JNDI注入实现攻击。</p>
-<p>当log4j打印的日志内容中包括 ${jndi:ldap://ip}时，程序就会通过Idap协议访问ip这个地址，然后ip就会返回一个包含Java代码的class文件的地址，然后程序再通过返回的地址下载class文件并执行。</p>
-<p>创建maven项目，导入log4j的依赖，找了一个exp，编译成class文件，开启ldap服务，运行log4j.java,即可成功。</p>
-<h2 id="20-mimikatz免杀"><a href="#20-mimikatz免杀" class="headerlink" title="20.mimikatz免杀"></a>20.mimikatz免杀</h2><ol>
-<li>替换资源+加壳+签名vpm加壳</li>
-</ol>
-<h2 id="21-判断是windows还是linux"><a href="#21-判断是windows还是linux" class="headerlink" title="21.判断是windows还是linux"></a>21.判断是windows还是linux</h2><p>linux大小写敏感，windows大小写不敏感</p>
-<h2 id="22-Mysql两种提权方式"><a href="#22-Mysql两种提权方式" class="headerlink" title="22.Mysql两种提权方式"></a>22.Mysql两种提权方式</h2><p>UDF提权</p>
-<ol>
-<li><p>目标系统是windows</p>
-</li>
-<li><p>拥有mysql的用户账号，可以使用insert、delete权限</p>
-</li>
-<li><p>有root账号密码</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.mysql&lt;5.1导出目录c:/windows或 system32</span><br><span class="line">2.mysql=&gt;5.1导出安装目录/lib/plugin/</span><br></pre></td></tr></table></figure></li>
-</ol>
-<p>流程：将udf文件放到指定位置，引入自定义函数，执行自定义函数。</p>
-<p>MOF提权</p>
-<ol>
-<li>select load file('c:/wmpub/nullevt.mof') into dumpfile 'c:/windows/system32/wbem/mof/nullevt.mov'</li>
-<li>执行成功后，即可添加一个普通用户，更改命令，再上传导出执行把用户提升到管理员权限，然后连接3389连接</li>
-</ol>
-<h2 id="23-宽字节注入"><a href="#23-宽字节注入" class="headerlink" title="23.宽字节注入"></a>23.宽字节注入</h2><p>魔术引号开关</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">magic_quotes_gpc,对用户post、get、cookie提交的数据增加转义字符\</span><br><span class="line">单引号，双引号，反斜线都会被加上反斜线</span><br></pre></td></tr></table></figure>
-
-<p>gbk编码</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\是%5c，可以使用%df吃掉%5c，因为它俩加起来是个汉字</span><br></pre></td></tr></table></figure>
-
-<p>有关函数</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">php中存在一个addslashes()函数，添加反斜杠</span><br><span class="line">在数据进入服务器之前，mysql_query(“SET NAMES gbk”);将MySQL的三个字符集设置为 gbk 编码</span><br><span class="line">character_set_client告诉MySQL Server，传入的是gbk编码，也就是’被当做了%5C%27传入</span><br><span class="line">character_set_connection-&gt; table charset这里我们需要关注下所使用的表的字符集</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="24-代理转发工具"><a href="#24-代理转发工具" class="headerlink" title="24.代理转发工具"></a>24.代理转发工具</h2><p>内网穿透工具frp、</p>
-]]></content>
-      <categories>
-        <category>面试</category>
-      </categories>
-      <tags>
-        <tag>杂识</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>权限提升</title>
     <url>/2022/04/03/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/</url>
     <content><![CDATA[<span id="more"></span>
@@ -1270,6 +1058,53 @@
       </tags>
   </entry>
   <entry>
+    <title>常见webshell客户端的流量特征及检测思路</title>
+    <url>/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="中国菜刀"><a href="#中国菜刀" class="headerlink" title="中国菜刀"></a>中国菜刀</h1><p>主流为11、14、16版，11到14功能性增强，14到16隐秘性增强。它支持PHP、JSP、ASP三种webshell的链接。</p>
+<h2 id="11和14版本的流量特征"><a href="#11和14版本的流量特征" class="headerlink" title="11和14版本的流量特征"></a>11和14版本的流量特征</h2><h3 id="php类的webshell流量特征"><a href="#php类的webshell流量特征" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>主要特征在body当中，将其中的流量解码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.&quot;eval&quot;，eval函数用于执行传递攻击的payload</span><br><span class="line">2.(base64_decode($_POST[z0]))，将攻击payload进行base64解码，菜刀默认将攻击荷载base64编码，避免被检测</span><br><span class="line">3.&amp;z0=QGluaV9zZXQ...，传递攻击payload，参数z0对应$_POST[z0]接收到的数据，该参数值使用base64编码的，所以使用base64解码可以看到攻击明文。</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">1.少数地方eval函数被assert方法替代</span><br><span class="line">2.$_POST也会被$_GET、$_REQUEST替代</span><br><span class="line">3.z0是菜刀默认的参数，这个地方也有可能被修改为其他参数名。</span><br></pre></td></tr></table></figure>
+
+<h3 id="jsp类的webshell流量特征"><a href="#jsp类的webshell流量特征" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><p>该流量是WebShell链接流量的第一段链接流量，其中特征主要在i&#x3D;A&amp;z0&#x3D;GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i&#x3D;A，第二个参数指定编码，其参数值为编码，如z0&#x3D;GB2312，有时候z0后面还会接着又z1&#x3D;参数用来加入攻击载荷。</p>
+<p>注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</p>
+<h3 id="asp类的webshell流量特征"><a href="#asp类的webshell流量特征" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><p>其中body流量进行URL解码后其特征点有如下三个</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“Execute”，此函数执行传递的攻击payload，等同于php的eval</span><br><span class="line">2.OnError ResumeNext，大部分asp客户端中必有的流量，不管前边有任何错误，继续执行</span><br><span class="line">3.Response.Write和Response.End必有，完善整个操作</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">OnError Resume Next这个特征在大部分流量中存在，极少数没有。</span><br></pre></td></tr></table></figure>
+
+<h2 id="16版的流量特征"><a href="#16版的流量特征" class="headerlink" title="16版的流量特征"></a>16版的流量特征</h2><h3 id="php类的webshell流量特征-1"><a href="#php类的webshell流量特征-1" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>其中特征主要在body中，将body中部分如下：这个版本中流量最大的改变就是将特征进行打断混淆，这也给我们识别特征提供一种思路。其中特征点有如下三部分</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“&quot;Ba&quot;.&quot;SE6&quot;.&quot;4_dEc&quot;.&quot;OdE”，这部分是将base64解码打断使用.来连接。</span><br><span class="line">2.@ev&quot;.&quot;al，这部分也是将@eval这部分进行打断连接，可以识别这段代码即可。</span><br><span class="line">3.QGluaV9zZXQoImRpc3BsYXlf...，该部分是传递攻击payload，payload依旧使用Base64编码的，所以可以利用base64解码可以看到攻击明文来识别。</span><br><span class="line"></span><br><span class="line">注意：有少数时候eval方法会被assert方法替代。</span><br></pre></td></tr></table></figure>
+
+<h3 id="jsp类的webshell流量特征-1"><a href="#jsp类的webshell流量特征-1" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">所以分析如上：该流量是WebShell链接流量的第一段链接流量，其中特征主要在i=A&amp;z0=GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i=A，第二个参数指定编码，其参数值为编码，如z0=GB2312，有时候z0后面还会接着又z1=、z2=参数用来加入攻击载荷。</span><br><span class="line">注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</span><br></pre></td></tr></table></figure>
+
+<h3 id="asp类的webshell流量特征-1"><a href="#asp类的webshell流量特征-1" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">其中body流量为：</span><br><span class="line">2016版本流量这链接流量最大的变化在于body中部分字符被unicode编码替换混淆，所以这种特征需要提取出一种形式来，匹配这个混淆特征，比如“字符+%u0000+字符+%u0000”这种形式来判断该流量。</span><br><span class="line">或者直接将这部分代码直接进行unicode解码，可以获取到如2011或2014版本的asp所示的流量。可以根据上一段特征来进行判断。</span><br><span class="line">这种流量主要识别这几部分特征，在正常流量中基本没有。</span><br></pre></td></tr></table></figure>
+
+<h1 id="中国蚁剑"><a href="#中国蚁剑" class="headerlink" title="中国蚁剑"></a>中国蚁剑</h1><p>大部分代码来源于菜刀，但是蚁剑扩充性好，可以对进行加密、混淆等绕过处理。蚁剑默认支持ASP以及PHP的webshell链接。</p>
+<h2 id="PHP类链接特征"><a href="#PHP类链接特征" class="headerlink" title="PHP类链接特征"></a>PHP类链接特征</h2><p>其中body流量进行url解码后为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">最明显的为@ini_set(&quot;display_errors&quot;,&quot;0&quot;);这段代码是基本所有webshell客户端连接php类webshell都有的一种代码，有的客户端会加密、编码。蚁剑是明文，好发现。</span><br></pre></td></tr></table></figure>
+
+<h2 id="ASP类链接特征"><a href="#ASP类链接特征" class="headerlink" title="ASP类链接特征"></a>ASP类链接特征</h2><p>其中body流量进行url解码后为；</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">与菜刀很像。如OnError、ResumeNext、Response.End、Response.Write其中execute在蚁剑中被打断混淆了，变成了拼接形式Ex&quot;&amp;cHr(101)&amp;&quot;cute,同时该流量也用了eval参数。</span><br></pre></td></tr></table></figure>
+
+<h2 id="蚁剑绕过流量特征"><a href="#蚁剑绕过流量特征" class="headerlink" title="蚁剑绕过流量特征"></a>蚁剑绕过流量特征</h2><p>蚁剑包含了很多加密、绕过插件，所以导致很多流量被加密后无法识别，但是还有一个明显的特征，即参数名大多数以”_0x……”这种形式。所以以这种形式开头的参数名，后面为加密数据的数据包也是特征。</p>
+<h1 id="冰蝎"><a href="#冰蝎" class="headerlink" title="冰蝎"></a>冰蝎</h1><p>流量进行了加密，且加密密钥使用者自己来设定，但是该拦截器对webshell的需求比较高，无法连接一句话木马，综上，该客户端的流量无法检测。</p>
+<p>功能介绍</p>
+<p><a href="https://xz.aliyun.com/t/2799">《利用动态二进制加密实现新型一句话木马之客户端篇》</a></p>
+<p>工作原理</p>
+<p><a href="https://xz.aliyun.com/t/2744">《利用动态二进制加密实现新型一句话木马之java篇》</a></p>
+<p><a href="https://xz.aliyun.com/t/2758">《利用动态二进制加密实现新型一句话木马之.NET篇》</a></p>
+<p><a href="https://xz.aliyun.com/t/2774">《利用动态二进制加密实现新型一句话木马之PHP篇》</a></p>
+<h1 id="Cknife"><a href="#Cknife" class="headerlink" title="Cknife"></a>Cknife</h1><p>特征就是在body部分的参数值均为base64编码，将该部分进行base64解码后，其流量特征同中国菜刀一致</p>
+<h1 id="Weevely"><a href="#Weevely" class="headerlink" title="Weevely"></a>Weevely</h1><p>Weevely是kail中自带的一款功能强大的WebShell客户端，该链接器首先自己生成webshell，在将该webshell上传至目的服务器后，通过Weevely进行链接，该链接流量属于加密流量，但是在该流量中还可以发现特征，进行区分。</p>
+<p>该流量中的攻击载荷存在于Referer中，其中Referer中的路径中php的查询参数有以下参数名或值，即sa&#x3D;、source&#x3D;web、cd&#x3D;数字、url&#x3D;、ei&#x3D;，即可确定该流量为客户端流量。</p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>webshell的流量特征</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>隐藏通信隧道</title>
     <url>/2022/02/17/%E9%9A%90%E8%97%8F%E9%80%9A%E4%BF%A1%E9%9A%A7%E9%81%93/</url>
     <content><![CDATA[<span id="more"></span>
@@ -1387,6 +1222,171 @@
       </categories>
       <tags>
         <tag>隐藏通信隧道</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>面试题整理</title>
+    <url>/2022/04/03/%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="面试题整理"><a href="#面试题整理" class="headerlink" title="面试题整理"></a>面试题整理</h1><p>自我介绍</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">面试官你好，我叫史博瑞，是19级应界生，来自中北大学软件工程专业的一名学生。在校内通过网安实验室初步学习了解了web渗透的一些基础，后来参加过校内组织的一些ctf比赛，网络安全知识竞赛等。后来自己报名参加过网上的一些web渗透相关培训，有了系统的了解。熟悉常见的web漏洞。还有一些扫漏工具的简单使用。内网方面也了解一些渗透方法和思路。熟悉一些java框架还有中间件的一些漏洞。</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="1-sqlmap-–os-shell原理"><a href="#1-sqlmap-–os-shell原理" class="headerlink" title="1.sqlmap –os-shell原理"></a>1.sqlmap –os-shell原理</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.已知网站的绝对路径</span><br><span class="line">2.已知目标站点的脚本语言</span><br><span class="line">3.当前数据库的权限必须是root权限</span><br><span class="line">4.网站不查杀木马文件</span><br><span class="line">5.php主动转义功能关闭</span><br></pre></td></tr></table></figure>
+
+<p>如何获取目标站点的绝对路径</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.IIS系统，参数恶意传值，使其出现报错</span><br><span class="line">2.TinkPHP访问无效路径，参数恶意传值</span><br><span class="line">3.字典拆解</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-Mysql上传文件的条件"><a href="#2-Mysql上传文件的条件" class="headerlink" title="2.Mysql上传文件的条件"></a>2.Mysql上传文件的条件</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.已知目标系统的绝对路径</span><br><span class="line">2.使用into outfile（）进行文件上传</span><br><span class="line">3.mysql数据库身份需要有写文件权限</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="3-TCP和UDP的区别"><a href="#3-TCP和UDP的区别" class="headerlink" title="3.TCP和UDP的区别"></a>3.TCP和UDP的区别</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.TCP比UDP安全</span><br><span class="line">2.UDP传输速度&gt;TCP,TCP报文长度&gt;UDP</span><br><span class="line">3.TCP面向连接，UDP不需要</span><br><span class="line">4.TCP是点对点，UDP可以一对多</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="4-常见端口的协议"><a href="#4-常见端口的协议" class="headerlink" title="4.常见端口的协议"></a>4.常见端口的协议</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220403134306981.png" alt="image-20220403134306981"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">443 网页浏览端口HTTPS</span><br><span class="line">445 共享文件夹</span><br><span class="line">3306 mysql数据库</span><br><span class="line">1443 mssql数据库</span><br><span class="line">20 21 ftp</span><br><span class="line">拓展：常见端口号</span><br><span class="line">端口号    端口说明    				攻击技巧</span><br><span class="line">21/22/69  ftp/tftp：文件传输协议    爆破\嗅探\溢出\后门</span><br><span class="line">22    	  ssh：远程连接    			爆破OpenSSH；28个退格</span><br><span class="line">23    	  telnet：远程连接    		爆破\嗅探</span><br><span class="line">25    	  smtp：邮件服务    		邮件伪造</span><br><span class="line">53   	  DNS：域名系统    			DNS区域传输\DNS劫持\DNS缓存投毒\DNS欺骗\利用DNS隧道技术刺透防火墙</span><br><span class="line">67/68     dhcp    					劫持\欺骗</span><br><span class="line">110    	  pop3    					爆破</span><br><span class="line">139    	  samba    					爆破\未授权访问\远程代码执行</span><br><span class="line">143    	  imap    					爆破</span><br><span class="line">161    	  snmp      				爆破</span><br><span class="line">389       ldap    					注入攻击\未授权访问</span><br><span class="line">512/513/514 linux r    				直接使用rlogin</span><br><span class="line">873    	  rsync    					未授权访问</span><br><span class="line">1080    socket    					爆破：进行内网渗透</span><br><span class="line">1352    lotus    					爆破：弱口令\信息泄漏：源代码</span><br><span class="line">1433    mssql    					爆破：使用系统用户登录\注入攻击</span><br><span class="line">1521    oracle    					爆破：TNS\注入攻击</span><br><span class="line">2049    nfs    						配置不当</span><br><span class="line">2181    zookeeper    				未授权访问</span><br><span class="line">3306    mysql    					爆破\拒绝服务\注入</span><br><span class="line">3389    rdp    						爆破\Shift后门</span><br><span class="line">4848    glassfish    				爆破：控制台弱口令\认证绕过</span><br><span class="line">5000    sybase/DB2    				爆破\注入</span><br><span class="line">5432    postgresql    				缓冲区溢出\注入攻击\爆破：弱口令</span><br><span class="line">5632    pcanywhere    				拒绝服务\代码执行</span><br><span class="line">5900    vnc    						爆破：弱口令\认证绕过</span><br><span class="line">6379    redis    					未授权访问\爆破：弱口令</span><br><span class="line">7001    weblogic    				Java反序列化\控制台弱口令\控制台部署webshell</span><br><span class="line">80/443/8080    web    				常见web攻击\控制台爆破\对应服务器版本漏洞</span><br><span class="line">8069    zabbix    					远程命令执行</span><br><span class="line">9090    websphere控制台    			爆破：控制台弱口令\Java反序列</span><br><span class="line">9200/9300 elasticsearch    			远程代码执行</span><br><span class="line">11211    memcacache    				未授权访问</span><br><span class="line">27017    mongodb    				爆破\未授权访问</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="5-http-only的作用，以及如何获取cookie"><a href="#5-http-only的作用，以及如何获取cookie" class="headerlink" title="5.http only的作用，以及如何获取cookie"></a>5.http only的作用，以及如何获取cookie</h2><p>如果在cookie中设置了http only属性，那么将不能从 JS脚本中获取到cookie信息，也就是说不能用 document.cookie()来获取cookie。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.信息泄露，http only是只对指定的cookie做保护，所以前端是会泄露指定保护的cookie</span><br><span class="line">2.配置错误，可能在设置 hettp only的时候只对某个 cookie做了保护，关键的 cookie未保护 </span><br><span class="line">3.如果apache版本较低，使用CVE-2012-0053 ,通过发送超长 cookie，可以获取 http only保护下的cookie</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="6-冰蝎、哥斯拉的流量特征"><a href="#6-冰蝎、哥斯拉的流量特征" class="headerlink" title="6.冰蝎、哥斯拉的流量特征"></a>6.冰蝎、哥斯拉的流量特征</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">冰蝎</span><br><span class="line">1.Accept头application/xhtml+xmlapplication/xmlapplication/signed-exchange属于弱特征</span><br><span class="line">2.内置的一些ua头</span><br><span class="line">3.request.getReader().readLine()读取post请求。请求的Content-Type: application/octet-stream属于强特征。</span><br><span class="line">4.content-length，上传文件，命令执行来讲，加密的参数不定长。但是对于密钥交互，获取基本信息来讲，payload都为定长，且无随机padding</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">哥斯拉</span><br><span class="line">phpshell有三种编码方式</span><br><span class="line">1.EVAL_XOR_BASE64编码连接特征很明显，经过url解码后，pass=eval(base64_decode... 拦截明显的木马特征即可</span><br><span class="line">2.XOR_BASE64编码方式第一个包形式为pass=加密数据，无法检测:(XOR_RAW与其类似，不再单独分析)</span><br><span class="line">3.哥斯拉连接时有一个握手机制，加密前的内容和响应都是固定的，且加密中未填充随机长度字符。故在默认密码和密钥的情况下，内容固定可以检测握手机制包中的请求体和响应体：DlMRWA1cL1gOVDc2MjRhRwZFEQ%3D%3D11cd6a8758984163fL1tMGI4YTljO/79NDQm7r9PZzBiOA==6c37ac826a2a04bc</span><br><span class="line">注意：密钥改变，base加密字符串改变，密码改变，md5加密字符串改变。如果密码和密钥不是默认，可以检测响应体的长度以及构成要素：前后为16位md5值，中间为32位加密字符串。</span><br><span class="line">4.哥斯拉页面配置中的header有三个固定值user-agent,accept,accept-language。该弱特征也可作为检测。</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="7-Kerberos协议，PAC还有黄金票据和白银票据"><a href="#7-Kerberos协议，PAC还有黄金票据和白银票据" class="headerlink" title="7.Kerberos协议，PAC还有黄金票据和白银票据"></a>7.Kerberos协议，PAC还有黄金票据和白银票据</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">首先Client向域控制器DC请求访问ServerDC通过去AD活动目录中查找依次区分Client来判断Client是否可信。</span><br><span class="line">认证通过后返回TGT给ClientClient 得到TGT（Ticket Granting Ticket）。</span><br><span class="line">Client继续拿着TGT请求DC访问Server，TGS通过Client消息中的TGT判断Client是否有访问权限。</span><br><span class="line">如果有，则给Client有访问Server的权限Ticket，也叫 ST（Service Ticket）。</span><br><span class="line">Client得到Ticket后，再去访问Server，且该Ticket只针对这一个Server有效。</span><br><span class="line">最终Server和Client建立通信。</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">客户机将明文密码进行NTLM哈希,然后和时间戳一起加密(使用krbtgt密码 hash作为密钥)，发送给kdc(域控)，kdc对用户进行检测，成功之后创建TGT(Ticket-Granting Ticket)</span><br><span class="line"></span><br><span class="line">将TGT进行加密签名返回给客户机器，只有域用户krbtgt才能读取kerberos中TGT数据</span><br><span class="line"></span><br><span class="line">然后客户机将TGT发送给域控制器KDC请求TGS(票证授权服务。kdc向客户机或server的临时密钥）票证，并且对TGT进行检测</span><br><span class="line"></span><br><span class="line">检测成功之后，将目标服务账户的NTLM以及TGT进行加密，将加密后的结果返回给客户机</span><br></pre></td></tr></table></figure>
+
+
+
+<p>PAC</p>
+<p>KDC向客户机返回AS的时候插入PAC，里边包含用户的 SID、用户所在的组等一些信息。PAC 造成了MS14-068这个漏洞。PAC是用来验证Client的访问权限的，它会被放在TGT里发送给Client，然后由Client发送给TGS。</p>
+<p>区别</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">获取的权限不同</span><br><span class="line">金票：伪造的TGT，可以获取任意Kerberos的访问权限</span><br><span class="line">银票：伪造的TGS，只能访问指定的服务，如CIFS</span><br><span class="line">认证流程不同</span><br><span class="line">金票：同KDC交互，但不同AS交互</span><br><span class="line">银票：不同KDC交互，直接访问Server</span><br><span class="line">加密方式不同</span><br><span class="line">金票：由krbtgt NTLM Hash 加密</span><br><span class="line">银票：由服务账号 NTLM Hash 加密</span><br><span class="line">所以白银票更加隐蔽</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="8-Codeql"><a href="#8-Codeql" class="headerlink" title="8.Codeql"></a>8.Codeql</h2><p>github收购了这个公司。用来解决项目托管的安全问题。而且还开源了一些规则。自动化审计工具。</p>
+<h2 id="9-渗透流程"><a href="#9-渗透流程" class="headerlink" title="9.渗透流程"></a>9.渗透流程</h2><ol>
+<li><p>首先得到人家的许可进行渗透测试</p>
+</li>
+<li><p>信息搜集包括</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.对方服务器的信息（ip、系统类型、版本、开放端口、waf）</span><br><span class="line">2.网站指纹识别（cms、cdn、证书、dns记录）</span><br><span class="line">3.社工whois信息、姓名、备案、邮箱、电话</span><br><span class="line">4.子域名收集、旁站、c段</span><br><span class="line">5.中间件、协议、网站的目录结构</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>漏洞挖掘</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.浏览网站的规模</span><br><span class="line">2.弱口令扫描</span><br><span class="line">3.xss、sql注入、csrf、敏感信息、暴力破解、文件上传、越权漏洞</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>漏洞利用和权限提升</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mysql提权、mssql、oracle</span><br><span class="line">windows</span><br><span class="line">linux</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>输出报告</p>
+</li>
+</ol>
+<h2 id="10-绕过CDN方法总结"><a href="#10-绕过CDN方法总结" class="headerlink" title="10.绕过CDN方法总结"></a>10.绕过CDN方法总结</h2><ol>
+<li><p>全球ping</p>
+</li>
+<li><p>黑暗引擎（fofa、shodan、钟馗之眼）</p>
+</li>
+<li><p>社工（邮箱）</p>
+</li>
+</ol>
+<h2 id="11-phpinfo你会关注哪些信息"><a href="#11-phpinfo你会关注哪些信息" class="headerlink" title="11.phpinfo你会关注哪些信息"></a>11.phpinfo你会关注哪些信息</h2><ol>
+<li>网站的绝对路径</li>
+<li>看是否有特殊的程序服务（redis、memcache可以ssrfgetshell）</li>
+<li>fastcgi是否开启，有些公开漏洞可以利用</li>
+<li>敏感配置allow_url_include 可用来远程文件包含、disable_functions 用来查看禁用函数。</li>
+</ol>
+<h2 id="12-权限维持"><a href="#12-权限维持" class="headerlink" title="12.权限维持"></a>12.权限维持</h2><p>msf里的use post&#x2F;windows&#x2F;manage&#x2F;sticky_keys</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">C:\Windows\System32\sethc.exe 粘滞键 快捷键：按五次 shift 键；</span><br><span class="line">C:\Windows\System32\utilman.exe 设置中心 快捷键：Windows+U 键；</span><br><span class="line">C:\Windows\System32\osk.exe 屏幕键盘</span><br></pre></td></tr></table></figure>
+
+<p>计划任务windows的2007之前的at2008之后的schtaskslinux计划任务为crontab命令</p>
+<h2 id="13-xss之href输出防护"><a href="#13-xss之href输出防护" class="headerlink" title="13.xss之href输出防护"></a>13.xss之href输出防护</h2><p>在输入的时候只允许http和https的协议</p>
+<h2 id="14-samesite防御CSRF的原理"><a href="#14-samesite防御CSRF的原理" class="headerlink" title="14.samesite防御CSRF的原理"></a>14.samesite防御CSRF的原理</h2><p>三个属性</p>
+<p>Lax:b通过超连接访问a，携带a的cookie，b通过img标签访问a，不带cookie，设置的cookie不起作用</p>
+<p>Strict：b通过超连接访问a，不会携带a的cookie，b通过img标签访问a，不带cookie，设置的cookie不起作用。</p>
+<ol>
+<li>get类型的csrf漏洞原本可以用img&#x2F;script等标签进行攻击，但是由于SameSite&#x3D;Lax属性，攻击无效，只能通过访问超连接进行攻击</li>
+<li>post类型的csrf漏洞，ajax可以完成content-type为application&#x2F;x-www-form-urlencoded的csrf攻击，form表单也可以进行攻击，由于SameSite&#x3D;Lax属性，只能通过form表单提交到新页面进行攻击。</li>
+</ol>
+<h2 id="15-json格式的CSRF如何防御"><a href="#15-json格式的CSRF如何防御" class="headerlink" title="15.json格式的CSRF如何防御"></a>15.json格式的CSRF如何防御</h2><ol>
+<li>验证用户，提交数据的时候输入验证码</li>
+<li>验证请求来源的refer</li>
+<li>表单token验证</li>
+</ol>
+<h2 id="16-浏览器解析顺序和解码顺序"><a href="#16-浏览器解析顺序和解码顺序" class="headerlink" title="16.浏览器解析顺序和解码顺序"></a>16.浏览器解析顺序和解码顺序</h2><p>解析顺序</p>
+<ol>
+<li>浏览器接收到响应数据后，解析器先对HTML之类的文档进行解析，构建成DOM节点树，同时，CSS会被CSS解析器解析生成样式表。</li>
+<li>解析html标签过程中遇到<script>标签，则暂停HTML标签解析，控制权转交给<a href="https://cloud.tencent.com/product/sms?from=10680">JavaScript</a>引擎，执行完后继续解析html，js可以对DOM进行修改。</li>
+</ol>
+<p>解码顺序</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">浏览器一般的解码顺序是先进行html解码，再进行javascript解码，最后再进行url解码，需要注意的是这里的url解码和我们发送到服务器的url解码不同，那个过程是由服务器来完成的，而不是浏览器。</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="17-过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过"><a href="#17-过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过" class="headerlink" title="17.过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过"></a>17.过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过</h2><p>在使用盲注的时候，需要使用到substr() .mid() ,limit。这些子句方法都需要使用到逗号。对于substr()和mid()这两个方法可以使用fromto的方式来解决。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">select substr(database(O from 1 for 1);</span><br><span class="line">select mid(database(O from 1 for 1);对于limit可以使用offset来绕过。</span><br><span class="line">select * from news limit 0,1#等价于下面这条SQL语句</span><br><span class="line">select * from news limit 1 offset o小结:使用from可以绕过逗号</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="18-Fastjson漏洞"><a href="#18-Fastjson漏洞" class="headerlink" title="18.Fastjson漏洞"></a>18.Fastjson漏洞</h2><p>提供了autoType功能，允许用户在反序列化数据中通过@type指定反序列化的类型，所以黑客可以构造数据，使目标应用的代码执行流程进入特定的类的settergetter方法中，从而造成攻击。</p>
+<p>反序列化有两种利用方式，rmi(远程方法调用)ldap（轻量级目录访问协议）</p>
+<p>exp 用java编译为class文件上传到VP-s上，然后在目录下运行python -m ip port搭建一个web服务，接受ldap的重定向请求。然后使用github上的一个工具，marshalsec ，maven生成jar包，进入这个工具目录，工具启动ldap服务，然后nc监听。反弹shell。</p>
+<h2 id="19-log4j漏洞"><a href="#19-log4j漏洞" class="headerlink" title="19.log4j漏洞"></a>19.log4j漏洞</h2><p>Apache Log4j 2是一个开源的日志记录组件，使用非常的广泛。黑客通过JNDI注入实现攻击。</p>
+<p>当log4j打印的日志内容中包括 ${jndi:ldap://ip}时，程序就会通过Idap协议访问ip这个地址，然后ip就会返回一个包含Java代码的class文件的地址，然后程序再通过返回的地址下载class文件并执行。</p>
+<p>创建maven项目，导入log4j的依赖，找了一个exp，编译成class文件，开启ldap服务，运行log4j.java,即可成功。</p>
+<h2 id="20-mimikatz免杀"><a href="#20-mimikatz免杀" class="headerlink" title="20.mimikatz免杀"></a>20.mimikatz免杀</h2><ol>
+<li>替换资源+加壳+签名vpm加壳</li>
+</ol>
+<h2 id="21-判断是windows还是linux"><a href="#21-判断是windows还是linux" class="headerlink" title="21.判断是windows还是linux"></a>21.判断是windows还是linux</h2><p>linux大小写敏感，windows大小写不敏感</p>
+<h2 id="22-Mysql两种提权方式"><a href="#22-Mysql两种提权方式" class="headerlink" title="22.Mysql两种提权方式"></a>22.Mysql两种提权方式</h2><p>UDF提权</p>
+<ol>
+<li><p>目标系统是windows</p>
+</li>
+<li><p>拥有mysql的用户账号，可以使用insert、delete权限</p>
+</li>
+<li><p>有root账号密码</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.mysql&lt;5.1导出目录c:/windows或 system32</span><br><span class="line">2.mysql=&gt;5.1导出安装目录/lib/plugin/</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>流程：将udf文件放到指定位置，引入自定义函数，执行自定义函数。</p>
+<p>MOF提权</p>
+<ol>
+<li>select load file('c:/wmpub/nullevt.mof') into dumpfile 'c:/windows/system32/wbem/mof/nullevt.mov'</li>
+<li>执行成功后，即可添加一个普通用户，更改命令，再上传导出执行把用户提升到管理员权限，然后连接3389连接</li>
+</ol>
+<h2 id="23-宽字节注入"><a href="#23-宽字节注入" class="headerlink" title="23.宽字节注入"></a>23.宽字节注入</h2><p>魔术引号开关</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">magic_quotes_gpc,对用户post、get、cookie提交的数据增加转义字符\</span><br><span class="line">单引号，双引号，反斜线都会被加上反斜线</span><br></pre></td></tr></table></figure>
+
+<p>gbk编码</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">\是%5c，可以使用%df吃掉%5c，因为它俩加起来是个汉字</span><br></pre></td></tr></table></figure>
+
+<p>有关函数</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">php中存在一个addslashes()函数，添加反斜杠</span><br><span class="line">在数据进入服务器之前，mysql_query(“SET NAMES gbk”);将MySQL的三个字符集设置为 gbk 编码</span><br><span class="line">character_set_client告诉MySQL Server，传入的是gbk编码，也就是’被当做了%5C%27传入</span><br><span class="line">character_set_connection-&gt; table charset这里我们需要关注下所使用的表的字符集</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="24-代理转发工具"><a href="#24-代理转发工具" class="headerlink" title="24.代理转发工具"></a>24.代理转发工具</h2><p>内网穿透工具frp、</p>
+]]></content>
+      <categories>
+        <category>面试</category>
+      </categories>
+      <tags>
+        <tag>杂识</tag>
       </tags>
   </entry>
 </search>
