@@ -1,39 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Fastjson漏洞详解</title>
-    <url>/2022/04/01/Fastjson%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="Fastjson简介"><a href="#Fastjson简介" class="headerlink" title="Fastjson简介"></a>Fastjson简介</h1><p>fastjson是阿里巴巴开发的java语言编写的高性能json库，可以解析json格式的字符串，支持将java bean序列化为json字符串，也可以将json反序列化为java bean字符串。fastjson接口简单易用，广泛适用在缓存序列化、协议交互、web输出、安卓客户端等。目前有2个接口toJsonString和parseObject来分别实现序列化和反序列化。</p>
-<h1 id="漏洞介绍"><a href="#漏洞介绍" class="headerlink" title="漏洞介绍"></a>漏洞介绍</h1><p>fastjson提供了autotype功能，允许用户在反序列化数据中通过”@type”指定反序列化的类型，fastjson自定义的反序列化机制时会调用指定类中的getter和setter方法，那么当组件开启了autotype功能并且反序列化不可信数据的时候，攻击者可以构造数据，使目标应用的代码执行流程进入特定类的特定setter、getter方法中。</p>
-<p>攻击者准备rmi服务和web服务，将rmi绝对路径注入到lookup方法中，受害者JNDI接口会指向攻击者控制rmi服务器，JNDI接口向攻击者控制web服务器远程加载恶意代码，执行构造函数形成RCE。</p>
-<h1 id="JNDI注入"><a href="#JNDI注入" class="headerlink" title="JNDI注入"></a>JNDI注入</h1><p>简单来说，JNDI (Java Naming and Directory Interface)  是一组应用程序接口，它为开发人员查找和访问各种资源提供了统一的通用接口，可以用来定位用户、网络、机器、对象和服务等各种资源。比如可以利用JNDI在局域网上定位一台打印机，也可以用JNDI来定位数据库服务或一个远程Java对象。JNDI底层支持RMI远程对象，RMI注册的服务可以通过JNDI接口来访问和调用。</p>
-<p>JNDI 是应用程序设计的 Api，JNDI可以根据名字动态加载数据，支持的服务主要有以下几种：</p>
-<p><strong>DNS、LDAP、 CORBA对象服务、RMI！</strong></p>
-<h1 id="Fastjson漏洞总结"><a href="#Fastjson漏洞总结" class="headerlink" title="Fastjson漏洞总结"></a>Fastjson漏洞总结</h1><ol>
-<li>反序列化常用的两种方式一种基于rmi一种基于ldap</li>
-<li>RMI是一种行为，指的是Java远程方法调用</li>
-<li>JNDI是一个接口，在这个接口下会有多种目录系统服务的实现，通过名称等去找相关的对象，并把他下载到客户端来</li>
-<li>ldap指的是轻量级目录访问协议</li>
-</ol>
-<p>存在java版本的限制</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">基于rmi的利用方式：适用jdk版本：JDK 6u132, JDK 7u131, JDK 8u121之前。</span><br><span class="line">在jdk8u122的时候，加入了反序列化白名单的机制，关闭了rmi远程加载代码。</span><br><span class="line">基于ldap的利用方式：适用jdk版本：JDK 11.0.1、8u191、7u201、6u211之前。</span><br><span class="line">在Java 8u191更新中，Oracle对LDAP向量设置了相同的限制，并发布了CVE-2018-3149，关闭了JNDI远程类加载。</span><br><span class="line">可以看到ldap的利用范围是比rmi要大的，实战情况下推荐使用ldap方法进行利用。</span><br></pre></td></tr></table></figure>
-
-<h2 id="fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）"><a href="#fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）" class="headerlink" title="fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）"></a>fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）</h2><p>漏洞原理</p>
-<p>fastjson在解析json的过程中，支持使用autoType来实例化某一个具体的类，并调用该类的set&#x2F;get方法来访问属性。通过查找代码中相关的方法，即可构造出一些恶意利用链。</p>
-<p>通俗理解就是：漏洞是利用fastjson  autotype在处理json对象的时候，未对@type字段进行完全的安全性验证，攻击者可以传入危险类，并调用危险类连接远程rmi主机，通过其中的恶意类执行代码。攻击者通过这种方式可以实现远程代码执行漏洞的利用，获取服务器的敏感信息泄露，甚至可以利用此漏洞进一步对服务器数据进行修改，增加，删除等操作，对服务器造成巨大的影响。</p>
-<p>影响版本</p>
-<p>Fastjson &lt; 1.2.25</p>
-]]></content>
-      <categories>
-        <category>其他漏洞</category>
-      </categories>
-      <tags>
-        <tag>Fastjson漏洞</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>HW蓝队面试</title>
     <url>/2022/03/28/HW%E8%93%9D%E9%98%9F%E9%9D%A2%E8%AF%95/</url>
     <content><![CDATA[<span id="more"></span>
@@ -138,6 +105,39 @@
       </categories>
       <tags>
         <tag>HW</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Fastjson漏洞详解</title>
+    <url>/2022/04/01/Fastjson%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="Fastjson简介"><a href="#Fastjson简介" class="headerlink" title="Fastjson简介"></a>Fastjson简介</h1><p>fastjson是阿里巴巴开发的java语言编写的高性能json库，可以解析json格式的字符串，支持将java bean序列化为json字符串，也可以将json反序列化为java bean字符串。fastjson接口简单易用，广泛适用在缓存序列化、协议交互、web输出、安卓客户端等。目前有2个接口toJsonString和parseObject来分别实现序列化和反序列化。</p>
+<h1 id="漏洞介绍"><a href="#漏洞介绍" class="headerlink" title="漏洞介绍"></a>漏洞介绍</h1><p>fastjson提供了autotype功能，允许用户在反序列化数据中通过”@type”指定反序列化的类型，fastjson自定义的反序列化机制时会调用指定类中的getter和setter方法，那么当组件开启了autotype功能并且反序列化不可信数据的时候，攻击者可以构造数据，使目标应用的代码执行流程进入特定类的特定setter、getter方法中。</p>
+<p>攻击者准备rmi服务和web服务，将rmi绝对路径注入到lookup方法中，受害者JNDI接口会指向攻击者控制rmi服务器，JNDI接口向攻击者控制web服务器远程加载恶意代码，执行构造函数形成RCE。</p>
+<h1 id="JNDI注入"><a href="#JNDI注入" class="headerlink" title="JNDI注入"></a>JNDI注入</h1><p>简单来说，JNDI (Java Naming and Directory Interface)  是一组应用程序接口，它为开发人员查找和访问各种资源提供了统一的通用接口，可以用来定位用户、网络、机器、对象和服务等各种资源。比如可以利用JNDI在局域网上定位一台打印机，也可以用JNDI来定位数据库服务或一个远程Java对象。JNDI底层支持RMI远程对象，RMI注册的服务可以通过JNDI接口来访问和调用。</p>
+<p>JNDI 是应用程序设计的 Api，JNDI可以根据名字动态加载数据，支持的服务主要有以下几种：</p>
+<p><strong>DNS、LDAP、 CORBA对象服务、RMI！</strong></p>
+<h1 id="Fastjson漏洞总结"><a href="#Fastjson漏洞总结" class="headerlink" title="Fastjson漏洞总结"></a>Fastjson漏洞总结</h1><ol>
+<li>反序列化常用的两种方式一种基于rmi一种基于ldap</li>
+<li>RMI是一种行为，指的是Java远程方法调用</li>
+<li>JNDI是一个接口，在这个接口下会有多种目录系统服务的实现，通过名称等去找相关的对象，并把他下载到客户端来</li>
+<li>ldap指的是轻量级目录访问协议</li>
+</ol>
+<p>存在java版本的限制</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">基于rmi的利用方式：适用jdk版本：JDK 6u132, JDK 7u131, JDK 8u121之前。</span><br><span class="line">在jdk8u122的时候，加入了反序列化白名单的机制，关闭了rmi远程加载代码。</span><br><span class="line">基于ldap的利用方式：适用jdk版本：JDK 11.0.1、8u191、7u201、6u211之前。</span><br><span class="line">在Java 8u191更新中，Oracle对LDAP向量设置了相同的限制，并发布了CVE-2018-3149，关闭了JNDI远程类加载。</span><br><span class="line">可以看到ldap的利用范围是比rmi要大的，实战情况下推荐使用ldap方法进行利用。</span><br></pre></td></tr></table></figure>
+
+<h2 id="fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）"><a href="#fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）" class="headerlink" title="fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）"></a>fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）</h2><p>漏洞原理</p>
+<p>fastjson在解析json的过程中，支持使用autoType来实例化某一个具体的类，并调用该类的set&#x2F;get方法来访问属性。通过查找代码中相关的方法，即可构造出一些恶意利用链。</p>
+<p>通俗理解就是：漏洞是利用fastjson  autotype在处理json对象的时候，未对@type字段进行完全的安全性验证，攻击者可以传入危险类，并调用危险类连接远程rmi主机，通过其中的恶意类执行代码。攻击者通过这种方式可以实现远程代码执行漏洞的利用，获取服务器的敏感信息泄露，甚至可以利用此漏洞进一步对服务器数据进行修改，增加，删除等操作，对服务器造成巨大的影响。</p>
+<p>影响版本</p>
+<p>Fastjson &lt; 1.2.25</p>
+]]></content>
+      <categories>
+        <category>其他漏洞</category>
+      </categories>
+      <tags>
+        <tag>Fastjson漏洞</tag>
       </tags>
   </entry>
   <entry>
@@ -276,40 +276,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Strut2框架漏洞</title>
-    <url>/2022/02/03/Strut2%E6%A1%86%E6%9E%B6%E6%BC%8F%E6%B4%9E/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="Structs2框架漏洞总结"><a href="#Structs2框架漏洞总结" class="headerlink" title="Structs2框架漏洞总结"></a>Structs2框架漏洞总结</h1><p>Struts2是一个基于MVC设计模式的Web应用框架，本质上相当于一个servlet， 会对某些标签属性（比如id）的属性值进行二次表达式解析，因此在某些场景下可能导致远程代码执行漏洞。</p>
-<h2 id="Structs2漏洞基础"><a href="#Structs2漏洞基础" class="headerlink" title="Structs2漏洞基础"></a>Structs2漏洞基础</h2><p>Structs2（OGNL表达式语言）</p>
-<p>Struts2是apache项目下的一个web 框架，普遍应用于阿里巴巴、京东等互联网、政府、企业门户网站</p>
-<p>Struts2是一个基于MVC设计思路的Web应用框架，它本质上相当于一个servlet，在MVC设计模式中，Struts2作为控制器来建立模型与视图的数据交互。Struts2是Struts的下一代产品，是在Struts1和WebWork的技术基础上进行了合并的全新的Struts2框架。其全新的Struts2的体系结构与Struts1的体系结构差别巨大。Struts2以WebWork为核心，采用拦截器的机制来处理用户的请求，</p>
-<p>这样的设计也使得业务逻辑控制器能够与Servlet API完全脱离开，所以Struts2可以理解为WebWork的更新产品。虽然从Struts1到Struts2有着太大的变化，但是相对于WebWork，Struts2的变化很小。</p>
-<p>Apache Struts2是一个基于MVC设计模式的Web应用框架，会对某些标签属性（比如id）的属性值进行二次表达式解析，因此在某些场景下将可能导致远程代码执行。</p>
-<h2 id="Structs2漏洞判断标准"><a href="#Structs2漏洞判断标准" class="headerlink" title="Structs2漏洞判断标准"></a>Structs2漏洞判断标准</h2><p>1.在页面的url后面添加&#x2F;struts&#x2F;webconsole.html ，看是否存在</p>
-<p>2.原始 URL 为 <a href="https://threathunter.org/%E5%88%99%E6%A3%80%E6%B5%8B%E6%89%80%E7%94%A8%E7%9A%84">https://threathunter.org/则检测所用的</a> URL 为<a href="https://threathunter.org/?actionErrors=1111">https://threathunter.org/?actionErrors=1111</a></p>
-<p>如果返回异常，则可以认定目标是基于Structs2构建的。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.页面出现404 500</span><br><span class="line">2.页面输出与业务有关错误消息，或者1111被返回到页面</span><br><span class="line">3.页面的内容结构发生改变</span><br><span class="line">4.页面发生了重定向</span><br></pre></td></tr></table></figure>
-
-<h2 id="Structs2漏洞利用原理"><a href="#Structs2漏洞利用原理" class="headerlink" title="Structs2漏洞利用原理"></a>Structs2漏洞利用原理</h2><p>Struts2的核心是使用的webwork框架,处理 action时通过调用底层的getter&#x2F;setter方法来处理http的参数,它将每个http参数声明为一个ONGL(这里是ONGL的介绍)语句。当我们提交一个http参数:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">?user.address.city=Bishkek&amp;user[&#x27;favoriteDrink&#x27;]=kumys  </span><br></pre></td></tr></table></figure>
-
-<p>ONGL将它转化为</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">action.getUser().getAddress().setCity(&quot;Bishkek&quot;) </span><br><span class="line">action.getUser().setFavoriteDrink(&quot;kumys&quot;) </span><br></pre></td></tr></table></figure>
-
-<p>这是通过ParametersInterceptor(参数过滤器)来执行的,使用用户提供的HTTP参数调用 ValueStack.setValue()。</p>
-<p>为了防范篡改服务器端对象,XWork的ParametersInterceptor不允许参数名中出现“#”字符,但如果使用了Java的 unicode字符串表示\u0023,攻击者就可以绕过保护,修改保护Java方式执行的值:</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">此处代码有破坏性,请在测试环境执行,严禁用此种方法进行恶意攻击</span><br><span class="line">?(&#x27;\u0023_memberAccess[\&#x27;allowStaticMethodAccess\&#x27;]&#x27;)(meh)=true&amp;(aaa)((&#x27;\u0023context[\&#x27;xwork.MethodAccessor.denyMethodExecution\&#x27;]\u003d\u0023foo&#x27;)(\u0023foo\u003dnew%20java.lang.Boolean(&quot;false&quot;)))&amp;(asdf)((&#x27;\u0023rt.exit(1)&#x27;)(\u0023rt\u003d@java.lang.Runtime@getRuntime()))=1</span><br><span class="line"> </span><br><span class="line">转义后是这样:</span><br><span class="line">?(&#x27;#_memberAccess[&#x27;allowStaticMethodAccess&#x27;]&#x27;)(meh)=true&amp;(aaa)((&#x27;#context[&#x27;xwork.MethodAccessor.denyMethodExecution&#x27;]=#foo&#x27;)(#foo=new%20java.lang.Boolean(&quot;false&quot;)))&amp;(asdf)((&#x27;#rt.exit(1)&#x27;)(#rt=@java.lang.Runtime@getRuntime()))=1</span><br><span class="line"></span><br><span class="line">OGNL处理时最终的结果就是</span><br><span class="line">java.lang.Runtime.getRuntime().exit(1); //关闭程序,即将web程序关闭 </span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>java框架漏洞</category>
-      </categories>
-      <tags>
-        <tag>Struts2框架漏洞</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>burp suit使用指南</title>
     <url>/2022/01/12/burp-suit%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/</url>
     <content><![CDATA[<span id="more"></span>
@@ -360,6 +326,40 @@
       </categories>
       <tags>
         <tag>burp suit工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Strut2框架漏洞</title>
+    <url>/2022/02/03/Strut2%E6%A1%86%E6%9E%B6%E6%BC%8F%E6%B4%9E/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="Structs2框架漏洞总结"><a href="#Structs2框架漏洞总结" class="headerlink" title="Structs2框架漏洞总结"></a>Structs2框架漏洞总结</h1><p>Struts2是一个基于MVC设计模式的Web应用框架，本质上相当于一个servlet， 会对某些标签属性（比如id）的属性值进行二次表达式解析，因此在某些场景下可能导致远程代码执行漏洞。</p>
+<h2 id="Structs2漏洞基础"><a href="#Structs2漏洞基础" class="headerlink" title="Structs2漏洞基础"></a>Structs2漏洞基础</h2><p>Structs2（OGNL表达式语言）</p>
+<p>Struts2是apache项目下的一个web 框架，普遍应用于阿里巴巴、京东等互联网、政府、企业门户网站</p>
+<p>Struts2是一个基于MVC设计思路的Web应用框架，它本质上相当于一个servlet，在MVC设计模式中，Struts2作为控制器来建立模型与视图的数据交互。Struts2是Struts的下一代产品，是在Struts1和WebWork的技术基础上进行了合并的全新的Struts2框架。其全新的Struts2的体系结构与Struts1的体系结构差别巨大。Struts2以WebWork为核心，采用拦截器的机制来处理用户的请求，</p>
+<p>这样的设计也使得业务逻辑控制器能够与Servlet API完全脱离开，所以Struts2可以理解为WebWork的更新产品。虽然从Struts1到Struts2有着太大的变化，但是相对于WebWork，Struts2的变化很小。</p>
+<p>Apache Struts2是一个基于MVC设计模式的Web应用框架，会对某些标签属性（比如id）的属性值进行二次表达式解析，因此在某些场景下将可能导致远程代码执行。</p>
+<h2 id="Structs2漏洞判断标准"><a href="#Structs2漏洞判断标准" class="headerlink" title="Structs2漏洞判断标准"></a>Structs2漏洞判断标准</h2><p>1.在页面的url后面添加&#x2F;struts&#x2F;webconsole.html ，看是否存在</p>
+<p>2.原始 URL 为 <a href="https://threathunter.org/%E5%88%99%E6%A3%80%E6%B5%8B%E6%89%80%E7%94%A8%E7%9A%84">https://threathunter.org/则检测所用的</a> URL 为<a href="https://threathunter.org/?actionErrors=1111">https://threathunter.org/?actionErrors=1111</a></p>
+<p>如果返回异常，则可以认定目标是基于Structs2构建的。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.页面出现404 500</span><br><span class="line">2.页面输出与业务有关错误消息，或者1111被返回到页面</span><br><span class="line">3.页面的内容结构发生改变</span><br><span class="line">4.页面发生了重定向</span><br></pre></td></tr></table></figure>
+
+<h2 id="Structs2漏洞利用原理"><a href="#Structs2漏洞利用原理" class="headerlink" title="Structs2漏洞利用原理"></a>Structs2漏洞利用原理</h2><p>Struts2的核心是使用的webwork框架,处理 action时通过调用底层的getter&#x2F;setter方法来处理http的参数,它将每个http参数声明为一个ONGL(这里是ONGL的介绍)语句。当我们提交一个http参数:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">?user.address.city=Bishkek&amp;user[&#x27;favoriteDrink&#x27;]=kumys  </span><br></pre></td></tr></table></figure>
+
+<p>ONGL将它转化为</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">action.getUser().getAddress().setCity(&quot;Bishkek&quot;) </span><br><span class="line">action.getUser().setFavoriteDrink(&quot;kumys&quot;) </span><br></pre></td></tr></table></figure>
+
+<p>这是通过ParametersInterceptor(参数过滤器)来执行的,使用用户提供的HTTP参数调用 ValueStack.setValue()。</p>
+<p>为了防范篡改服务器端对象,XWork的ParametersInterceptor不允许参数名中出现“#”字符,但如果使用了Java的 unicode字符串表示\u0023,攻击者就可以绕过保护,修改保护Java方式执行的值:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">此处代码有破坏性,请在测试环境执行,严禁用此种方法进行恶意攻击</span><br><span class="line">?(&#x27;\u0023_memberAccess[\&#x27;allowStaticMethodAccess\&#x27;]&#x27;)(meh)=true&amp;(aaa)((&#x27;\u0023context[\&#x27;xwork.MethodAccessor.denyMethodExecution\&#x27;]\u003d\u0023foo&#x27;)(\u0023foo\u003dnew%20java.lang.Boolean(&quot;false&quot;)))&amp;(asdf)((&#x27;\u0023rt.exit(1)&#x27;)(\u0023rt\u003d@java.lang.Runtime@getRuntime()))=1</span><br><span class="line"> </span><br><span class="line">转义后是这样:</span><br><span class="line">?(&#x27;#_memberAccess[&#x27;allowStaticMethodAccess&#x27;]&#x27;)(meh)=true&amp;(aaa)((&#x27;#context[&#x27;xwork.MethodAccessor.denyMethodExecution&#x27;]=#foo&#x27;)(#foo=new%20java.lang.Boolean(&quot;false&quot;)))&amp;(asdf)((&#x27;#rt.exit(1)&#x27;)(#rt=@java.lang.Runtime@getRuntime()))=1</span><br><span class="line"></span><br><span class="line">OGNL处理时最终的结果就是</span><br><span class="line">java.lang.Runtime.getRuntime().exit(1); //关闭程序,即将web程序关闭 </span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>java框架漏洞</category>
+      </categories>
+      <tags>
+        <tag>Struts2框架漏洞</tag>
       </tags>
   </entry>
   <entry>
@@ -484,6 +484,76 @@
       </categories>
       <tags>
         <tag>中间件</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>web基础总结</title>
+    <url>/2022/01/05/web%E5%9F%BA%E7%A1%80%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="一、web"><a href="#一、web" class="headerlink" title="一、web"></a>一、web</h1><h2 id="1-sql注入"><a href="#1-sql注入" class="headerlink" title="1.sql注入"></a>1.sql注入</h2><h3 id="sql注入原理"><a href="#sql注入原理" class="headerlink" title="sql注入原理"></a>sql注入原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">web应用程序对用户输入的数据过滤不严谨，并且把用户输入的数据当作sql语句去执行。</span><br></pre></td></tr></table></figure>
+
+<h3 id="sql注入分类"><a href="#sql注入分类" class="headerlink" title="sql注入分类"></a>sql注入分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">反馈结果上分为</span><br><span class="line">	有回显型</span><br><span class="line">	无回显型</span><br><span class="line">攻击手法上分为</span><br><span class="line">	1.联合查询注入 union select</span><br><span class="line">	2.堆叠注入 在SQL语句中，语句的结束都是以&#x27;;&#x27;结尾，但是如果我们在&#x27;;&#x27;后面再加上一条SQL语句，两条语句会一起执行</span><br><span class="line">	3.报错注入 updatexml、floor、ExtractValue </span><br><span class="line">	ExtractValue 接收两个字符串参数，1传入xml文档，2是Xpath路径表示法表示的查找路径，语法错误就会报错</span><br><span class="line">	extracrvalue(0,concat(0x7e,database()))</span><br><span class="line">	UpdateXML 三个参数，1操作片段2xml路径3更新内容</span><br><span class="line">	updatexml(0,concat(0x7e,select database()),1)</span><br><span class="line">	floor，group by向临时表插入数据，rand多次计算报错。报错前concat中的语句被执行。</span><br><span class="line">	concat(floor(rand(0)*2),database()) x from information_schema.schemata group by </span><br><span class="line">	exp是个数学函数。</span><br><span class="line">	4.盲注</span><br><span class="line">		时间盲注    if sleep</span><br><span class="line">		布尔盲注    count，length</span><br><span class="line">	5.二次注入  sql-labs24关，插入admin‘# 修改密码，修改的是admin的密码</span><br><span class="line">	6.宽字节注入 php发送请求到mysql使用了gbk编码。%df吃掉%5c（\）</span><br><span class="line">	character_set_client(客户端的字符集)和character_set_connection(连接层的字符集)不同,或转换函数如，iconv、mb_convert_encoding使用不当。</span><br><span class="line">	7.mysql写shell用的函数outfile、dumpfile、开启log写shell</span><br><span class="line">	8.为什么参数化查询可以防止sql注入</span><br><span class="line">使用参数化查询数据库服务器不会把参数的内容当作sql指令的一部分来执行，是在数据库完成sql指令的编译后才套用参数运行</span><br><span class="line">简单的说: 参数化能防注入的原因在于,语句是语句，参数是参数，参数的值并不是语句的一部分，数据库只按语句的语义跑</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="sql常用语句"><a href="#sql常用语句" class="headerlink" title="sql常用语句"></a>sql常用语句</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">查库selsct schema_name from information_schema.schemata</span><br><span class="line">查表select table_name from information_schema.tables where table_schema=&#x27;security&#x27;</span><br><span class="line">查列select column_name from information_schema.columns where table_name=&#x27;users&#x27;</span><br><span class="line">查字段select username,password from security.users</span><br><span class="line">if(ascii(substr(“hello”, 1, 1))=104, sleep(5), 1)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="sql注入绕过"><a href="#sql注入绕过" class="headerlink" title="sql注入绕过"></a>sql注入绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.注释符（#   --+）</span><br><span class="line">2.大小写绕过（or and ）</span><br><span class="line">3.双写绕过（oorrder）</span><br><span class="line">4.空格绕过 /**/  %09（Tab）</span><br><span class="line">5.对字符进行转义</span><br></pre></td></tr></table></figure>
+
+<h3 id="sql注入防御"><a href="#sql注入防御" class="headerlink" title="sql注入防御"></a>sql注入防御</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.代码层</span><br><span class="line">黑名单、白名单、敏感字符过滤、规范输出</span><br><span class="line">2.配置层</span><br><span class="line">开启gpc（php的防御函数魔术引号开关）、使用utf-8</span><br><span class="line">3.物理层面</span><br><span class="line">WAF、IPS、数据库审计</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-xss（跨站脚本攻击）"><a href="#2-xss（跨站脚本攻击）" class="headerlink" title="2.xss（跨站脚本攻击）"></a>2.xss（跨站脚本攻击）</h2><h3 id="xss原理"><a href="#xss原理" class="headerlink" title="xss原理"></a>xss原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">攻击者在web页面中会插入一些恶意的script代码。当用户浏览该页面的时候，那么嵌入到web页面中script代码会执行，因此会达到恶意攻击用户的目的。</span><br></pre></td></tr></table></figure>
+
+<h3 id="xss分类"><a href="#xss分类" class="headerlink" title="xss分类"></a>xss分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.反射型</span><br><span class="line">一般指攻击者通过特定的方式来诱惑受害者去访问一个包含恶意代码的URL。当受害者点击恶意链接url的时候，恶意代码会直接在受害者的主机上的浏览器执行。</span><br><span class="line">2.存储型</span><br><span class="line">主要是将恶意代码上传或存储到服务器中，下次只要受害者浏览包含此恶意代码的页面就会执行恶意代码。</span><br><span class="line">3.DOM型</span><br><span class="line">不经过后端,DOM—based XSS漏洞是基于文档对象模型Document Objeet Model,DOM)的一种漏洞,dom - xss是通过url传入参数去控制触发的。</span><br><span class="line">区别</span><br><span class="line">12都需要服务器解析，并与数据库交互3只用前端解析，不与数据库交互</span><br><span class="line">23都会将攻击代码长期存在到受害者服务器1只能攻击一次</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="xss绕过"><a href="#xss绕过" class="headerlink" title="xss绕过"></a>xss绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">a标签、src属性、大小写、双写</span><br></pre></td></tr></table></figure>
+
+<h3 id="xss防护"><a href="#xss防护" class="headerlink" title="xss防护"></a>xss防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">编码、WAF、filter过滤敏感字符</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-csrf（跨站请求伪造攻击）"><a href="#3-csrf（跨站请求伪造攻击）" class="headerlink" title="3.csrf（跨站请求伪造攻击）"></a>3.csrf（跨站请求伪造攻击）</h2><h3 id="csrf原理"><a href="#csrf原理" class="headerlink" title="csrf原理"></a>csrf原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">同一浏览器下，用户访问了攻击者的恶意链接，攻击者拿着你的“身份凭证”，冒充你进行相应的攻击。</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf防护"><a href="#csrf防护" class="headerlink" title="csrf防护"></a>csrf防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.验证HTTP Referer字段</span><br><span class="line">2.在请求地址中添加Token验证</span><br><span class="line">3.在HTTP头中自定义属性并验证</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf位置"><a href="#csrf位置" class="headerlink" title="csrf位置"></a>csrf位置</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">密码修改、点赞、删除、转账、注销</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-ssrf（服务端请求伪造攻击）"><a href="#4-ssrf（服务端请求伪造攻击）" class="headerlink" title="4.ssrf（服务端请求伪造攻击）"></a>4.ssrf（服务端请求伪造攻击）</h2><h3 id="ssrf原理"><a href="#ssrf原理" class="headerlink" title="ssrf原理"></a>ssrf原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">攻击者在访问A时，利用A的特定功能构造特殊payload，由A发起对内部网络中系统B（内网隔离，外部不可访问）的请求，从而获取敏感信息。</span><br><span class="line"></span><br><span class="line">1- 服务器允许向其他服务器获取资源</span><br><span class="line">2- 但是并没有对该地址做严格的过滤和限制</span><br><span class="line">3- 所以导致了攻击者可以向受害者服务器，传入任意的URL 地址，并将数据返回</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf原因"><a href="#ssrf原因" class="headerlink" title="ssrf原因"></a>ssrf原因</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">file_get_contents()、fsockopen()、curl_exec()这三个函数运用不当。</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf位置"><a href="#ssrf位置" class="headerlink" title="ssrf位置"></a>ssrf位置</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.分享：通过URL地址分享网页内容</span><br><span class="line">2.转码服务</span><br><span class="line">3.在线翻译</span><br><span class="line">4.图片加载与下载：通过URL地址加载或下载图片</span><br><span class="line">5.图片、文章收藏功能</span><br><span class="line">6.未公开的api实现以及其他调用URL的功能</span><br><span class="line">7.从URL关键字中寻找</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf防护"><a href="#ssrf防护" class="headerlink" title="ssrf防护"></a>ssrf防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">禁止302跳转、限制协议只保留HTTP、HTTPS，防止file://、gopher://和ftp://、内外网限制、URL限制</span><br><span class="line">地址做白名单</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf和ssrf区别"><a href="#csrf和ssrf区别" class="headerlink" title="csrf和ssrf区别"></a>csrf和ssrf区别</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">csrf是服务器端对对用户的数据像cookie信息等重要数据没有做严格把控，使得攻击者窃取信息进行伪造发送给服务器</span><br><span class="line">ssrf是服务器对用户提供的url地址过于信任，没有检测，导致攻击者可以通过这个跳板攻击内网。</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-文件上传"><a href="#5-文件上传" class="headerlink" title="5.文件上传"></a>5.文件上传</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">用户上传了一个可执行的脚本文件，并通过此脚本文件获得了执行服务器端命令的能力。</span><br></pre></td></tr></table></figure>
+
+<h3 id="绕过"><a href="#绕过" class="headerlink" title="绕过"></a>绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">MIME类型检测：HTTP请求字段里的Content-Type字段改为image/jpeg；image/png；image/gif</span><br><span class="line">黑名单绕过：php3、php4、大小写</span><br><span class="line">.htaccess绕过：1.mod_rewrite模块开启。2.AllowOverride All，该目录的文件按php来解析执行</span><br><span class="line">&lt;FilesMatch &quot;shana&quot;&gt;</span><br><span class="line">SetHandler application/x-httpd-php</span><br><span class="line">&lt;/FilesMatch&gt;</span><br><span class="line">::$DATA绕过：会把这个后面的后缀名当成文件流处理。</span><br><span class="line">点、空格、大小写、双写绕过</span><br><span class="line">图片马绕过：绕过getimagesize()方法、exif_imagetype()需要开启php的配置文件中的php_exif模块。</span><br><span class="line">二次渲染：文件上传后经过二次渲染重新生成图片容易把图片里的php代码改掉，把图片里的php代码放到前面</span><br><span class="line">条件竞争：不断上传，不断访问。</span><br><span class="line">%00截断：：php版本小于5.3.4，php的magic_quotes_gpc为OFF状态</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-文件包含"><a href="#6-文件包含" class="headerlink" title="6.文件包含"></a>6.文件包含</h2><h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">在网站的开发人员在开发网站的时候，会把经常重复使用的函数或者特定的页面写到单个文件中，需要使用的时候就直接调用此文件即可，而无需再次浪费时间再次编写，这种操作通常被称为文件包含。</span><br></pre></td></tr></table></figure>
+
+<h3 id="相关函数"><a href="#相关函数" class="headerlink" title="相关函数"></a>相关函数</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">include()：包含并运行指定的文件，包含文件发生错误时，程序警告，但会继续执行。</span><br><span class="line">require()：包含并运行指定的文件，包含文件发生错误时，程序直接终止执行。</span><br><span class="line">include_once()：和 include 类似，不同处在于 include_once 会检查这个文件是否已经被导入，如果已导入，下文便不会再导入，直面 once 理解就是只导入一次。</span><br><span class="line">require_once()：和 require 类似，不同处在于 require_once 只导入一次。</span><br></pre></td></tr></table></figure>
+
+<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.本地文件包含</span><br><span class="line">2.远程文件包含需要php.ini开启了allow_url_fopen默认开启和allow_url_include默认关闭</span><br></pre></td></tr></table></figure>
+
+<h3 id="伪协议"><a href="#伪协议" class="headerlink" title="伪协议"></a>伪协议</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.php://input</span><br><span class="line">2.php://filter</span><br></pre></td></tr></table></figure>
+
+<h3 id="防范"><a href="#防范" class="headerlink" title="防范"></a>防范</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.检查服务器配置文件</span><br><span class="line">2.过滤特殊符号 ，\/input output filter</span><br></pre></td></tr></table></figure>
+
+<h2 id="XXE（外部实体注入）"><a href="#XXE（外部实体注入）" class="headerlink" title="XXE（外部实体注入）"></a>XXE（外部实体注入）</h2><h3 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">当包含对外部实体的引用的 XML 输入被弱配置的 XML 解析器处理时，就会发生这种攻击。这种攻击可能导致机密数据泄露、拒绝服务、服务器端请求伪造、从解析器所在机器的角度进行端口扫描，以及其他系统影响。</span><br><span class="line"></span><br><span class="line">XML很像html语言，但标签需要自己来定义。</span><br><span class="line">XML用于传输和数据存储。HTML用于显示数据。</span><br></pre></td></tr></table></figure>
+
+<h3 id="危害"><a href="#危害" class="headerlink" title="危害"></a>危害</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.DOS攻击</span><br><span class="line">2.文件读取</span><br><span class="line">3.内网探测</span><br></pre></td></tr></table></figure>
+
+<h3 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.使用开发语言提供的禁用外部实体的方法</span><br><span class="line">PHP：</span><br><span class="line">libxml_disable_entity_loader(true);</span><br><span class="line">JAVA:</span><br><span class="line">DocumentBuilderFactory dbf =DocumentBuilderFactory.newInstance();</span><br><span class="line">dbf.setExpandEntityReferences(false);</span><br><span class="line">Python：</span><br><span class="line">from lxml import etree</span><br><span class="line">xmlData = etree.parse(xmlSource,etree.XMLParser(resolve_entities=False))</span><br><span class="line">2.过滤和验证用户提交的XML数据</span><br><span class="line">3.过滤关键词&lt;!DOCTYPE、&lt;!ENTITY SYSTEM、PUBLIC</span><br><span class="line">4.不允许XML中含有任何自己声明的DTD</span><br></pre></td></tr></table></figure>
+
+<h2 id="业务逻辑漏洞"><a href="#业务逻辑漏洞" class="headerlink" title="业务逻辑漏洞"></a>业务逻辑漏洞</h2><h3 id="类型"><a href="#类型" class="headerlink" title="类型"></a>类型</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.身份验证漏洞</span><br><span class="line">暴力破解</span><br><span class="line">Session固定攻击</span><br><span class="line">Cookie欺骗漏洞</span><br><span class="line">2.权限类逻辑漏洞</span><br><span class="line">水平越权</span><br><span class="line">垂直越权</span><br><span class="line">未授权访问</span><br><span class="line">3.图形验证码漏洞</span><br><span class="line">4.找回密码逻辑洞</span><br><span class="line">5.业务逻辑篡改漏洞</span><br><span class="line">6.执行顺序篡改漏洞</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>web</category>
+      </categories>
+      <tags>
+        <tag>web渗透基础</tag>
       </tags>
   </entry>
   <entry>
@@ -765,123 +835,6 @@
       </tags>
   </entry>
   <entry>
-    <title>常见webshell客户端的流量特征及检测思路</title>
-    <url>/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="中国菜刀"><a href="#中国菜刀" class="headerlink" title="中国菜刀"></a>中国菜刀</h1><p>主流为11、14、16版，11到14功能性增强，14到16隐秘性增强。它支持PHP、JSP、ASP三种webshell的链接。</p>
-<h2 id="11和14版本的流量特征"><a href="#11和14版本的流量特征" class="headerlink" title="11和14版本的流量特征"></a>11和14版本的流量特征</h2><h3 id="php类的webshell流量特征"><a href="#php类的webshell流量特征" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>主要特征在body当中，将其中的流量解码如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.&quot;eval&quot;，eval函数用于执行传递攻击的payload</span><br><span class="line">2.(base64_decode($_POST[z0]))，将攻击payload进行base64解码，菜刀默认将攻击荷载base64编码，避免被检测</span><br><span class="line">3.&amp;z0=QGluaV9zZXQ...，传递攻击payload，参数z0对应$_POST[z0]接收到的数据，该参数值使用base64编码的，所以使用base64解码可以看到攻击明文。</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">1.少数地方eval函数被assert方法替代</span><br><span class="line">2.$_POST也会被$_GET、$_REQUEST替代</span><br><span class="line">3.z0是菜刀默认的参数，这个地方也有可能被修改为其他参数名。</span><br></pre></td></tr></table></figure>
-
-<h3 id="jsp类的webshell流量特征"><a href="#jsp类的webshell流量特征" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><p>该流量是WebShell链接流量的第一段链接流量，其中特征主要在i&#x3D;A&amp;z0&#x3D;GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i&#x3D;A，第二个参数指定编码，其参数值为编码，如z0&#x3D;GB2312，有时候z0后面还会接着又z1&#x3D;参数用来加入攻击载荷。</p>
-<p>注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</p>
-<h3 id="asp类的webshell流量特征"><a href="#asp类的webshell流量特征" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><p>其中body流量进行URL解码后其特征点有如下三个</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“Execute”，此函数执行传递的攻击payload，等同于php的eval</span><br><span class="line">2.OnError ResumeNext，大部分asp客户端中必有的流量，不管前边有任何错误，继续执行</span><br><span class="line">3.Response.Write和Response.End必有，完善整个操作</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">OnError Resume Next这个特征在大部分流量中存在，极少数没有。</span><br></pre></td></tr></table></figure>
-
-<h2 id="16版的流量特征"><a href="#16版的流量特征" class="headerlink" title="16版的流量特征"></a>16版的流量特征</h2><h3 id="php类的webshell流量特征-1"><a href="#php类的webshell流量特征-1" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>其中特征主要在body中，将body中部分如下：这个版本中流量最大的改变就是将特征进行打断混淆，这也给我们识别特征提供一种思路。其中特征点有如下三部分</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“&quot;Ba&quot;.&quot;SE6&quot;.&quot;4_dEc&quot;.&quot;OdE”，这部分是将base64解码打断使用.来连接。</span><br><span class="line">2.@ev&quot;.&quot;al，这部分也是将@eval这部分进行打断连接，可以识别这段代码即可。</span><br><span class="line">3.QGluaV9zZXQoImRpc3BsYXlf...，该部分是传递攻击payload，payload依旧使用Base64编码的，所以可以利用base64解码可以看到攻击明文来识别。</span><br><span class="line"></span><br><span class="line">注意：有少数时候eval方法会被assert方法替代。</span><br></pre></td></tr></table></figure>
-
-<h3 id="jsp类的webshell流量特征-1"><a href="#jsp类的webshell流量特征-1" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">所以分析如上：该流量是WebShell链接流量的第一段链接流量，其中特征主要在i=A&amp;z0=GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i=A，第二个参数指定编码，其参数值为编码，如z0=GB2312，有时候z0后面还会接着又z1=、z2=参数用来加入攻击载荷。</span><br><span class="line">注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</span><br></pre></td></tr></table></figure>
-
-<h3 id="asp类的webshell流量特征-1"><a href="#asp类的webshell流量特征-1" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">其中body流量为：</span><br><span class="line">2016版本流量这链接流量最大的变化在于body中部分字符被unicode编码替换混淆，所以这种特征需要提取出一种形式来，匹配这个混淆特征，比如“字符+%u0000+字符+%u0000”这种形式来判断该流量。</span><br><span class="line">或者直接将这部分代码直接进行unicode解码，可以获取到如2011或2014版本的asp所示的流量。可以根据上一段特征来进行判断。</span><br><span class="line">这种流量主要识别这几部分特征，在正常流量中基本没有。</span><br></pre></td></tr></table></figure>
-
-<h1 id="中国蚁剑"><a href="#中国蚁剑" class="headerlink" title="中国蚁剑"></a>中国蚁剑</h1><p>大部分代码来源于菜刀，但是蚁剑扩充性好，可以对进行加密、混淆等绕过处理。蚁剑默认支持ASP以及PHP的webshell链接。</p>
-<h2 id="PHP类链接特征"><a href="#PHP类链接特征" class="headerlink" title="PHP类链接特征"></a>PHP类链接特征</h2><p>其中body流量进行url解码后为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">最明显的为@ini_set(&quot;display_errors&quot;,&quot;0&quot;);这段代码是基本所有webshell客户端连接php类webshell都有的一种代码，有的客户端会加密、编码。蚁剑是明文，好发现。</span><br></pre></td></tr></table></figure>
-
-<h2 id="ASP类链接特征"><a href="#ASP类链接特征" class="headerlink" title="ASP类链接特征"></a>ASP类链接特征</h2><p>其中body流量进行url解码后为；</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">与菜刀很像。如OnError、ResumeNext、Response.End、Response.Write其中execute在蚁剑中被打断混淆了，变成了拼接形式Ex&quot;&amp;cHr(101)&amp;&quot;cute,同时该流量也用了eval参数。</span><br></pre></td></tr></table></figure>
-
-<h2 id="蚁剑绕过流量特征"><a href="#蚁剑绕过流量特征" class="headerlink" title="蚁剑绕过流量特征"></a>蚁剑绕过流量特征</h2><p>蚁剑包含了很多加密、绕过插件，所以导致很多流量被加密后无法识别，但是还有一个明显的特征，即参数名大多数以”_0x……”这种形式。所以以这种形式开头的参数名，后面为加密数据的数据包也是特征。</p>
-<h1 id="冰蝎"><a href="#冰蝎" class="headerlink" title="冰蝎"></a>冰蝎</h1><p>流量进行了加密，且加密密钥使用者自己来设定，但是该拦截器对webshell的需求比较高，无法连接一句话木马，综上，该客户端的流量无法检测。</p>
-<p>功能介绍</p>
-<p><a href="https://xz.aliyun.com/t/2799">《利用动态二进制加密实现新型一句话木马之客户端篇》</a></p>
-<p>工作原理</p>
-<p><a href="https://xz.aliyun.com/t/2744">《利用动态二进制加密实现新型一句话木马之java篇》</a></p>
-<p><a href="https://xz.aliyun.com/t/2758">《利用动态二进制加密实现新型一句话木马之.NET篇》</a></p>
-<p><a href="https://xz.aliyun.com/t/2774">《利用动态二进制加密实现新型一句话木马之PHP篇》</a></p>
-<h1 id="Cknife"><a href="#Cknife" class="headerlink" title="Cknife"></a>Cknife</h1><p>特征就是在body部分的参数值均为base64编码，将该部分进行base64解码后，其流量特征同中国菜刀一致</p>
-<h1 id="Weevely"><a href="#Weevely" class="headerlink" title="Weevely"></a>Weevely</h1><p>Weevely是kail中自带的一款功能强大的WebShell客户端，该链接器首先自己生成webshell，在将该webshell上传至目的服务器后，通过Weevely进行链接，该链接流量属于加密流量，但是在该流量中还可以发现特征，进行区分。</p>
-<p>该流量中的攻击载荷存在于Referer中，其中Referer中的路径中php的查询参数有以下参数名或值，即sa&#x3D;、source&#x3D;web、cd&#x3D;数字、url&#x3D;、ei&#x3D;，即可确定该流量为客户端流量。</p>
-]]></content>
-      <categories>
-        <category>工具</category>
-      </categories>
-      <tags>
-        <tag>webshell的流量特征</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>web基础总结</title>
-    <url>/2022/01/05/web%E5%9F%BA%E7%A1%80%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="一、web"><a href="#一、web" class="headerlink" title="一、web"></a>一、web</h1><h2 id="1-sql注入"><a href="#1-sql注入" class="headerlink" title="1.sql注入"></a>1.sql注入</h2><h3 id="sql注入原理"><a href="#sql注入原理" class="headerlink" title="sql注入原理"></a>sql注入原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">web应用程序对用户输入的数据过滤不严谨，并且把用户输入的数据当作sql语句去执行。</span><br></pre></td></tr></table></figure>
-
-<h3 id="sql注入分类"><a href="#sql注入分类" class="headerlink" title="sql注入分类"></a>sql注入分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">反馈结果上分为</span><br><span class="line">	有回显型</span><br><span class="line">	无回显型</span><br><span class="line">攻击手法上分为</span><br><span class="line">	1.联合查询注入 union select</span><br><span class="line">	2.堆叠注入 在SQL语句中，语句的结束都是以&#x27;;&#x27;结尾，但是如果我们在&#x27;;&#x27;后面再加上一条SQL语句，两条语句会一起执行</span><br><span class="line">	3.报错注入 updatexml、floor、ExtractValue </span><br><span class="line">	ExtractValue 接收两个字符串参数，1传入xml文档，2是Xpath路径表示法表示的查找路径，语法错误就会报错</span><br><span class="line">	extracrvalue(0,concat(0x7e,database()))</span><br><span class="line">	UpdateXML 三个参数，1操作片段2xml路径3更新内容</span><br><span class="line">	updatexml(0,concat(0x7e,select database()),1)</span><br><span class="line">	floor，group by向临时表插入数据，rand多次计算报错。报错前concat中的语句被执行。</span><br><span class="line">	concat(floor(rand(0)*2),database()) x from information_schema.schemata group by </span><br><span class="line">	exp是个数学函数。</span><br><span class="line">	4.盲注</span><br><span class="line">		时间盲注    if sleep</span><br><span class="line">		布尔盲注    count，length</span><br><span class="line">	5.二次注入  sql-labs24关，插入admin‘# 修改密码，修改的是admin的密码</span><br><span class="line">	6.宽字节注入 php发送请求到mysql使用了gbk编码。%df吃掉%5c（\）</span><br><span class="line">	character_set_client(客户端的字符集)和character_set_connection(连接层的字符集)不同,或转换函数如，iconv、mb_convert_encoding使用不当。</span><br><span class="line">	7.mysql写shell用的函数outfile、dumpfile、开启log写shell</span><br><span class="line">	8.为什么参数化查询可以防止sql注入</span><br><span class="line">使用参数化查询数据库服务器不会把参数的内容当作sql指令的一部分来执行，是在数据库完成sql指令的编译后才套用参数运行</span><br><span class="line">简单的说: 参数化能防注入的原因在于,语句是语句，参数是参数，参数的值并不是语句的一部分，数据库只按语句的语义跑</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="sql常用语句"><a href="#sql常用语句" class="headerlink" title="sql常用语句"></a>sql常用语句</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">查库selsct schema_name from information_schema.schemata</span><br><span class="line">查表select table_name from information_schema.tables where table_schema=&#x27;security&#x27;</span><br><span class="line">查列select column_name from information_schema.columns where table_name=&#x27;users&#x27;</span><br><span class="line">查字段select username,password from security.users</span><br><span class="line">if(ascii(substr(“hello”, 1, 1))=104, sleep(5), 1)</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="sql注入绕过"><a href="#sql注入绕过" class="headerlink" title="sql注入绕过"></a>sql注入绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.注释符（#   --+）</span><br><span class="line">2.大小写绕过（or and ）</span><br><span class="line">3.双写绕过（oorrder）</span><br><span class="line">4.空格绕过 /**/  %09（Tab）</span><br><span class="line">5.对字符进行转义</span><br></pre></td></tr></table></figure>
-
-<h3 id="sql注入防御"><a href="#sql注入防御" class="headerlink" title="sql注入防御"></a>sql注入防御</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.代码层</span><br><span class="line">黑名单、白名单、敏感字符过滤、规范输出</span><br><span class="line">2.配置层</span><br><span class="line">开启gpc（php的防御函数魔术引号开关）、使用utf-8</span><br><span class="line">3.物理层面</span><br><span class="line">WAF、IPS、数据库审计</span><br></pre></td></tr></table></figure>
-
-<h2 id="2-xss（跨站脚本攻击）"><a href="#2-xss（跨站脚本攻击）" class="headerlink" title="2.xss（跨站脚本攻击）"></a>2.xss（跨站脚本攻击）</h2><h3 id="xss原理"><a href="#xss原理" class="headerlink" title="xss原理"></a>xss原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">攻击者在web页面中会插入一些恶意的script代码。当用户浏览该页面的时候，那么嵌入到web页面中script代码会执行，因此会达到恶意攻击用户的目的。</span><br></pre></td></tr></table></figure>
-
-<h3 id="xss分类"><a href="#xss分类" class="headerlink" title="xss分类"></a>xss分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.反射型</span><br><span class="line">一般指攻击者通过特定的方式来诱惑受害者去访问一个包含恶意代码的URL。当受害者点击恶意链接url的时候，恶意代码会直接在受害者的主机上的浏览器执行。</span><br><span class="line">2.存储型</span><br><span class="line">主要是将恶意代码上传或存储到服务器中，下次只要受害者浏览包含此恶意代码的页面就会执行恶意代码。</span><br><span class="line">3.DOM型</span><br><span class="line">不经过后端,DOM—based XSS漏洞是基于文档对象模型Document Objeet Model,DOM)的一种漏洞,dom - xss是通过url传入参数去控制触发的。</span><br><span class="line">区别</span><br><span class="line">12都需要服务器解析，并与数据库交互3只用前端解析，不与数据库交互</span><br><span class="line">23都会将攻击代码长期存在到受害者服务器1只能攻击一次</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="xss绕过"><a href="#xss绕过" class="headerlink" title="xss绕过"></a>xss绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">a标签、src属性、大小写、双写</span><br></pre></td></tr></table></figure>
-
-<h3 id="xss防护"><a href="#xss防护" class="headerlink" title="xss防护"></a>xss防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">编码、WAF、filter过滤敏感字符</span><br></pre></td></tr></table></figure>
-
-<h2 id="3-csrf（跨站请求伪造攻击）"><a href="#3-csrf（跨站请求伪造攻击）" class="headerlink" title="3.csrf（跨站请求伪造攻击）"></a>3.csrf（跨站请求伪造攻击）</h2><h3 id="csrf原理"><a href="#csrf原理" class="headerlink" title="csrf原理"></a>csrf原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">同一浏览器下，用户访问了攻击者的恶意链接，攻击者拿着你的“身份凭证”，冒充你进行相应的攻击。</span><br></pre></td></tr></table></figure>
-
-<h3 id="csrf防护"><a href="#csrf防护" class="headerlink" title="csrf防护"></a>csrf防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.验证HTTP Referer字段</span><br><span class="line">2.在请求地址中添加Token验证</span><br><span class="line">3.在HTTP头中自定义属性并验证</span><br></pre></td></tr></table></figure>
-
-<h3 id="csrf位置"><a href="#csrf位置" class="headerlink" title="csrf位置"></a>csrf位置</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">密码修改、点赞、删除、转账、注销</span><br></pre></td></tr></table></figure>
-
-<h2 id="4-ssrf（服务端请求伪造攻击）"><a href="#4-ssrf（服务端请求伪造攻击）" class="headerlink" title="4.ssrf（服务端请求伪造攻击）"></a>4.ssrf（服务端请求伪造攻击）</h2><h3 id="ssrf原理"><a href="#ssrf原理" class="headerlink" title="ssrf原理"></a>ssrf原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">攻击者在访问A时，利用A的特定功能构造特殊payload，由A发起对内部网络中系统B（内网隔离，外部不可访问）的请求，从而获取敏感信息。</span><br><span class="line"></span><br><span class="line">1- 服务器允许向其他服务器获取资源</span><br><span class="line">2- 但是并没有对该地址做严格的过滤和限制</span><br><span class="line">3- 所以导致了攻击者可以向受害者服务器，传入任意的URL 地址，并将数据返回</span><br></pre></td></tr></table></figure>
-
-<h3 id="ssrf原因"><a href="#ssrf原因" class="headerlink" title="ssrf原因"></a>ssrf原因</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">file_get_contents()、fsockopen()、curl_exec()这三个函数运用不当。</span><br></pre></td></tr></table></figure>
-
-<h3 id="ssrf位置"><a href="#ssrf位置" class="headerlink" title="ssrf位置"></a>ssrf位置</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.分享：通过URL地址分享网页内容</span><br><span class="line">2.转码服务</span><br><span class="line">3.在线翻译</span><br><span class="line">4.图片加载与下载：通过URL地址加载或下载图片</span><br><span class="line">5.图片、文章收藏功能</span><br><span class="line">6.未公开的api实现以及其他调用URL的功能</span><br><span class="line">7.从URL关键字中寻找</span><br></pre></td></tr></table></figure>
-
-<h3 id="ssrf防护"><a href="#ssrf防护" class="headerlink" title="ssrf防护"></a>ssrf防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">禁止302跳转、限制协议只保留HTTP、HTTPS，防止file://、gopher://和ftp://、内外网限制、URL限制</span><br><span class="line">地址做白名单</span><br></pre></td></tr></table></figure>
-
-<h3 id="csrf和ssrf区别"><a href="#csrf和ssrf区别" class="headerlink" title="csrf和ssrf区别"></a>csrf和ssrf区别</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">csrf是服务器端对对用户的数据像cookie信息等重要数据没有做严格把控，使得攻击者窃取信息进行伪造发送给服务器</span><br><span class="line">ssrf是服务器对用户提供的url地址过于信任，没有检测，导致攻击者可以通过这个跳板攻击内网。</span><br></pre></td></tr></table></figure>
-
-<h2 id="5-文件上传"><a href="#5-文件上传" class="headerlink" title="5.文件上传"></a>5.文件上传</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">用户上传了一个可执行的脚本文件，并通过此脚本文件获得了执行服务器端命令的能力。</span><br></pre></td></tr></table></figure>
-
-<h3 id="绕过"><a href="#绕过" class="headerlink" title="绕过"></a>绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">MIME类型检测：HTTP请求字段里的Content-Type字段改为image/jpeg；image/png；image/gif</span><br><span class="line">黑名单绕过：php3、php4、大小写</span><br><span class="line">.htaccess绕过：1.mod_rewrite模块开启。2.AllowOverride All，该目录的文件按php来解析执行</span><br><span class="line">&lt;FilesMatch &quot;shana&quot;&gt;</span><br><span class="line">SetHandler application/x-httpd-php</span><br><span class="line">&lt;/FilesMatch&gt;</span><br><span class="line">::$DATA绕过：会把这个后面的后缀名当成文件流处理。</span><br><span class="line">点、空格、大小写、双写绕过</span><br><span class="line">图片马绕过：绕过getimagesize()方法、exif_imagetype()需要开启php的配置文件中的php_exif模块。</span><br><span class="line">二次渲染：文件上传后经过二次渲染重新生成图片容易把图片里的php代码改掉，把图片里的php代码放到前面</span><br><span class="line">条件竞争：不断上传，不断访问。</span><br><span class="line">%00截断：：php版本小于5.3.4，php的magic_quotes_gpc为OFF状态</span><br></pre></td></tr></table></figure>
-
-<h2 id="6-文件包含"><a href="#6-文件包含" class="headerlink" title="6.文件包含"></a>6.文件包含</h2><h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">在网站的开发人员在开发网站的时候，会把经常重复使用的函数或者特定的页面写到单个文件中，需要使用的时候就直接调用此文件即可，而无需再次浪费时间再次编写，这种操作通常被称为文件包含。</span><br></pre></td></tr></table></figure>
-
-<h3 id="相关函数"><a href="#相关函数" class="headerlink" title="相关函数"></a>相关函数</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">include()：包含并运行指定的文件，包含文件发生错误时，程序警告，但会继续执行。</span><br><span class="line">require()：包含并运行指定的文件，包含文件发生错误时，程序直接终止执行。</span><br><span class="line">include_once()：和 include 类似，不同处在于 include_once 会检查这个文件是否已经被导入，如果已导入，下文便不会再导入，直面 once 理解就是只导入一次。</span><br><span class="line">require_once()：和 require 类似，不同处在于 require_once 只导入一次。</span><br></pre></td></tr></table></figure>
-
-<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.本地文件包含</span><br><span class="line">2.远程文件包含需要php.ini开启了allow_url_fopen默认开启和allow_url_include默认关闭</span><br></pre></td></tr></table></figure>
-
-<h3 id="伪协议"><a href="#伪协议" class="headerlink" title="伪协议"></a>伪协议</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.php://input</span><br><span class="line">2.php://filter</span><br></pre></td></tr></table></figure>
-
-<h3 id="防范"><a href="#防范" class="headerlink" title="防范"></a>防范</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.检查服务器配置文件</span><br><span class="line">2.过滤特殊符号 ，\/input output filter</span><br></pre></td></tr></table></figure>
-
-<h2 id="XXE（外部实体注入）"><a href="#XXE（外部实体注入）" class="headerlink" title="XXE（外部实体注入）"></a>XXE（外部实体注入）</h2><h3 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">当包含对外部实体的引用的 XML 输入被弱配置的 XML 解析器处理时，就会发生这种攻击。这种攻击可能导致机密数据泄露、拒绝服务、服务器端请求伪造、从解析器所在机器的角度进行端口扫描，以及其他系统影响。</span><br><span class="line"></span><br><span class="line">XML很像html语言，但标签需要自己来定义。</span><br><span class="line">XML用于传输和数据存储。HTML用于显示数据。</span><br></pre></td></tr></table></figure>
-
-<h3 id="危害"><a href="#危害" class="headerlink" title="危害"></a>危害</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.DOS攻击</span><br><span class="line">2.文件读取</span><br><span class="line">3.内网探测</span><br></pre></td></tr></table></figure>
-
-<h3 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.使用开发语言提供的禁用外部实体的方法</span><br><span class="line">PHP：</span><br><span class="line">libxml_disable_entity_loader(true);</span><br><span class="line">JAVA:</span><br><span class="line">DocumentBuilderFactory dbf =DocumentBuilderFactory.newInstance();</span><br><span class="line">dbf.setExpandEntityReferences(false);</span><br><span class="line">Python：</span><br><span class="line">from lxml import etree</span><br><span class="line">xmlData = etree.parse(xmlSource,etree.XMLParser(resolve_entities=False))</span><br><span class="line">2.过滤和验证用户提交的XML数据</span><br><span class="line">3.过滤关键词&lt;!DOCTYPE、&lt;!ENTITY SYSTEM、PUBLIC</span><br><span class="line">4.不允许XML中含有任何自己声明的DTD</span><br></pre></td></tr></table></figure>
-
-<h2 id="业务逻辑漏洞"><a href="#业务逻辑漏洞" class="headerlink" title="业务逻辑漏洞"></a>业务逻辑漏洞</h2><h3 id="类型"><a href="#类型" class="headerlink" title="类型"></a>类型</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.身份验证漏洞</span><br><span class="line">暴力破解</span><br><span class="line">Session固定攻击</span><br><span class="line">Cookie欺骗漏洞</span><br><span class="line">2.权限类逻辑漏洞</span><br><span class="line">水平越权</span><br><span class="line">垂直越权</span><br><span class="line">未授权访问</span><br><span class="line">3.图形验证码漏洞</span><br><span class="line">4.找回密码逻辑洞</span><br><span class="line">5.业务逻辑篡改漏洞</span><br><span class="line">6.执行顺序篡改漏洞</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>web</category>
-      </categories>
-      <tags>
-        <tag>web渗透基础</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>权限提升</title>
     <url>/2022/04/03/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/</url>
     <content><![CDATA[<span id="more"></span>
@@ -1102,6 +1055,53 @@
 ]]></content>
       <tags>
         <tag>权限提升</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>常见webshell客户端的流量特征及检测思路</title>
+    <url>/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="中国菜刀"><a href="#中国菜刀" class="headerlink" title="中国菜刀"></a>中国菜刀</h1><p>主流为11、14、16版，11到14功能性增强，14到16隐秘性增强。它支持PHP、JSP、ASP三种webshell的链接。</p>
+<h2 id="11和14版本的流量特征"><a href="#11和14版本的流量特征" class="headerlink" title="11和14版本的流量特征"></a>11和14版本的流量特征</h2><h3 id="php类的webshell流量特征"><a href="#php类的webshell流量特征" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>主要特征在body当中，将其中的流量解码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.&quot;eval&quot;，eval函数用于执行传递攻击的payload</span><br><span class="line">2.(base64_decode($_POST[z0]))，将攻击payload进行base64解码，菜刀默认将攻击荷载base64编码，避免被检测</span><br><span class="line">3.&amp;z0=QGluaV9zZXQ...，传递攻击payload，参数z0对应$_POST[z0]接收到的数据，该参数值使用base64编码的，所以使用base64解码可以看到攻击明文。</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">1.少数地方eval函数被assert方法替代</span><br><span class="line">2.$_POST也会被$_GET、$_REQUEST替代</span><br><span class="line">3.z0是菜刀默认的参数，这个地方也有可能被修改为其他参数名。</span><br></pre></td></tr></table></figure>
+
+<h3 id="jsp类的webshell流量特征"><a href="#jsp类的webshell流量特征" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><p>该流量是WebShell链接流量的第一段链接流量，其中特征主要在i&#x3D;A&amp;z0&#x3D;GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i&#x3D;A，第二个参数指定编码，其参数值为编码，如z0&#x3D;GB2312，有时候z0后面还会接着又z1&#x3D;参数用来加入攻击载荷。</p>
+<p>注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</p>
+<h3 id="asp类的webshell流量特征"><a href="#asp类的webshell流量特征" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><p>其中body流量进行URL解码后其特征点有如下三个</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“Execute”，此函数执行传递的攻击payload，等同于php的eval</span><br><span class="line">2.OnError ResumeNext，大部分asp客户端中必有的流量，不管前边有任何错误，继续执行</span><br><span class="line">3.Response.Write和Response.End必有，完善整个操作</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">OnError Resume Next这个特征在大部分流量中存在，极少数没有。</span><br></pre></td></tr></table></figure>
+
+<h2 id="16版的流量特征"><a href="#16版的流量特征" class="headerlink" title="16版的流量特征"></a>16版的流量特征</h2><h3 id="php类的webshell流量特征-1"><a href="#php类的webshell流量特征-1" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>其中特征主要在body中，将body中部分如下：这个版本中流量最大的改变就是将特征进行打断混淆，这也给我们识别特征提供一种思路。其中特征点有如下三部分</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.“&quot;Ba&quot;.&quot;SE6&quot;.&quot;4_dEc&quot;.&quot;OdE”，这部分是将base64解码打断使用.来连接。</span><br><span class="line">2.@ev&quot;.&quot;al，这部分也是将@eval这部分进行打断连接，可以识别这段代码即可。</span><br><span class="line">3.QGluaV9zZXQoImRpc3BsYXlf...，该部分是传递攻击payload，payload依旧使用Base64编码的，所以可以利用base64解码可以看到攻击明文来识别。</span><br><span class="line"></span><br><span class="line">注意：有少数时候eval方法会被assert方法替代。</span><br></pre></td></tr></table></figure>
+
+<h3 id="jsp类的webshell流量特征-1"><a href="#jsp类的webshell流量特征-1" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">所以分析如上：该流量是WebShell链接流量的第一段链接流量，其中特征主要在i=A&amp;z0=GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i=A，第二个参数指定编码，其参数值为编码，如z0=GB2312，有时候z0后面还会接着又z1=、z2=参数用来加入攻击载荷。</span><br><span class="line">注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</span><br></pre></td></tr></table></figure>
+
+<h3 id="asp类的webshell流量特征-1"><a href="#asp类的webshell流量特征-1" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">其中body流量为：</span><br><span class="line">2016版本流量这链接流量最大的变化在于body中部分字符被unicode编码替换混淆，所以这种特征需要提取出一种形式来，匹配这个混淆特征，比如“字符+%u0000+字符+%u0000”这种形式来判断该流量。</span><br><span class="line">或者直接将这部分代码直接进行unicode解码，可以获取到如2011或2014版本的asp所示的流量。可以根据上一段特征来进行判断。</span><br><span class="line">这种流量主要识别这几部分特征，在正常流量中基本没有。</span><br></pre></td></tr></table></figure>
+
+<h1 id="中国蚁剑"><a href="#中国蚁剑" class="headerlink" title="中国蚁剑"></a>中国蚁剑</h1><p>大部分代码来源于菜刀，但是蚁剑扩充性好，可以对进行加密、混淆等绕过处理。蚁剑默认支持ASP以及PHP的webshell链接。</p>
+<h2 id="PHP类链接特征"><a href="#PHP类链接特征" class="headerlink" title="PHP类链接特征"></a>PHP类链接特征</h2><p>其中body流量进行url解码后为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">最明显的为@ini_set(&quot;display_errors&quot;,&quot;0&quot;);这段代码是基本所有webshell客户端连接php类webshell都有的一种代码，有的客户端会加密、编码。蚁剑是明文，好发现。</span><br></pre></td></tr></table></figure>
+
+<h2 id="ASP类链接特征"><a href="#ASP类链接特征" class="headerlink" title="ASP类链接特征"></a>ASP类链接特征</h2><p>其中body流量进行url解码后为；</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">与菜刀很像。如OnError、ResumeNext、Response.End、Response.Write其中execute在蚁剑中被打断混淆了，变成了拼接形式Ex&quot;&amp;cHr(101)&amp;&quot;cute,同时该流量也用了eval参数。</span><br></pre></td></tr></table></figure>
+
+<h2 id="蚁剑绕过流量特征"><a href="#蚁剑绕过流量特征" class="headerlink" title="蚁剑绕过流量特征"></a>蚁剑绕过流量特征</h2><p>蚁剑包含了很多加密、绕过插件，所以导致很多流量被加密后无法识别，但是还有一个明显的特征，即参数名大多数以”_0x……”这种形式。所以以这种形式开头的参数名，后面为加密数据的数据包也是特征。</p>
+<h1 id="冰蝎"><a href="#冰蝎" class="headerlink" title="冰蝎"></a>冰蝎</h1><p>流量进行了加密，且加密密钥使用者自己来设定，但是该拦截器对webshell的需求比较高，无法连接一句话木马，综上，该客户端的流量无法检测。</p>
+<p>功能介绍</p>
+<p><a href="https://xz.aliyun.com/t/2799">《利用动态二进制加密实现新型一句话木马之客户端篇》</a></p>
+<p>工作原理</p>
+<p><a href="https://xz.aliyun.com/t/2744">《利用动态二进制加密实现新型一句话木马之java篇》</a></p>
+<p><a href="https://xz.aliyun.com/t/2758">《利用动态二进制加密实现新型一句话木马之.NET篇》</a></p>
+<p><a href="https://xz.aliyun.com/t/2774">《利用动态二进制加密实现新型一句话木马之PHP篇》</a></p>
+<h1 id="Cknife"><a href="#Cknife" class="headerlink" title="Cknife"></a>Cknife</h1><p>特征就是在body部分的参数值均为base64编码，将该部分进行base64解码后，其流量特征同中国菜刀一致</p>
+<h1 id="Weevely"><a href="#Weevely" class="headerlink" title="Weevely"></a>Weevely</h1><p>Weevely是kail中自带的一款功能强大的WebShell客户端，该链接器首先自己生成webshell，在将该webshell上传至目的服务器后，通过Weevely进行链接，该链接流量属于加密流量，但是在该流量中还可以发现特征，进行区分。</p>
+<p>该流量中的攻击载荷存在于Referer中，其中Referer中的路径中php的查询参数有以下参数名或值，即sa&#x3D;、source&#x3D;web、cd&#x3D;数字、url&#x3D;、ei&#x3D;，即可确定该流量为客户端流量。</p>
+]]></content>
+      <categories>
+        <category>工具</category>
+      </categories>
+      <tags>
+        <tag>webshell的流量特征</tag>
       </tags>
   </entry>
   <entry>
