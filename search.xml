@@ -233,49 +233,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Spring框架漏洞</title>
-    <url>/2022/01/25/Spring%E6%A1%86%E6%9E%B6%E6%BC%8F%E6%B4%9E/</url>
-    <content><![CDATA[<span id="more"></span>
-
-<h1 id="Spring框架漏洞总结"><a href="#Spring框架漏洞总结" class="headerlink" title="Spring框架漏洞总结"></a>Spring框架漏洞总结</h1><p>spring是java EE的一个轻量级开源框架，2009年9月Spring 3.0 RC1发布后，Spring就引入了SpEL，具有了安全风险。</p>
-<h2 id="SpEL是什么"><a href="#SpEL是什么" class="headerlink" title="SpEL是什么"></a>SpEL是什么</h2><p>SpEL(Spring Expression  Language)是基于spring的一个表达式语言，类似于struts的OGNL，能够在运行时动态执行一些运算甚至一些指令，类似于Java的反射功能。就使用方法上来看，一共分为三类，分别是直接在注解中使用，在XML文件中使用和直接在代码块中使用。</p>
-<h2 id="SpEL原理"><a href="#SpEL原理" class="headerlink" title="SpEL原理"></a>SpEL原理</h2><p><a href="http://rui0.cn/archives/1043">参考链接</a></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">表达式：传入的字符串内容。</span><br><span class="line">解析器：将字符串解析为表达式内容。</span><br><span class="line">上下文：表达式对象执行的环境。</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring框架特征"><a href="#Spring框架特征" class="headerlink" title="Spring框架特征"></a>Spring框架特征</h2><p>1.看web应用的ico小图标，是个小绿叶子</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085400267.png" alt="image-20220329085400267"></p>
-<p>2.看报错页面</p>
-<p>3.wappalyzer插件识别</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085605143.png" alt="image-20220329085605143"></p>
-<p>4.F12开发者模式看关键字</p>
-<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085655536.png" alt="image-20220329085655536"></p>
-<h2 id="Spring-Security-OAuth2-远程命令执行（CVE-2016-4977）"><a href="#Spring-Security-OAuth2-远程命令执行（CVE-2016-4977）" class="headerlink" title="Spring Security OAuth2 远程命令执行（CVE-2016-4977）"></a>Spring Security OAuth2 远程命令执行（CVE-2016-4977）</h2><h3 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Security OAuth2是Spring框架提供安全认证支持的一个模块。Spring Security OAuth2处理认证请求的时候使用了whitelabel views，response_type参数值会被当作Spring SpEL来执行，攻击者可以在被授权的情况下通过构造response_type值也就是通过构造恶意SpEL表达式可以触发远程代码执行漏洞。故是在需要知道账号密码的前提下才可以利用该漏洞。</p>
-<h3 id="影响版本"><a href="#影响版本" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">2.0.0-2.0.9</span><br><span class="line">1.0.0-1.0.5</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Web-Flow框架远程代码执行-CVE-2017-4971"><a href="#Spring-Web-Flow框架远程代码执行-CVE-2017-4971" class="headerlink" title="Spring Web Flow框架远程代码执行(CVE-2017-4971)"></a>Spring Web Flow框架远程代码执行(CVE-2017-4971)</h2><h3 id="漏洞简介-1"><a href="#漏洞简介-1" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Web Flow是Spring的一个子项目，主要目的是解决跨越多个请求的、用户与服务器之间的、有状态交互问题，提供了描述业务流程的抽象能力。</p>
-<p>Spring WebFlow 是一个适用于开发基于流程的应用程序的框架（如购物逻辑），可以将流程的定义和实现流程行为的类和视图分离开来。在其 2.4.x 版本中，如果我们控制了数据绑定时的field，将导致一个SpEL表达式注入漏洞，最终造成任意命令执行。</p>
-<h3 id="影响版本-1"><a href="#影响版本-1" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring WebFlow 2.4.0 - 2.4.4</span><br></pre></td></tr></table></figure>
-
-<h3 id="触发条件"><a href="#触发条件" class="headerlink" title="触发条件"></a>触发条件</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">MvcViewFactoryCreator对象的useSpringBeanBinding参数需要设置为false（默认值）</span><br><span class="line">flow view对象中设置BinderConfiguration对象为空</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Data-Rest远程命令执行命令-CVE-2017-8046"><a href="#Spring-Data-Rest远程命令执行命令-CVE-2017-8046" class="headerlink" title="Spring Data Rest远程命令执行命令(CVE-2017-8046)"></a>Spring Data Rest远程命令执行命令(CVE-2017-8046)</h2><h3 id="漏洞简介-2"><a href="#漏洞简介-2" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring-data-rest服务器在处理PATCH请求时，攻击者可以构造恶意的PATCH请求并发送给spring-date-rest服务器，通过构造好的JSON数据来执行任意Java代码。</p>
-<h3 id="影响版本-2"><a href="#影响版本-2" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Data REST versions &lt; 2.5.12, 2.6.7, 3.0 RC3</span><br><span class="line">Spring Boot version &lt; 2.0.0M4</span><br><span class="line">Spring Data release trains &lt; Kay-RC3</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Messaging远程命令执行突破-CVE-2018-1270"><a href="#Spring-Messaging远程命令执行突破-CVE-2018-1270" class="headerlink" title="Spring Messaging远程命令执行突破(CVE-2018-1270)"></a>Spring Messaging远程命令执行突破(CVE-2018-1270)</h2><h3 id="漏洞简介-3"><a href="#漏洞简介-3" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>spring  messaging为spring框架提供消息支持，其上层协议是STOMP，底层通信基于SockJS，STOMP消息代理在处理客户端消息时存在SpEL表达式注入漏洞，在spring  messaging中，其允许客户端订阅消息，并使用selector过滤消息。selector用SpEL表达式编写，并使用StandardEvaluationContext解析，造成命令执行漏洞。</p>
-<h3 id="影响版本-3"><a href="#影响版本-3" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Framework 5.0 - 5.0.5</span><br><span class="line">Spring Framework 4.3 - 4.3.15</span><br><span class="line">已不支持的旧版本仍然受影响</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Data-Commons远程命令执行漏洞-CVE-2018-1273"><a href="#Spring-Data-Commons远程命令执行漏洞-CVE-2018-1273" class="headerlink" title="Spring Data Commons远程命令执行漏洞(CVE-2018-1273)"></a>Spring Data Commons远程命令执行漏洞(CVE-2018-1273)</h2><h3 id="漏洞简介-4"><a href="#漏洞简介-4" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Data是一个用于简化数据库访问，并支持云服务的开源框架，Spring Data Commons是Spring  Data下所有子项目共享的基础框架。Spring Data Commons  在2.0.5及以前版本中，存在一处SpEL表达式注入漏洞，攻击者可以注入恶意SpEL表达式以执行任意命令。</p>
-<h3 id="影响版本-4"><a href="#影响版本-4" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Data Commons 1.13 – 1.13.10 (Ingalls SR10)</span><br><span class="line">Spring Data REST 2.6 – 2.6.10(Ingalls SR10)</span><br><span class="line">Spring Data Commons 2.0 – 2.0.5 (Kay SR5)</span><br><span class="line">Spring Data REST 3.0 – 3.0.5(Kay SR5)</span><br><span class="line">官方已经不支持的旧版本</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>java框架漏洞</category>
-      </categories>
-      <tags>
-        <tag>Spring框架漏洞</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Strut2框架漏洞</title>
     <url>/2022/02/03/Strut2%E6%A1%86%E6%9E%B6%E6%BC%8F%E6%B4%9E/</url>
     <content><![CDATA[<span id="more"></span>
@@ -360,6 +317,49 @@
       </categories>
       <tags>
         <tag>burp suit工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Spring框架漏洞</title>
+    <url>/2022/01/25/Spring%E6%A1%86%E6%9E%B6%E6%BC%8F%E6%B4%9E/</url>
+    <content><![CDATA[<span id="more"></span>
+
+<h1 id="Spring框架漏洞总结"><a href="#Spring框架漏洞总结" class="headerlink" title="Spring框架漏洞总结"></a>Spring框架漏洞总结</h1><p>spring是java EE的一个轻量级开源框架，2009年9月Spring 3.0 RC1发布后，Spring就引入了SpEL，具有了安全风险。</p>
+<h2 id="SpEL是什么"><a href="#SpEL是什么" class="headerlink" title="SpEL是什么"></a>SpEL是什么</h2><p>SpEL(Spring Expression  Language)是基于spring的一个表达式语言，类似于struts的OGNL，能够在运行时动态执行一些运算甚至一些指令，类似于Java的反射功能。就使用方法上来看，一共分为三类，分别是直接在注解中使用，在XML文件中使用和直接在代码块中使用。</p>
+<h2 id="SpEL原理"><a href="#SpEL原理" class="headerlink" title="SpEL原理"></a>SpEL原理</h2><p><a href="http://rui0.cn/archives/1043">参考链接</a></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">表达式：传入的字符串内容。</span><br><span class="line">解析器：将字符串解析为表达式内容。</span><br><span class="line">上下文：表达式对象执行的环境。</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring框架特征"><a href="#Spring框架特征" class="headerlink" title="Spring框架特征"></a>Spring框架特征</h2><p>1.看web应用的ico小图标，是个小绿叶子</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085400267.png" alt="image-20220329085400267"></p>
+<p>2.看报错页面</p>
+<p>3.wappalyzer插件识别</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085605143.png" alt="image-20220329085605143"></p>
+<p>4.F12开发者模式看关键字</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220329085655536.png" alt="image-20220329085655536"></p>
+<h2 id="Spring-Security-OAuth2-远程命令执行（CVE-2016-4977）"><a href="#Spring-Security-OAuth2-远程命令执行（CVE-2016-4977）" class="headerlink" title="Spring Security OAuth2 远程命令执行（CVE-2016-4977）"></a>Spring Security OAuth2 远程命令执行（CVE-2016-4977）</h2><h3 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Security OAuth2是Spring框架提供安全认证支持的一个模块。Spring Security OAuth2处理认证请求的时候使用了whitelabel views，response_type参数值会被当作Spring SpEL来执行，攻击者可以在被授权的情况下通过构造response_type值也就是通过构造恶意SpEL表达式可以触发远程代码执行漏洞。故是在需要知道账号密码的前提下才可以利用该漏洞。</p>
+<h3 id="影响版本"><a href="#影响版本" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">2.0.0-2.0.9</span><br><span class="line">1.0.0-1.0.5</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Web-Flow框架远程代码执行-CVE-2017-4971"><a href="#Spring-Web-Flow框架远程代码执行-CVE-2017-4971" class="headerlink" title="Spring Web Flow框架远程代码执行(CVE-2017-4971)"></a>Spring Web Flow框架远程代码执行(CVE-2017-4971)</h2><h3 id="漏洞简介-1"><a href="#漏洞简介-1" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Web Flow是Spring的一个子项目，主要目的是解决跨越多个请求的、用户与服务器之间的、有状态交互问题，提供了描述业务流程的抽象能力。</p>
+<p>Spring WebFlow 是一个适用于开发基于流程的应用程序的框架（如购物逻辑），可以将流程的定义和实现流程行为的类和视图分离开来。在其 2.4.x 版本中，如果我们控制了数据绑定时的field，将导致一个SpEL表达式注入漏洞，最终造成任意命令执行。</p>
+<h3 id="影响版本-1"><a href="#影响版本-1" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring WebFlow 2.4.0 - 2.4.4</span><br></pre></td></tr></table></figure>
+
+<h3 id="触发条件"><a href="#触发条件" class="headerlink" title="触发条件"></a>触发条件</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">MvcViewFactoryCreator对象的useSpringBeanBinding参数需要设置为false（默认值）</span><br><span class="line">flow view对象中设置BinderConfiguration对象为空</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Data-Rest远程命令执行命令-CVE-2017-8046"><a href="#Spring-Data-Rest远程命令执行命令-CVE-2017-8046" class="headerlink" title="Spring Data Rest远程命令执行命令(CVE-2017-8046)"></a>Spring Data Rest远程命令执行命令(CVE-2017-8046)</h2><h3 id="漏洞简介-2"><a href="#漏洞简介-2" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring-data-rest服务器在处理PATCH请求时，攻击者可以构造恶意的PATCH请求并发送给spring-date-rest服务器，通过构造好的JSON数据来执行任意Java代码。</p>
+<h3 id="影响版本-2"><a href="#影响版本-2" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Data REST versions &lt; 2.5.12, 2.6.7, 3.0 RC3</span><br><span class="line">Spring Boot version &lt; 2.0.0M4</span><br><span class="line">Spring Data release trains &lt; Kay-RC3</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Messaging远程命令执行突破-CVE-2018-1270"><a href="#Spring-Messaging远程命令执行突破-CVE-2018-1270" class="headerlink" title="Spring Messaging远程命令执行突破(CVE-2018-1270)"></a>Spring Messaging远程命令执行突破(CVE-2018-1270)</h2><h3 id="漏洞简介-3"><a href="#漏洞简介-3" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>spring  messaging为spring框架提供消息支持，其上层协议是STOMP，底层通信基于SockJS，STOMP消息代理在处理客户端消息时存在SpEL表达式注入漏洞，在spring  messaging中，其允许客户端订阅消息，并使用selector过滤消息。selector用SpEL表达式编写，并使用StandardEvaluationContext解析，造成命令执行漏洞。</p>
+<h3 id="影响版本-3"><a href="#影响版本-3" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Framework 5.0 - 5.0.5</span><br><span class="line">Spring Framework 4.3 - 4.3.15</span><br><span class="line">已不支持的旧版本仍然受影响</span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Data-Commons远程命令执行漏洞-CVE-2018-1273"><a href="#Spring-Data-Commons远程命令执行漏洞-CVE-2018-1273" class="headerlink" title="Spring Data Commons远程命令执行漏洞(CVE-2018-1273)"></a>Spring Data Commons远程命令执行漏洞(CVE-2018-1273)</h2><h3 id="漏洞简介-4"><a href="#漏洞简介-4" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Spring Data是一个用于简化数据库访问，并支持云服务的开源框架，Spring Data Commons是Spring  Data下所有子项目共享的基础框架。Spring Data Commons  在2.0.5及以前版本中，存在一处SpEL表达式注入漏洞，攻击者可以注入恶意SpEL表达式以执行任意命令。</p>
+<h3 id="影响版本-4"><a href="#影响版本-4" class="headerlink" title="影响版本"></a>影响版本</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Spring Data Commons 1.13 – 1.13.10 (Ingalls SR10)</span><br><span class="line">Spring Data REST 2.6 – 2.6.10(Ingalls SR10)</span><br><span class="line">Spring Data Commons 2.0 – 2.0.5 (Kay SR5)</span><br><span class="line">Spring Data REST 3.0 – 3.0.5(Kay SR5)</span><br><span class="line">官方已经不支持的旧版本</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>java框架漏洞</category>
+      </categories>
+      <tags>
+        <tag>Spring框架漏洞</tag>
       </tags>
   </entry>
   <entry>
