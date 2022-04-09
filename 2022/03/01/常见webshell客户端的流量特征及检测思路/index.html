@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="manifest" href="/images/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="菜刀、蚁剑、冰蝎、Cknife、Weevely等工具的流量特征。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常见webshell客户端的流量特征及检测思路">
+<meta property="og:url" content="http://example.com/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/index.html">
+<meta property="og:site_name" content="Spring&#39;blog">
+<meta property="og:description" content="菜刀、蚁剑、冰蝎、Cknife、Weevely等工具的流量特征。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-03-01T13:05:19.000Z">
+<meta property="article:modified_time" content="2022-04-01T05:46:08.543Z">
+<meta property="article:author" content="Spring">
+<meta property="article:tag" content="webshell的流量特征">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>常见webshell客户端的流量特征及检测思路 | Spring'blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Spring'blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我还年轻，吃苦趁现在。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">7</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">14</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Spring">
+      <meta itemprop="description" content="见到一座山，就想知道山后面是什么。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Spring'blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          常见webshell客户端的流量特征及检测思路
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-03-01 21:05:19" itemprop="dateCreated datePublished" datetime="2022-03-01T21:05:19+08:00">2022-03-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-01 13:46:08" itemprop="dateModified" datetime="2022-04-01T13:46:08+08:00">2022-04-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">工具</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <div class="post-description">菜刀、蚁剑、冰蝎、Cknife、Weevely等工具的流量特征。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <span id="more"></span>
+
+<h1 id="中国菜刀"><a href="#中国菜刀" class="headerlink" title="中国菜刀"></a>中国菜刀</h1><p>主流为11、14、16版，11到14功能性增强，14到16隐秘性增强。它支持PHP、JSP、ASP三种webshell的链接。</p>
+<h2 id="11和14版本的流量特征"><a href="#11和14版本的流量特征" class="headerlink" title="11和14版本的流量特征"></a>11和14版本的流量特征</h2><h3 id="php类的webshell流量特征"><a href="#php类的webshell流量特征" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>主要特征在body当中，将其中的流量解码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1.&quot;eval&quot;，eval函数用于执行传递攻击的payload</span><br><span class="line">2.(base64_decode($_POST[z0]))，将攻击payload进行base64解码，菜刀默认将攻击荷载base64编码，避免被检测</span><br><span class="line">3.&amp;z0=QGluaV9zZXQ...，传递攻击payload，参数z0对应$_POST[z0]接收到的数据，该参数值使用base64编码的，所以使用base64解码可以看到攻击明文。</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">1.少数地方eval函数被assert方法替代</span><br><span class="line">2.$_POST也会被$_GET、$_REQUEST替代</span><br><span class="line">3.z0是菜刀默认的参数，这个地方也有可能被修改为其他参数名。</span><br></pre></td></tr></table></figure>
+
+<h3 id="jsp类的webshell流量特征"><a href="#jsp类的webshell流量特征" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><p>该流量是WebShell链接流量的第一段链接流量，其中特征主要在i&#x3D;A&amp;z0&#x3D;GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i&#x3D;A，第二个参数指定编码，其参数值为编码，如z0&#x3D;GB2312，有时候z0后面还会接着又z1&#x3D;参数用来加入攻击载荷。</p>
+<p>注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</p>
+<h3 id="asp类的webshell流量特征"><a href="#asp类的webshell流量特征" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><p>其中body流量进行URL解码后其特征点有如下三个</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1.“Execute”，此函数执行传递的攻击payload，等同于php的eval</span><br><span class="line">2.OnError ResumeNext，大部分asp客户端中必有的流量，不管前边有任何错误，继续执行</span><br><span class="line">3.Response.Write和Response.End必有，完善整个操作</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">OnError Resume Next这个特征在大部分流量中存在，极少数没有。</span><br></pre></td></tr></table></figure>
+
+<h2 id="16版的流量特征"><a href="#16版的流量特征" class="headerlink" title="16版的流量特征"></a>16版的流量特征</h2><h3 id="php类的webshell流量特征-1"><a href="#php类的webshell流量特征-1" class="headerlink" title="php类的webshell流量特征"></a>php类的webshell流量特征</h3><p>其中特征主要在body中，将body中部分如下：这个版本中流量最大的改变就是将特征进行打断混淆，这也给我们识别特征提供一种思路。其中特征点有如下三部分</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.“&quot;Ba&quot;.&quot;SE6&quot;.&quot;4_dEc&quot;.&quot;OdE”，这部分是将base64解码打断使用.来连接。</span><br><span class="line">2.@ev&quot;.&quot;al，这部分也是将@eval这部分进行打断连接，可以识别这段代码即可。</span><br><span class="line">3.QGluaV9zZXQoImRpc3BsYXlf...，该部分是传递攻击payload，payload依旧使用Base64编码的，所以可以利用base64解码可以看到攻击明文来识别。</span><br><span class="line"></span><br><span class="line">注意：有少数时候eval方法会被assert方法替代。</span><br></pre></td></tr></table></figure>
+
+<h3 id="jsp类的webshell流量特征-1"><a href="#jsp类的webshell流量特征-1" class="headerlink" title="jsp类的webshell流量特征"></a>jsp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">所以分析如上：该流量是WebShell链接流量的第一段链接流量，其中特征主要在i=A&amp;z0=GB2312，菜刀链接JSP木马时，第一个参数定义操作，其中参数值为A-Q，如i=A，第二个参数指定编码，其参数值为编码，如z0=GB2312，有时候z0后面还会接着又z1=、z2=参数用来加入攻击载荷。</span><br><span class="line">注：其中参数名i、z0、z1这种参数名是会变的，但是其参数值以及这种形式是不会变得，最主要就是第一个参数值在A-Q，这种是不变的。</span><br></pre></td></tr></table></figure>
+
+<h3 id="asp类的webshell流量特征-1"><a href="#asp类的webshell流量特征-1" class="headerlink" title="asp类的webshell流量特征"></a>asp类的webshell流量特征</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">其中body流量为：</span><br><span class="line">2016版本流量这链接流量最大的变化在于body中部分字符被unicode编码替换混淆，所以这种特征需要提取出一种形式来，匹配这个混淆特征，比如“字符+%u0000+字符+%u0000”这种形式来判断该流量。</span><br><span class="line">或者直接将这部分代码直接进行unicode解码，可以获取到如2011或2014版本的asp所示的流量。可以根据上一段特征来进行判断。</span><br><span class="line">这种流量主要识别这几部分特征，在正常流量中基本没有。</span><br></pre></td></tr></table></figure>
+
+<h1 id="中国蚁剑"><a href="#中国蚁剑" class="headerlink" title="中国蚁剑"></a>中国蚁剑</h1><p>大部分代码来源于菜刀，但是蚁剑扩充性好，可以对进行加密、混淆等绕过处理。蚁剑默认支持ASP以及PHP的webshell链接。</p>
+<h2 id="PHP类链接特征"><a href="#PHP类链接特征" class="headerlink" title="PHP类链接特征"></a>PHP类链接特征</h2><p>其中body流量进行url解码后为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">最明显的为@ini_set(&quot;display_errors&quot;,&quot;0&quot;);这段代码是基本所有webshell客户端连接php类webshell都有的一种代码，有的客户端会加密、编码。蚁剑是明文，好发现。</span><br></pre></td></tr></table></figure>
+
+<h2 id="ASP类链接特征"><a href="#ASP类链接特征" class="headerlink" title="ASP类链接特征"></a>ASP类链接特征</h2><p>其中body流量进行url解码后为；</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">与菜刀很像。如OnError、ResumeNext、Response.End、Response.Write其中execute在蚁剑中被打断混淆了，变成了拼接形式Ex&quot;&amp;cHr(101)&amp;&quot;cute,同时该流量也用了eval参数。</span><br></pre></td></tr></table></figure>
+
+<h2 id="蚁剑绕过流量特征"><a href="#蚁剑绕过流量特征" class="headerlink" title="蚁剑绕过流量特征"></a>蚁剑绕过流量特征</h2><p>蚁剑包含了很多加密、绕过插件，所以导致很多流量被加密后无法识别，但是还有一个明显的特征，即参数名大多数以”_0x……”这种形式。所以以这种形式开头的参数名，后面为加密数据的数据包也是特征。</p>
+<h1 id="冰蝎"><a href="#冰蝎" class="headerlink" title="冰蝎"></a>冰蝎</h1><p>流量进行了加密，且加密密钥使用者自己来设定，但是该拦截器对webshell的需求比较高，无法连接一句话木马，综上，该客户端的流量无法检测。</p>
+<p>功能介绍</p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/2799">《利用动态二进制加密实现新型一句话木马之客户端篇》</a></p>
+<p>工作原理</p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/2744">《利用动态二进制加密实现新型一句话木马之java篇》</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/2758">《利用动态二进制加密实现新型一句话木马之.NET篇》</a></p>
+<p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/2774">《利用动态二进制加密实现新型一句话木马之PHP篇》</a></p>
+<h1 id="Cknife"><a href="#Cknife" class="headerlink" title="Cknife"></a>Cknife</h1><p>特征就是在body部分的参数值均为base64编码，将该部分进行base64解码后，其流量特征同中国菜刀一致</p>
+<h1 id="Weevely"><a href="#Weevely" class="headerlink" title="Weevely"></a>Weevely</h1><p>Weevely是kail中自带的一款功能强大的WebShell客户端，该链接器首先自己生成webshell，在将该webshell上传至目的服务器后，通过Weevely进行链接，该链接流量属于加密流量，但是在该流量中还可以发现特征，进行区分。</p>
+<p>该流量中的攻击载荷存在于Referer中，其中Referer中的路径中php的查询参数有以下参数名或值，即sa&#x3D;、source&#x3D;web、cd&#x3D;数字、url&#x3D;、ei&#x3D;，即可确定该流量为客户端流量。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>原创技术分享，您的支持将鼓励我继续创作</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Spring 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Spring 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+	  
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/webshell%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81/" rel="tag"># webshell的流量特征</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/02/24/%E5%9F%9F%E5%86%85%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E5%BE%A1/" rel="prev" title="域内横向移动分析及防御">
+      <i class="fa fa-chevron-left"></i> 域内横向移动分析及防御
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/03/28/HW%E8%93%9D%E9%98%9F%E9%9D%A2%E8%AF%95/" rel="next" title="HW蓝队面试">
+      HW蓝队面试 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%AD%E5%9B%BD%E8%8F%9C%E5%88%80"><span class="nav-number">1.</span> <span class="nav-text">中国菜刀</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#11%E5%92%8C14%E7%89%88%E6%9C%AC%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81"><span class="nav-number">1.1.</span> <span class="nav-text">11和14版本的流量特征</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#php%E7%B1%BB%E7%9A%84webshell%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81"><span class="nav-number">1.1.1.</span> <span class="nav-text">php类的webshell流量特征</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jsp%E7%B1%BB%E7%9A%84webshell%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81"><span class="nav-number">1.1.2.</span> <span class="nav-text">jsp类的webshell流量特征</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#asp%E7%B1%BB%E7%9A%84webshell%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81"><span class="nav-number">1.1.3.</span> <span class="nav-text">asp类的webshell流量特征</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#16%E7%89%88%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81"><span class="nav-number">1.2.</span> <span class="nav-text">16版的流量特征</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#php%E7%B1%BB%E7%9A%84webshell%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81-1"><span class="nav-number">1.2.1.</span> <span class="nav-text">php类的webshell流量特征</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jsp%E7%B1%BB%E7%9A%84webshell%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81-1"><span class="nav-number">1.2.2.</span> <span class="nav-text">jsp类的webshell流量特征</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#asp%E7%B1%BB%E7%9A%84webshell%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81-1"><span class="nav-number">1.2.3.</span> <span class="nav-text">asp类的webshell流量特征</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%AD%E5%9B%BD%E8%9A%81%E5%89%91"><span class="nav-number">2.</span> <span class="nav-text">中国蚁剑</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#PHP%E7%B1%BB%E9%93%BE%E6%8E%A5%E7%89%B9%E5%BE%81"><span class="nav-number">2.1.</span> <span class="nav-text">PHP类链接特征</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ASP%E7%B1%BB%E9%93%BE%E6%8E%A5%E7%89%B9%E5%BE%81"><span class="nav-number">2.2.</span> <span class="nav-text">ASP类链接特征</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%9A%81%E5%89%91%E7%BB%95%E8%BF%87%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81"><span class="nav-number">2.3.</span> <span class="nav-text">蚁剑绕过流量特征</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%B0%E8%9D%8E"><span class="nav-number">3.</span> <span class="nav-text">冰蝎</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Cknife"><span class="nav-number">4.</span> <span class="nav-text">Cknife</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Weevely"><span class="nav-number">5.</span> <span class="nav-text">Weevely</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Spring"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Spring</p>
+  <div class="site-description" itemprop="description">见到一座山，就想知道山后面是什么。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49502930" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49502930" rel="noopener" target="_blank"><i class="crosshairs fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Spring</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":"true#是否在手机端显示"},"log":false});</script></body>
+</html>

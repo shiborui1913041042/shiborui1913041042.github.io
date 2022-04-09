@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="manifest" href="/images/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="web渗透的基础漏洞总结，包括sql注入、xss、文件上传等等的原理、分类、绕过、防御。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="web基础总结">
+<meta property="og:url" content="http://example.com/2022/01/05/web%E5%9F%BA%E7%A1%80%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:site_name" content="Spring&#39;blog">
+<meta property="og:description" content="web渗透的基础漏洞总结，包括sql注入、xss、文件上传等等的原理、分类、绕过、防御。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-01-05T00:01:00.000Z">
+<meta property="article:modified_time" content="2022-04-08T16:04:41.422Z">
+<meta property="article:author" content="Spring">
+<meta property="article:tag" content="web渗透基础">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/01/05/web%E5%9F%BA%E7%A1%80%E6%80%BB%E7%BB%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>web基础总结 | Spring'blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Spring'blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我还年轻，吃苦趁现在。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">7</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">14</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/01/05/web%E5%9F%BA%E7%A1%80%E6%80%BB%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Spring">
+      <meta itemprop="description" content="见到一座山，就想知道山后面是什么。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Spring'blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          web基础总结
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-05 08:01:00" itemprop="dateCreated datePublished" datetime="2022-01-05T08:01:00+08:00">2022-01-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-09 00:04:41" itemprop="dateModified" datetime="2022-04-09T00:04:41+08:00">2022-04-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/web/" itemprop="url" rel="index"><span itemprop="name">web</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <div class="post-description">web渗透的基础漏洞总结，包括sql注入、xss、文件上传等等的原理、分类、绕过、防御。</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <span id="more"></span>
+
+<h1 id="一、web"><a href="#一、web" class="headerlink" title="一、web"></a>一、web</h1><h2 id="1-sql注入"><a href="#1-sql注入" class="headerlink" title="1.sql注入"></a>1.sql注入</h2><h3 id="sql注入原理"><a href="#sql注入原理" class="headerlink" title="sql注入原理"></a>sql注入原理</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">web应用程序对用户输入的数据过滤不严谨，并且把用户输入的数据当作sql语句去执行。</span><br></pre></td></tr></table></figure>
+
+<h3 id="sql注入分类"><a href="#sql注入分类" class="headerlink" title="sql注入分类"></a>sql注入分类</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">反馈结果上分为</span><br><span class="line">	有回显型</span><br><span class="line">	无回显型</span><br><span class="line">攻击手法上分为</span><br><span class="line">	1.联合查询注入 union select</span><br><span class="line">	2.堆叠注入 在SQL语句中，语句的结束都是以&#x27;;&#x27;结尾，但是如果我们在&#x27;;&#x27;后面再加上一条SQL语句，两条语句会一起执行</span><br><span class="line">	3.报错注入 updatexml、floor、ExtractValue </span><br><span class="line">	ExtractValue 接收两个字符串参数，1传入xml文档，2是Xpath路径表示法表示的查找路径，语法错误就会报错</span><br><span class="line">	extracrvalue(0,concat(0x7e,database()))</span><br><span class="line">	UpdateXML 三个参数，1操作片段2xml路径3更新内容</span><br><span class="line">	updatexml(0,concat(0x7e,select database()),1)</span><br><span class="line">	floor，group by向临时表插入数据，rand多次计算报错。报错前concat中的语句被执行。</span><br><span class="line">	concat(floor(rand(0)*2),database()) x from information_schema.schemata group by </span><br><span class="line">	exp是个数学函数。</span><br><span class="line">	4.盲注</span><br><span class="line">		时间盲注    if sleep</span><br><span class="line">		布尔盲注    count，length</span><br><span class="line">	5.二次注入  sql-labs24关，插入admin‘# 修改密码，修改的是admin的密码</span><br><span class="line">	6.宽字节注入 php发送请求到mysql使用了gbk编码。%df吃掉%5c（\）</span><br><span class="line">	character_set_client(客户端的字符集)和character_set_connection(连接层的字符集)不同,或转换函数如，iconv、mb_convert_encoding使用不当。</span><br><span class="line">	7.mysql写shell用的函数outfile、dumpfile、开启log写shell</span><br><span class="line">	8.为什么参数化查询可以防止sql注入</span><br><span class="line">使用参数化查询数据库服务器不会把参数的内容当作sql指令的一部分来执行，是在数据库完成sql指令的编译后才套用参数运行</span><br><span class="line">简单的说: 参数化能防注入的原因在于,语句是语句，参数是参数，参数的值并不是语句的一部分，数据库只按语句的语义跑</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="sql常用语句"><a href="#sql常用语句" class="headerlink" title="sql常用语句"></a>sql常用语句</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">查库selsct schema_name from information_schema.schemata</span><br><span class="line">查表select table_name from information_schema.tables where table_schema=&#x27;security&#x27;</span><br><span class="line">查列select column_name from information_schema.columns where table_name=&#x27;users&#x27;</span><br><span class="line">查字段select username,password from security.users</span><br><span class="line">if(ascii(substr(“hello”, 1, 1))=104, sleep(5), 1)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="sql注入绕过"><a href="#sql注入绕过" class="headerlink" title="sql注入绕过"></a>sql注入绕过</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.注释符（#   --+）</span><br><span class="line">2.大小写绕过（or and ）</span><br><span class="line">3.双写绕过（oorrder）</span><br><span class="line">4.空格绕过 /**/  %09（Tab）</span><br><span class="line">5.对字符进行转义</span><br></pre></td></tr></table></figure>
+
+<h3 id="sql注入防御"><a href="#sql注入防御" class="headerlink" title="sql注入防御"></a>sql注入防御</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1.代码层</span><br><span class="line">黑名单、白名单、敏感字符过滤、规范输出</span><br><span class="line">2.配置层</span><br><span class="line">开启gpc（php的防御函数魔术引号开关）、使用utf-8</span><br><span class="line">3.物理层面</span><br><span class="line">WAF、IPS、数据库审计</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-xss（跨站脚本攻击）"><a href="#2-xss（跨站脚本攻击）" class="headerlink" title="2.xss（跨站脚本攻击）"></a>2.xss（跨站脚本攻击）</h2><h3 id="xss原理"><a href="#xss原理" class="headerlink" title="xss原理"></a>xss原理</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">攻击者在web页面中会插入一些恶意的script代码。当用户浏览该页面的时候，那么嵌入到web页面中script代码会执行，因此会达到恶意攻击用户的目的。</span><br></pre></td></tr></table></figure>
+
+<h3 id="xss分类"><a href="#xss分类" class="headerlink" title="xss分类"></a>xss分类</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">1.反射型</span><br><span class="line">一般指攻击者通过特定的方式来诱惑受害者去访问一个包含恶意代码的URL。当受害者点击恶意链接url的时候，恶意代码会直接在受害者的主机上的浏览器执行。</span><br><span class="line">2.存储型</span><br><span class="line">主要是将恶意代码上传或存储到服务器中，下次只要受害者浏览包含此恶意代码的页面就会执行恶意代码。</span><br><span class="line">3.DOM型</span><br><span class="line">不经过后端,DOM—based XSS漏洞是基于文档对象模型Document Objeet Model,DOM)的一种漏洞,dom - xss是通过url传入参数去控制触发的。</span><br><span class="line">区别</span><br><span class="line">12都需要服务器解析，并与数据库交互3只用前端解析，不与数据库交互</span><br><span class="line">23都会将攻击代码长期存在到受害者服务器1只能攻击一次</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="xss绕过"><a href="#xss绕过" class="headerlink" title="xss绕过"></a>xss绕过</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a标签、src属性、大小写、双写</span><br></pre></td></tr></table></figure>
+
+<h3 id="xss防护"><a href="#xss防护" class="headerlink" title="xss防护"></a>xss防护</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">编码、WAF、filter过滤敏感字符</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-csrf（跨站请求伪造攻击）"><a href="#3-csrf（跨站请求伪造攻击）" class="headerlink" title="3.csrf（跨站请求伪造攻击）"></a>3.csrf（跨站请求伪造攻击）</h2><h3 id="csrf原理"><a href="#csrf原理" class="headerlink" title="csrf原理"></a>csrf原理</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">同一浏览器下，用户访问了攻击者的恶意链接，攻击者拿着你的“身份凭证”，冒充你进行相应的攻击。</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf防护"><a href="#csrf防护" class="headerlink" title="csrf防护"></a>csrf防护</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.验证HTTP Referer字段</span><br><span class="line">2.在请求地址中添加Token验证</span><br><span class="line">3.在HTTP头中自定义属性并验证</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf位置"><a href="#csrf位置" class="headerlink" title="csrf位置"></a>csrf位置</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">密码修改、点赞、删除、转账、注销</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-ssrf（服务端请求伪造攻击）"><a href="#4-ssrf（服务端请求伪造攻击）" class="headerlink" title="4.ssrf（服务端请求伪造攻击）"></a>4.ssrf（服务端请求伪造攻击）</h2><h3 id="ssrf原理"><a href="#ssrf原理" class="headerlink" title="ssrf原理"></a>ssrf原理</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">攻击者在访问A时，利用A的特定功能构造特殊payload，由A发起对内部网络中系统B（内网隔离，外部不可访问）的请求，从而获取敏感信息。</span><br><span class="line"></span><br><span class="line">1- 服务器允许向其他服务器获取资源</span><br><span class="line">2- 但是并没有对该地址做严格的过滤和限制</span><br><span class="line">3- 所以导致了攻击者可以向受害者服务器，传入任意的URL 地址，并将数据返回</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf原因"><a href="#ssrf原因" class="headerlink" title="ssrf原因"></a>ssrf原因</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">file_get_contents()、fsockopen()、curl_exec()这三个函数运用不当。</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf位置"><a href="#ssrf位置" class="headerlink" title="ssrf位置"></a>ssrf位置</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1.分享：通过URL地址分享网页内容</span><br><span class="line">2.转码服务</span><br><span class="line">3.在线翻译</span><br><span class="line">4.图片加载与下载：通过URL地址加载或下载图片</span><br><span class="line">5.图片、文章收藏功能</span><br><span class="line">6.未公开的api实现以及其他调用URL的功能</span><br><span class="line">7.从URL关键字中寻找</span><br></pre></td></tr></table></figure>
+
+<h3 id="ssrf防护"><a href="#ssrf防护" class="headerlink" title="ssrf防护"></a>ssrf防护</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">禁止302跳转、限制协议只保留HTTP、HTTPS，防止file://、gopher://和ftp://、内外网限制、URL限制</span><br><span class="line">地址做白名单</span><br></pre></td></tr></table></figure>
+
+<h3 id="csrf和ssrf区别"><a href="#csrf和ssrf区别" class="headerlink" title="csrf和ssrf区别"></a>csrf和ssrf区别</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">csrf是服务器端对对用户的数据像cookie信息等重要数据没有做严格把控，使得攻击者窃取信息进行伪造发送给服务器</span><br><span class="line">ssrf是服务器对用户提供的url地址过于信任，没有检测，导致攻击者可以通过这个跳板攻击内网。</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-文件上传"><a href="#5-文件上传" class="headerlink" title="5.文件上传"></a>5.文件上传</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">用户上传了一个可执行的脚本文件，并通过此脚本文件获得了执行服务器端命令的能力。</span><br></pre></td></tr></table></figure>
+
+<h3 id="绕过"><a href="#绕过" class="headerlink" title="绕过"></a>绕过</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">MIME类型检测：HTTP请求字段里的Content-Type字段改为image/jpeg；image/png；image/gif</span><br><span class="line">黑名单绕过：php3、php4、大小写</span><br><span class="line">.htaccess绕过：1.mod_rewrite模块开启。2.AllowOverride All，该目录的文件按php来解析执行</span><br><span class="line">&lt;FilesMatch &quot;shana&quot;&gt;</span><br><span class="line">SetHandler application/x-httpd-php</span><br><span class="line">&lt;/FilesMatch&gt;</span><br><span class="line">::$DATA绕过：会把这个后面的后缀名当成文件流处理。</span><br><span class="line">点、空格、大小写、双写绕过</span><br><span class="line">图片马绕过：绕过getimagesize()方法、exif_imagetype()需要开启php的配置文件中的php_exif模块。</span><br><span class="line">二次渲染：文件上传后经过二次渲染重新生成图片容易把图片里的php代码改掉，把图片里的php代码放到前面</span><br><span class="line">条件竞争：不断上传，不断访问。</span><br><span class="line">%00截断：：php版本小于5.3.4，php的magic_quotes_gpc为OFF状态</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-文件包含"><a href="#6-文件包含" class="headerlink" title="6.文件包含"></a>6.文件包含</h2><h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">在网站的开发人员在开发网站的时候，会把经常重复使用的函数或者特定的页面写到单个文件中，需要使用的时候就直接调用此文件即可，而无需再次浪费时间再次编写，这种操作通常被称为文件包含。</span><br></pre></td></tr></table></figure>
+
+<h3 id="相关函数"><a href="#相关函数" class="headerlink" title="相关函数"></a>相关函数</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">include()：包含并运行指定的文件，包含文件发生错误时，程序警告，但会继续执行。</span><br><span class="line">require()：包含并运行指定的文件，包含文件发生错误时，程序直接终止执行。</span><br><span class="line">include_once()：和 include 类似，不同处在于 include_once 会检查这个文件是否已经被导入，如果已导入，下文便不会再导入，直面 once 理解就是只导入一次。</span><br><span class="line">require_once()：和 require 类似，不同处在于 require_once 只导入一次。</span><br></pre></td></tr></table></figure>
+
+<h3 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1.本地文件包含</span><br><span class="line">2.远程文件包含需要php.ini开启了allow_url_fopen默认开启和allow_url_include默认关闭</span><br></pre></td></tr></table></figure>
+
+<h3 id="伪协议"><a href="#伪协议" class="headerlink" title="伪协议"></a>伪协议</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1.php://input</span><br><span class="line">2.php://filter</span><br></pre></td></tr></table></figure>
+
+<h3 id="防范"><a href="#防范" class="headerlink" title="防范"></a>防范</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1.检查服务器配置文件</span><br><span class="line">2.过滤特殊符号 ，\/input output filter</span><br></pre></td></tr></table></figure>
+
+<h2 id="XXE（外部实体注入）"><a href="#XXE（外部实体注入）" class="headerlink" title="XXE（外部实体注入）"></a>XXE（外部实体注入）</h2><h3 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">当包含对外部实体的引用的 XML 输入被弱配置的 XML 解析器处理时，就会发生这种攻击。这种攻击可能导致机密数据泄露、拒绝服务、服务器端请求伪造、从解析器所在机器的角度进行端口扫描，以及其他系统影响。</span><br><span class="line"></span><br><span class="line">XML很像html语言，但标签需要自己来定义。</span><br><span class="line">XML用于传输和数据存储。HTML用于显示数据。</span><br></pre></td></tr></table></figure>
+
+<h3 id="危害"><a href="#危害" class="headerlink" title="危害"></a>危害</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.DOS攻击</span><br><span class="line">2.文件读取</span><br><span class="line">3.内网探测</span><br></pre></td></tr></table></figure>
+
+<h3 id="防御"><a href="#防御" class="headerlink" title="防御"></a>防御</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">1.使用开发语言提供的禁用外部实体的方法</span><br><span class="line">PHP：</span><br><span class="line">libxml_disable_entity_loader(true);</span><br><span class="line">JAVA:</span><br><span class="line">DocumentBuilderFactory dbf =DocumentBuilderFactory.newInstance();</span><br><span class="line">dbf.setExpandEntityReferences(false);</span><br><span class="line">Python：</span><br><span class="line">from lxml import etree</span><br><span class="line">xmlData = etree.parse(xmlSource,etree.XMLParser(resolve_entities=False))</span><br><span class="line">2.过滤和验证用户提交的XML数据</span><br><span class="line">3.过滤关键词&lt;!DOCTYPE、&lt;!ENTITY SYSTEM、PUBLIC</span><br><span class="line">4.不允许XML中含有任何自己声明的DTD</span><br></pre></td></tr></table></figure>
+
+<h2 id="业务逻辑漏洞"><a href="#业务逻辑漏洞" class="headerlink" title="业务逻辑漏洞"></a>业务逻辑漏洞</h2><h3 id="类型"><a href="#类型" class="headerlink" title="类型"></a>类型</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">1.身份验证漏洞</span><br><span class="line">暴力破解</span><br><span class="line">Session固定攻击</span><br><span class="line">Cookie欺骗漏洞</span><br><span class="line">2.权限类逻辑漏洞</span><br><span class="line">水平越权</span><br><span class="line">垂直越权</span><br><span class="line">未授权访问</span><br><span class="line">3.图形验证码漏洞</span><br><span class="line">4.找回密码逻辑洞</span><br><span class="line">5.业务逻辑篡改漏洞</span><br><span class="line">6.执行顺序篡改漏洞</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>原创技术分享，您的支持将鼓励我继续创作</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Spring 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Spring 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+	  
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/web%E6%B8%97%E9%80%8F%E5%9F%BA%E7%A1%80/" rel="tag"># web渗透基础</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2022/01/12/burp-suit%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" rel="next" title="burp suit使用指南">
+      burp suit使用指南 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81web"><span class="nav-number">1.</span> <span class="nav-text">一、web</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-sql%E6%B3%A8%E5%85%A5"><span class="nav-number">1.1.</span> <span class="nav-text">1.sql注入</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sql%E6%B3%A8%E5%85%A5%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.1.</span> <span class="nav-text">sql注入原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sql%E6%B3%A8%E5%85%A5%E5%88%86%E7%B1%BB"><span class="nav-number">1.1.2.</span> <span class="nav-text">sql注入分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sql%E5%B8%B8%E7%94%A8%E8%AF%AD%E5%8F%A5"><span class="nav-number">1.1.3.</span> <span class="nav-text">sql常用语句</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sql%E6%B3%A8%E5%85%A5%E7%BB%95%E8%BF%87"><span class="nav-number">1.1.4.</span> <span class="nav-text">sql注入绕过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sql%E6%B3%A8%E5%85%A5%E9%98%B2%E5%BE%A1"><span class="nav-number">1.1.5.</span> <span class="nav-text">sql注入防御</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-xss%EF%BC%88%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC%E6%94%BB%E5%87%BB%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">2.xss（跨站脚本攻击）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#xss%E5%8E%9F%E7%90%86"><span class="nav-number">1.2.1.</span> <span class="nav-text">xss原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#xss%E5%88%86%E7%B1%BB"><span class="nav-number">1.2.2.</span> <span class="nav-text">xss分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#xss%E7%BB%95%E8%BF%87"><span class="nav-number">1.2.3.</span> <span class="nav-text">xss绕过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#xss%E9%98%B2%E6%8A%A4"><span class="nav-number">1.2.4.</span> <span class="nav-text">xss防护</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-csrf%EF%BC%88%E8%B7%A8%E7%AB%99%E8%AF%B7%E6%B1%82%E4%BC%AA%E9%80%A0%E6%94%BB%E5%87%BB%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">3.csrf（跨站请求伪造攻击）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#csrf%E5%8E%9F%E7%90%86"><span class="nav-number">1.3.1.</span> <span class="nav-text">csrf原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#csrf%E9%98%B2%E6%8A%A4"><span class="nav-number">1.3.2.</span> <span class="nav-text">csrf防护</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#csrf%E4%BD%8D%E7%BD%AE"><span class="nav-number">1.3.3.</span> <span class="nav-text">csrf位置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-ssrf%EF%BC%88%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%AF%B7%E6%B1%82%E4%BC%AA%E9%80%A0%E6%94%BB%E5%87%BB%EF%BC%89"><span class="nav-number">1.4.</span> <span class="nav-text">4.ssrf（服务端请求伪造攻击）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ssrf%E5%8E%9F%E7%90%86"><span class="nav-number">1.4.1.</span> <span class="nav-text">ssrf原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ssrf%E5%8E%9F%E5%9B%A0"><span class="nav-number">1.4.2.</span> <span class="nav-text">ssrf原因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ssrf%E4%BD%8D%E7%BD%AE"><span class="nav-number">1.4.3.</span> <span class="nav-text">ssrf位置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ssrf%E9%98%B2%E6%8A%A4"><span class="nav-number">1.4.4.</span> <span class="nav-text">ssrf防护</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#csrf%E5%92%8Cssrf%E5%8C%BA%E5%88%AB"><span class="nav-number">1.4.5.</span> <span class="nav-text">csrf和ssrf区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0"><span class="nav-number">1.5.</span> <span class="nav-text">5.文件上传</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.5.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%95%E8%BF%87"><span class="nav-number">1.5.2.</span> <span class="nav-text">绕过</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB"><span class="nav-number">1.6.</span> <span class="nav-text">6.文件包含</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86-1"><span class="nav-number">1.6.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%87%BD%E6%95%B0"><span class="nav-number">1.6.2.</span> <span class="nav-text">相关函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E7%B1%BB"><span class="nav-number">1.6.3.</span> <span class="nav-text">分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%AA%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.6.4.</span> <span class="nav-text">伪协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%98%B2%E8%8C%83"><span class="nav-number">1.6.5.</span> <span class="nav-text">防范</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#XXE%EF%BC%88%E5%A4%96%E9%83%A8%E5%AE%9E%E4%BD%93%E6%B3%A8%E5%85%A5%EF%BC%89"><span class="nav-number">1.7.</span> <span class="nav-text">XXE（外部实体注入）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86-2"><span class="nav-number">1.7.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%B1%E5%AE%B3"><span class="nav-number">1.7.2.</span> <span class="nav-text">危害</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%98%B2%E5%BE%A1"><span class="nav-number">1.7.3.</span> <span class="nav-text">防御</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%9A%E5%8A%A1%E9%80%BB%E8%BE%91%E6%BC%8F%E6%B4%9E"><span class="nav-number">1.8.</span> <span class="nav-text">业务逻辑漏洞</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.8.1.</span> <span class="nav-text">类型</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Spring"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Spring</p>
+  <div class="site-description" itemprop="description">见到一座山，就想知道山后面是什么。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49502930" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49502930" rel="noopener" target="_blank"><i class="crosshairs fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Spring</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":"true#是否在手机端显示"},"log":false});</script></body>
+</html>

